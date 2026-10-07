@@ -1,0 +1,14 @@
+{
+  "domain": "camera-formats",
+  "feature_defaults": {"implementation":{"components":[],"notes":"No dedicated production runtime exists."},"tests":{"unit":[],"integration":[],"fixture":[]},"platforms":{"windows":"target","macos":"future","linux":"future"},"hardware":{"cpu_fallback":"required","gpu_optional":true,"pro_io":"not_required"},"known_gaps":["No validated native runtime yet."],"licensing_notes":"Each camera SDK/format requires a compatibility and licensing review."},
+  "features": [
+    {"id":"camera_format_capability_registry","name":"Camera format capability registry","priority":"P1","status":"planned","acceptance":["Reports decode, metadata, proxy, and license capability per camera format." ]},
+    {"id":"arri_format_support","name":"ARRI format support","priority":"P2","status":"planned","acceptance":["Handles approved ARRI media through a licensed/proven decoder path." ]},
+    {"id":"red_format_support","name":"RED format support","priority":"P2","status":"planned","acceptance":["Handles approved RED media through an authorized decoder path." ]},
+    {"id":"sony_xavc_support","name":"Sony XAVC support","priority":"P2","status":"planned","acceptance":["Probes and decodes supported XAVC variants with correct metadata." ]},
+    {"id":"canon_raw_support","name":"Canon RAW support","priority":"P2","status":"planned","acceptance":["Handles approved Canon RAW media with documented limits." ]},
+    {"id":"braw_support","name":"Blackmagic RAW support","priority":"P2","status":"planned","acceptance":["Uses the appropriate SDK path and preserves decode controls." ]},
+    {"id":"prores_support","name":"ProRes support","priority":"P1","status":"planned","acceptance":["Probes, decodes, and exports only supported/legal ProRes profiles." ]},
+    {"id":"raw_metadata_controls","name":"RAW metadata controls","priority":"P2","status":"planned","acceptance":["Makes source decode controls explicit and non-destructive." ]}
+  ]
+}

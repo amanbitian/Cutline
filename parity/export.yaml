@@ -1,0 +1,203 @@
+{
+ "domain": "export",
+ "feature_defaults": {
+  "implementation": {
+   "components": [],
+   "notes": "No dedicated production runtime exists."
+  },
+  "tests": {
+   "unit": [],
+   "integration": [],
+   "fixture": []
+  },
+  "platforms": {
+   "windows": "target",
+   "macos": "future",
+   "linux": "future"
+  },
+  "hardware": {
+   "cpu_fallback": "required",
+   "gpu_optional": true,
+   "pro_io": "not_required"
+  },
+  "known_gaps": [
+   "No validated native runtime yet."
+  ],
+  "licensing_notes": "No license review recorded."
+ },
+ "features": [
+  {
+   "id": "export_queue",
+   "name": "Export queue",
+   "priority": "P0",
+   "status": "implemented",
+   "implementation": {
+    "components": [
+     "exporter/ExportQueue.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   },
+   "acceptance": [
+    "Queues persistent, resumable jobs with frozen job settings."
+   ],
+   "tests": {
+    "unit": [
+     "QueuedExportsRunOneAtATimeInOrderAndKeepTheirProgressAndOutcome",
+     "AFailedExportIsRecordedWithItsReasonAndCanBeRetriedAndACancelledOneStopsPromptly",
+     "WaitingJobsCanBeCancelledRemovedReorderedAndPausedWithoutDisturbingTheRunningOne",
+     "TheQueueSurvivesARestartAJobThatWasRunningIsInterruptedAndADamagedRecordIsKeptAside"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   }
+  },
+  {
+   "id": "timeline_export",
+   "name": "Timeline export",
+   "priority": "P0",
+   "status": "implemented",
+   "acceptance": [
+    "Renders an exact selected sequence range to a validated output."
+   ],
+   "tests": {
+    "unit": [
+     "ExportedVideoDecodesBackToWhatTheMonitorRendered",
+     "ExportWritesTheExpectedFrameCount"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "exporter/ExportWorker.cpp",
+     "media/ffmpeg/FFmpegWriter.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "media_export",
+   "name": "Media export",
+   "priority": "P1",
+   "status": "planned",
+   "acceptance": [
+    "Transcodes selected source or timeline output with diagnostics."
+   ]
+  },
+  {
+   "id": "export_presets",
+   "name": "Export presets",
+   "priority": "P1",
+   "status": "implemented",
+   "acceptance": [
+    "Stores versioned preset settings and resolves inheritance explicitly."
+   ],
+   "tests": {
+    "unit": [
+     "EveryPresetNamesRealEncodersAndResolvesToSettingsThatMatchItsPromises",
+     "ABitrateScalesWithThePictureAndIsClampedAndAProfileCodecIsLeftToItsProfile",
+     "HardwareEncodersAreUsedWhenTheyWorkSkippedWithAReasonWhenTheyDoNotAndSoftwareStaysAvailable",
+     "APresetRefusesASequenceItCannotDeliverAndCorrectsTheFileExtension",
+     "EveryPresetThatWorksOnThisMachineProducesAFileThatPassesTheCheck",
+     "TheHardwareAndFinishingPresetsThatNeedAnHdPictureExportAtOneAndPassTheCheck"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "exporter/ExportPresets.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "export_progress",
+   "name": "Export progress",
+   "priority": "P0",
+   "status": "implemented",
+   "acceptance": [
+    "Reports phase, frames, time, error, and cancellation state."
+   ],
+   "tests": {
+    "unit": [
+     "ExportReportsProgressAndCanBeCancelled"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "exporter/ExportWorker.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "export_validation",
+   "name": "Export validation",
+   "priority": "P1",
+   "status": "implemented",
+   "acceptance": [
+    "Re-probes outputs and reports format/timing mismatches."
+   ],
+   "tests": {
+    "unit": [
+     "TheCheckOfAFinishedExportNamesWhatIsWrongWithATruncatedWrongOrMissingFile",
+     "EveryPresetThatWorksOnThisMachineProducesAFileThatPassesTheCheck"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "exporter/ExportValidation.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "smart_render",
+   "name": "Smart render",
+   "priority": "P2",
+   "status": "planned",
+   "acceptance": [
+    "Reuses eligible encoded segments only when codec and GOP constraints permit."
+   ]
+  },
+  {
+   "id": "render_and_replace",
+   "name": "Render and Replace",
+   "priority": "P1",
+   "status": "planned",
+   "acceptance": [
+    "Creates a reversible rendered-media substitution with provenance."
+   ]
+  }
+ ]
+}

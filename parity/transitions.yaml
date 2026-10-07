@@ -1,0 +1,181 @@
+{
+ "domain": "transitions",
+ "feature_defaults": {
+  "implementation": {
+   "components": [],
+   "notes": "No dedicated production runtime exists."
+  },
+  "tests": {
+   "unit": [],
+   "integration": [],
+   "fixture": []
+  },
+  "platforms": {
+   "windows": "target",
+   "macos": "future",
+   "linux": "future"
+  },
+  "hardware": {
+   "cpu_fallback": "required",
+   "gpu_optional": true,
+   "pro_io": "not_required"
+  },
+  "known_gaps": [
+   "No validated native runtime yet."
+  ],
+  "licensing_notes": "No license review recorded."
+ },
+ "features": [
+  {
+   "id": "transition_model",
+   "name": "Transition model",
+   "priority": "P1",
+   "status": "implemented",
+   "acceptance": [
+    "Persists transition type, alignment, duration, and parameters."
+   ],
+   "tests": {
+    "unit": [
+     "TransitionsJoinClipsOnTheSameTrack",
+     "ATransitionReportsBothSidesAndItsProgress",
+     "ATransitionBetweenTwoClipsRequiresThemToBeAdjacent",
+     "SplittingTheOutgoingClipMovesItsTransitionToTheHalfThatNowEndsAtTheCut",
+     "MovingAClipAwayDetachesItsTransitionInsteadOfLeavingItDangling",
+     "ValidateDatabaseReportsATransitionThatNoLongerJoinsItsClips",
+     "ARandomSessionOfEditsNeverLeavesTheProjectInvalidAndUndoesCompletely"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "core/project/Schema.cpp",
+     "core/project/ProjectStore.cpp",
+     "timeline/TimelineCompiler.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "cross_dissolve",
+   "name": "Cross dissolve",
+   "priority": "P1",
+   "status": "implemented",
+   "acceptance": [
+    "Blends eligible adjacent clip frames across exact transition duration."
+   ],
+   "tests": {
+    "unit": [
+     "CrossDissolveMixesByProgress",
+     "EveryTransitionStartsAsTheOutgoingPictureAndEndsAsTheIncomingOneAndNeverLeavesTheRange",
+     "TheCompositorDrawsTheNamedTransitionAtTheProgressOfTheFrameAndTellsOfOneItDoesNotHave"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "render/Transitions.cpp",
+     "render/Compositor.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "dip_to_color",
+   "name": "Dip to color",
+   "priority": "P1",
+   "status": "planned",
+   "acceptance": [
+    "Composites outgoing/incoming frames through a configurable color."
+   ]
+  },
+  {
+   "id": "audio_crossfade",
+   "name": "Audio crossfade",
+   "priority": "P1",
+   "status": "implemented",
+   "acceptance": [
+    "Applies gain envelopes that avoid discontinuities."
+   ],
+   "tests": {
+    "unit": [
+     "AudioTransitionsCrossFade",
+     "AConstantPowerTransitionHoldsLoudnessAcrossTheCut",
+     "ACrossfadePlaysTheMediaOnEitherSideOfTheCut",
+     "WhereTheMediaHasNoHandleTheCrossfadeIsSilenceNotAHeldSample",
+     "AFadeOnOneClipHasNoHandle"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "audio/AudioMixer.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "transition_alignment",
+   "name": "Transition alignment",
+   "priority": "P1",
+   "status": "implemented",
+   "acceptance": [
+    "Supports center/start/end alignment with handle validation."
+   ],
+   "tests": {
+    "unit": [
+     "ATransitionIsAddedAtTheCutKeptWithinTheHandlesAndRefusedWhereThereIsNoRoomOrAnotherIsThere",
+     "ATransitionIsChangedToAnotherKindAndLengthInOneStepAndTakenOffAgain"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "ui/Transitions.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "transition_handle_diagnostics",
+   "name": "Transition handle diagnostics",
+   "priority": "P1",
+   "status": "planned",
+   "acceptance": [
+    "Explains insufficient media handles before applying a transition."
+   ]
+  },
+  {
+   "id": "custom_transition_shaders",
+   "name": "Custom transition shaders",
+   "priority": "P2",
+   "status": "planned",
+   "acceptance": [
+    "Loads validated portable shader transitions through a controlled interface."
+   ]
+  }
+ ]
+}

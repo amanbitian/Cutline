@@ -1,0 +1,212 @@
+#include "render/OpticalFlow.h"
+
+#include <algorithm>
+#include <cmath>
+#include <limits>
+#include <stdexcept>
+
+namespace cutline::render {
+namespace {
+
+[[nodiscard]] float Luma(const media::VideoFrame& frame, int x, int y) {
+  const auto* pixel = frame.row_f32(y) + static_cast<std::size_t>(x) * 4;
+  return 0.2126f * pixel[0] + 0.7152f * pixel[1] + 0.0722f * pixel[2];
+}
+
+[[nodiscard]] media::VideoFrame AsFloat(const media::VideoFrame& frame) {
+  return frame.format() == media::PixelFormat::RgbaF32 ? frame.Clone()
+                                                        : media::ConvertFrame(frame, media::PixelFormat::RgbaF32);
+}
+
+[[nodiscard]] FlowField EstimateOneWay(const media::VideoFrame& first, const media::VideoFrame& second,
+                                       const OpticalFlowConfig& config) {
+  FlowField field;
+  field.width = first.width();
+  field.height = first.height();
+  field.block_size = std::max(2, config.block_size);
+  field.columns = (field.width + field.block_size - 1) / field.block_size;
+  field.rows = (field.height + field.block_size - 1) / field.block_size;
+  field.samples.resize(static_cast<std::size_t>(field.columns * field.rows));
+
+  const auto search = std::max(0, config.search_radius);
+  for (int block_y = 0; block_y < field.rows; ++block_y) {
+    if (config.cancel && config.cancel()) throw FlowCancelled();
+    const auto y0 = block_y * field.block_size;
+    const auto y1 = std::min(y0 + field.block_size, field.height);
+    for (int block_x = 0; block_x < field.columns; ++block_x) {
+      const auto x0 = block_x * field.block_size;
+      const auto x1 = std::min(x0 + field.block_size, field.width);
+      double best = std::numeric_limits<double>::infinity();
+      double second_best = std::numeric_limits<double>::infinity();
+      int best_dx = 0;
+      int best_dy = 0;
+      int best_count = 0;
+
+      for (int dy = -search; dy <= search; ++dy) {
+        for (int dx = -search; dx <= search; ++dx) {
+          double error = 0.0;
+          int count = 0;
+          for (int y = y0; y < y1; ++y) {
+            const auto sy = y + dy;
+            if (sy < 0 || sy >= field.height) continue;
+            for (int x = x0; x < x1; ++x) {
+              const auto sx = x + dx;
+              if (sx < 0 || sx >= field.width) continue;
+              error += std::abs(static_cast<double>(Luma(first, x, y) - Luma(second, sx, sy)));
+              ++count;
+            }
+          }
+          if (count < std::max(1, (x1 - x0) * (y1 - y0) / 2)) continue;
+          const auto average = error / static_cast<double>(count);
+          // A small distance preference resolves flat/periodic areas without
+          // pulling motion away from a clearly better match.
+          const auto score = average + 1e-5 * static_cast<double>(dx * dx + dy * dy);
+          if (score < best) {
+            second_best = best;
+            best = score;
+            best_dx = dx;
+            best_dy = dy;
+            best_count = count;
+          } else if (score < second_best) {
+            second_best = score;
+          }
+        }
+      }
+
+      auto& sample = field.samples[static_cast<std::size_t>(block_y * field.columns + block_x)];
+      sample.dx = static_cast<float>(best_dx);
+      sample.dy = static_cast<float>(best_dy);
+      if (best_count > 0 && std::isfinite(second_best)) {
+        sample.confidence = static_cast<float>(std::clamp((second_best - best) / (second_best + 1e-6), 0.0, 1.0));
+      }
+    }
+  }
+  return field;
+}
+
+[[nodiscard]] const float* PixelAt(const media::VideoFrame& frame, float x, float y, float storage[4]) {
+  x = std::clamp(x, 0.0f, static_cast<float>(frame.width() - 1));
+  y = std::clamp(y, 0.0f, static_cast<float>(frame.height() - 1));
+  const auto x0 = static_cast<int>(std::floor(x));
+  const auto y0 = static_cast<int>(std::floor(y));
+  const auto x1 = std::min(x0 + 1, frame.width() - 1);
+  const auto y1 = std::min(y0 + 1, frame.height() - 1);
+  const auto tx = x - static_cast<float>(x0);
+  const auto ty = y - static_cast<float>(y0);
+  const auto* a = frame.row_f32(y0) + static_cast<std::size_t>(x0) * 4;
+  const auto* b = frame.row_f32(y0) + static_cast<std::size_t>(x1) * 4;
+  const auto* c = frame.row_f32(y1) + static_cast<std::size_t>(x0) * 4;
+  const auto* d = frame.row_f32(y1) + static_cast<std::size_t>(x1) * 4;
+  for (int channel = 0; channel < 4; ++channel) {
+    const auto top = a[channel] + (b[channel] - a[channel]) * tx;
+    const auto bottom = c[channel] + (d[channel] - c[channel]) * tx;
+    storage[channel] = top + (bottom - top) * ty;
+  }
+  return storage;
+}
+
+}  // namespace
+
+bool FlowField::valid() const noexcept {
+  return width > 0 && height > 0 && block_size > 0 && columns > 0 && rows > 0 &&
+         samples.size() == static_cast<std::size_t>(columns * rows);
+}
+
+const FlowSample& FlowField::at(int column, int row) const {
+  if (!valid() || column < 0 || row < 0 || column >= columns || row >= rows) {
+    throw std::out_of_range("Optical-flow block is outside the field");
+  }
+  return samples[static_cast<std::size_t>(row * columns + column)];
+}
+
+FlowSample FlowField::sample(float x, float y) const {
+  if (!valid()) return {};
+  const auto gx = std::clamp(x / static_cast<float>(block_size) - 0.5f, 0.0f,
+                             static_cast<float>(columns - 1));
+  const auto gy = std::clamp(y / static_cast<float>(block_size) - 0.5f, 0.0f,
+                             static_cast<float>(rows - 1));
+  const auto x0 = static_cast<int>(std::floor(gx));
+  const auto y0 = static_cast<int>(std::floor(gy));
+  const auto x1 = std::min(x0 + 1, columns - 1);
+  const auto y1 = std::min(y0 + 1, rows - 1);
+  const auto tx = gx - static_cast<float>(x0);
+  const auto ty = gy - static_cast<float>(y0);
+  const auto& a = at(x0, y0);
+  const auto& b = at(x1, y0);
+  const auto& c = at(x0, y1);
+  const auto& d = at(x1, y1);
+  const auto mix = [](float p, float q, float t) { return p + (q - p) * t; };
+  return {mix(mix(a.dx, b.dx, tx), mix(c.dx, d.dx, tx), ty),
+          mix(mix(a.dy, b.dy, tx), mix(c.dy, d.dy, tx), ty),
+          mix(mix(a.confidence, b.confidence, tx), mix(c.confidence, d.confidence, tx), ty),
+          a.occluded || b.occluded || c.occluded || d.occluded};
+}
+
+FlowField EstimateOpticalFlow(const media::VideoFrame& first, const media::VideoFrame& second,
+                              const OpticalFlowConfig& config) {
+  if (!first.valid() || !second.valid() || first.width() != second.width() || first.height() != second.height()) {
+    throw std::invalid_argument("Optical flow requires two valid frames of the same size");
+  }
+  const auto first_float = AsFloat(first);
+  const auto second_float = AsFloat(second);
+  auto forward = EstimateOneWay(first_float, second_float, config);
+  const auto backward = EstimateOneWay(second_float, first_float, config);
+  for (int row = 0; row < forward.rows; ++row) {
+    for (int column = 0; column < forward.columns; ++column) {
+      auto& motion = forward.samples[static_cast<std::size_t>(row * forward.columns + column)];
+      const auto center_x = (static_cast<float>(column) + 0.5f) * forward.block_size;
+      const auto center_y = (static_cast<float>(row) + 0.5f) * forward.block_size;
+      const auto reverse = backward.sample(center_x + motion.dx, center_y + motion.dy);
+      const auto disagreement = std::hypot(motion.dx + reverse.dx, motion.dy + reverse.dy);
+      motion.occluded = motion.confidence < config.minimum_confidence || disagreement > config.occlusion_tolerance;
+    }
+  }
+  return forward;
+}
+
+media::VideoFrame InterpolateOpticalFlow(const media::VideoFrame& first, const media::VideoFrame& second,
+                                         float progress, const FlowField& forward, const FlowField* backward) {
+  if (!forward.valid() || first.width() != forward.width || first.height() != forward.height ||
+      second.width() != forward.width || second.height() != forward.height) {
+    throw std::invalid_argument("Optical-flow field does not match the interpolation frames");
+  }
+  const auto a = AsFloat(first);
+  const auto b = AsFloat(second);
+  const auto t = std::clamp(progress, 0.0f, 1.0f);
+  auto output = media::VideoFrame::Allocate(media::PixelFormat::RgbaF32, forward.width, forward.height);
+  constexpr std::int64_t kProgressScale = 1'000'000;
+  const auto progress_time = time::RationalTime(static_cast<std::int64_t>(std::llround(t * kProgressScale)),
+                                                 kProgressScale);
+  output.presentation_time = first.presentation_time.Add(
+      second.presentation_time.Subtract(first.presentation_time).Multiply(progress_time));
+  output.color = first.color;
+  for (int y = 0; y < forward.height; ++y) {
+    auto* destination = output.row_f32(y);
+    for (int x = 0; x < forward.width; ++x) {
+      const auto motion = forward.sample(static_cast<float>(x), static_cast<float>(y));
+      FlowSample reverse{-motion.dx, -motion.dy, motion.confidence, motion.occluded};
+      if (backward != nullptr && backward->valid()) reverse = backward->sample(static_cast<float>(x), static_cast<float>(y));
+      float first_pixel[4];
+      float second_pixel[4];
+      const auto* pa = PixelAt(a, static_cast<float>(x) - t * motion.dx,
+                               static_cast<float>(y) - t * motion.dy, first_pixel);
+      const auto* pb = PixelAt(b, static_cast<float>(x) - (1.0f - t) * reverse.dx,
+                               static_cast<float>(y) - (1.0f - t) * reverse.dy, second_pixel);
+      const auto safe = !motion.occluded && !reverse.occluded;
+      for (int channel = 0; channel < 4; ++channel) {
+        // The fallback is deliberately the same blend, but at unwarped positions.
+        // This avoids motion-stretched edges while keeping temporal continuity.
+        if (safe) {
+          destination[static_cast<std::size_t>(x) * 4 + channel] = pa[channel] * (1.0f - t) + pb[channel] * t;
+        } else {
+          const auto* ua = a.row_f32(y) + static_cast<std::size_t>(x) * 4;
+          const auto* ub = b.row_f32(y) + static_cast<std::size_t>(x) * 4;
+          destination[static_cast<std::size_t>(x) * 4 + channel] = ua[channel] * (1.0f - t) + ub[channel] * t;
+        }
+      }
+    }
+  }
+  return output;
+}
+
+}  // namespace cutline::render

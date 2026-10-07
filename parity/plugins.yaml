@@ -1,0 +1,13 @@
+{
+  "domain": "plugins",
+  "feature_defaults": {"implementation":{"components":[],"notes":"No plugin-host runtime exists."},"tests":{"unit":[],"integration":[],"fixture":[]},"platforms":{"windows":"target","macos":"future","linux":"future"},"hardware":{"cpu_fallback":"required","gpu_optional":true,"pro_io":"not_required"},"known_gaps":["Plugin loading and sandboxing are outside P0."],"licensing_notes":"Plugin SDK, binary signing, sandboxing, and vendor licenses require policy approval."},
+  "features": [
+    {"id":"plugin_capability_registry","name":"Plugin capability registry","priority":"P2","status":"deferred","acceptance":["Lists supported plugin formats, ABI versions, permissions, and isolation level." ]},
+    {"id":"ofx_hosting","name":"OFX hosting","priority":"P2","status":"deferred","acceptance":["Hosts approved OFX effects out of process or in controlled isolation." ]},
+    {"id":"vst3_hosting","name":"VST3 hosting","priority":"P2","status":"deferred","acceptance":["Hosts approved VST3 audio plugins within real-time safety limits." ]},
+    {"id":"plugin_scan","name":"Plugin scan","priority":"P2","status":"deferred","acceptance":["Scans plugins in an isolated worker and records failures safely." ]},
+    {"id":"plugin_crash_recovery","name":"Plugin crash recovery","priority":"P2","status":"deferred","acceptance":["Recovers project state when a plugin process fails." ]},
+    {"id":"plugin_parameter_automation","name":"Plugin parameter automation","priority":"P2","status":"deferred","acceptance":["Persists validated automation independent of transient plugin UI." ]},
+    {"id":"plugin_render_cache","name":"Plugin render cache","priority":"P2","status":"deferred","acceptance":["Invalidates cached output by plugin/version/parameter/media dependency." ]}
+  ]
+}

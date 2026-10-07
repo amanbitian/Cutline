@@ -1,0 +1,212 @@
+{
+ "domain": "color",
+ "feature_defaults": {
+  "implementation": {
+   "components": [],
+   "notes": "No dedicated production runtime exists."
+  },
+  "tests": {
+   "unit": [],
+   "integration": [],
+   "fixture": []
+  },
+  "platforms": {
+   "windows": "target",
+   "macos": "future",
+   "linux": "future"
+  },
+  "hardware": {
+   "cpu_fallback": "required",
+   "gpu_optional": true,
+   "pro_io": "not_required"
+  },
+  "known_gaps": [
+   "No validated native runtime yet."
+  ],
+  "licensing_notes": "Color transforms, LUTs, and proprietary camera transforms require provenance tracking."
+ },
+ "features": [
+  {
+   "id": "color_managed_pipeline",
+   "name": "Color-managed pipeline",
+   "priority": "P1",
+   "status": "partial",
+   "acceptance": [
+    "Tracks input, working, display, and export transforms explicitly."
+   ],
+   "tests": {
+    "unit": [
+     "CameraLogAndAcesTransfersMatchTheirPublishedGreyPointsAndRoundTripAcrossTheirRange",
+     "AClipCanSayWhatItsPictureIsAndLogFootageIsReadAsLogEvenWhenTheFileSaysNothing",
+     "FramesInTheSequenceSpaceAreLeftAloneAndOtherSpacesAreConvertedUnderTheCurrentVersion"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "render/ColorManagement.cpp",
+     "render/Compositor.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "basic_color_correction",
+   "name": "Basic color correction",
+   "priority": "P1",
+   "status": "implemented",
+   "implementation": {
+    "components": [
+     "render/Compositor.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   },
+   "acceptance": [
+    "Applies correction values in a color-managed native render pipeline."
+   ],
+   "tests": {
+    "unit": [
+     "ExposureIsMeasuredInStops",
+     "SaturationPivotsAroundRec709Luma",
+     "ContrastPivotsAroundMidGrey",
+     "GoldenGradedBars"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   }
+  },
+  {
+   "id": "lumetri_style_curves",
+   "name": "Curves",
+   "priority": "P1",
+   "status": "planned",
+   "acceptance": [
+    "Evaluates editable channel and luma curves in the grade graph."
+   ]
+  },
+  {
+   "id": "color_wheels",
+   "name": "Color wheels",
+   "priority": "P1",
+   "status": "planned",
+   "acceptance": [
+    "Applies lift/gamma/gain style controls with documented math."
+   ]
+  },
+  {
+   "id": "lut_management",
+   "name": "LUT management",
+   "priority": "P1",
+   "status": "partial",
+   "acceptance": [
+    "Imports, validates, applies, and records LUT provenance."
+   ],
+   "tests": {
+    "unit": [
+     "TheLookPackIsWrittenOnceReadsAsCubesAndEveryLookIsASaneMonotoneGrade",
+     "CubeLutLoadsOnceAndBlendsByIntensity",
+     "MissingLutIsReportedAndBypassed"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "ui/LutLibrary.cpp",
+     "ui/LookPack.cpp",
+     "app/LutPreviewProvider.h"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "color_scopes",
+   "name": "Color scopes",
+   "priority": "P1",
+   "status": "planned",
+   "acceptance": [
+    "Computes waveform, vectorscope, histogram, and parade from actual frames."
+   ]
+  },
+  {
+   "id": "hdr_pq",
+   "name": "HDR PQ",
+   "priority": "P2",
+   "status": "planned",
+   "acceptance": [
+    "Maintains PQ transfer metadata and validates preview/export transform."
+   ]
+  },
+  {
+   "id": "hdr_hlg",
+   "name": "HDR HLG",
+   "priority": "P2",
+   "status": "planned",
+   "acceptance": [
+    "Maintains HLG transfer metadata and validates preview/export transform."
+   ]
+  },
+  {
+   "id": "wide_gamut",
+   "name": "Wide-gamut workflows",
+   "priority": "P2",
+   "status": "partial",
+   "acceptance": [
+    "Preserves declared color primaries through decode, render, and export."
+   ],
+   "tests": {
+    "unit": [
+     "AcesAndCameraGamutsRotateByTheirPublishedMatricesAndKeepWhiteWhite",
+     "SceneReferredSpacesAreNamedAndLogFootageReachesTheDisplayNeutralGreyAtGreyAndHighlightsUnclipped"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "render/ColorManagement.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "color_match",
+   "name": "Color match",
+   "priority": "P2",
+   "status": "planned",
+   "acceptance": [
+    "Produces reviewable match parameters rather than destructive pixel changes."
+   ]
+  },
+  {
+   "id": "look_presets",
+   "name": "Look presets",
+   "priority": "P1",
+   "status": "planned",
+   "acceptance": [
+    "Stores non-destructive versioned grade presets."
+   ]
+  }
+ ]
+}

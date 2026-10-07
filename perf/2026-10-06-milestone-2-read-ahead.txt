@@ -1,0 +1,10 @@
+Command: scripts\bench.bat --playback
+Build: Release, MSVC / VS 18, FFmpeg enabled
+Fixture: bars-2997.mp4 (H.264, 320x180, 30000/1001 fps, GOP 30, 4 seconds)
+
+Cutline playback latency benchmark
+  seek request -> raw frame cached   n=  80  median    1.139  p95    1.944  p99    2.122  max    4.793 ms
+  cached raw frame -> composed frame n=  80  median    0.357  p95    0.426  p99    0.695  max    0.783 ms
+      queued 83, completed 83, consumed from read-ahead 80
+
+The extra queued/completed work comes from automatic one-frame look-ahead during the render phase; all 80 requested frames had completed before their render timing began.

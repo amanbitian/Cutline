@@ -1,0 +1,7 @@
+Cutline GPU benchmark
+
+== GPU compositor, 1080p, 8-bit sources, adapter: AMD Radeon AI PRO R9700 ===
+  1 track(s), 3 effects: software 36.9 ms, GPU 2.7 ms (upload 0.4, on the card 0.26, read back 2.0) -> 13.6x
+  2 track(s), 3 effects: software 77.3 ms, GPU 3.3 ms (upload 1.0, on the card 0.33, read back 2.1) -> 23.1x
+  4 track(s), 3 effects: software 153.7 ms, GPU 4.5 ms (upload 1.8, on the card 0.40, read back 2.3) -> 34.4x
+  1080p H.264 read + one GPU layer: software decode + upload 5.29 ms (decode alone 3.26), hardware decode, no copy 1.98 ms -> 2.67x

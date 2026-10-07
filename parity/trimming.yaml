@@ -1,0 +1,250 @@
+{
+ "domain": "trimming",
+ "feature_defaults": {
+  "implementation": {
+   "components": [],
+   "notes": "No dedicated production runtime exists."
+  },
+  "tests": {
+   "unit": [],
+   "integration": [],
+   "fixture": []
+  },
+  "platforms": {
+   "windows": "target",
+   "macos": "future",
+   "linux": "future"
+  },
+  "hardware": {
+   "cpu_fallback": "required",
+   "gpu_optional": true,
+   "pro_io": "not_required"
+  },
+  "known_gaps": [
+   "No validated native runtime yet."
+  ],
+  "licensing_notes": "No license review recorded."
+ },
+ "features": [
+  {
+   "id": "clip_selection",
+   "name": "Clip selection",
+   "priority": "P0",
+   "status": "prototype",
+   "implementation": {
+    "components": [
+     "app.js"
+    ],
+    "notes": "Browser prototype selection only; it is not authoritative project state."
+   },
+   "acceptance": [
+    "Selection maps to durable clip identities and command targets."
+   ]
+  },
+  {
+   "id": "snapping",
+   "name": "Snapping",
+   "priority": "P0",
+   "status": "prototype",
+   "implementation": {
+    "components": [
+     "app.js"
+    ],
+    "notes": "Browser UI heuristic only."
+   },
+   "acceptance": [
+    "Snap candidates are resolved exactly at sequence time."
+   ]
+  },
+  {
+   "id": "trim_start",
+   "name": "Trim start",
+   "priority": "P0",
+   "status": "implemented",
+   "acceptance": [
+    "Changes an editable clip start while preserving valid source range."
+   ],
+   "tests": {
+    "unit": [
+     "TrimIsClampedToTheMediaDuration"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "core/project/ProjectStore.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "trim_end",
+   "name": "Trim end",
+   "priority": "P0",
+   "status": "implemented",
+   "acceptance": [
+    "Changes an editable clip end while preserving valid source range."
+   ],
+   "tests": {
+    "unit": [
+     "TrimIsClampedToTheMediaDuration"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "core/project/ProjectStore.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "ripple_trim",
+   "name": "Ripple trim",
+   "priority": "P0",
+   "status": "planned",
+   "acceptance": [
+    "Adjusts adjacent downstream clips according to track ripple policy."
+   ]
+  },
+  {
+   "id": "roll_trim",
+   "name": "Roll trim",
+   "priority": "P1",
+   "status": "planned",
+   "acceptance": [
+    "Moves a shared edit point while preserving combined duration."
+   ]
+  },
+  {
+   "id": "slip_edit",
+   "name": "Slip edit",
+   "priority": "P1",
+   "status": "planned",
+   "acceptance": [
+    "Moves source range while keeping clip timeline placement unchanged."
+   ]
+  },
+  {
+   "id": "slide_edit",
+   "name": "Slide edit",
+   "priority": "P1",
+   "status": "planned",
+   "acceptance": [
+    "Moves a clip while counter-trimming eligible adjacent clips."
+   ]
+  },
+  {
+   "id": "rate_stretch",
+   "name": "Rate stretch",
+   "priority": "P1",
+   "status": "planned",
+   "acceptance": [
+    "Changes clip duration with an explicit rational playback-rate transform."
+   ]
+  },
+  {
+   "id": "ripple_delete",
+   "name": "Ripple delete",
+   "priority": "P0",
+   "status": "implemented",
+   "implementation": {
+    "components": [
+     "core/project/ProjectStore.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   },
+   "acceptance": [
+    "Deletes selection and closes the intended gaps transactionally."
+   ],
+   "tests": {
+    "unit": [
+     "RippleDeleteClosesTheGap",
+     "UndoReversesARippleDeleteIncludingTheShift"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   }
+  },
+  {
+   "id": "lift",
+   "name": "Lift",
+   "priority": "P0",
+   "status": "implemented",
+   "acceptance": [
+    "Removes selected material without shifting unselected material."
+   ],
+   "tests": {
+    "unit": [
+     "UndoAndRedoRestoreExactState"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "core/project/ProjectStore.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "extract",
+   "name": "Extract",
+   "priority": "P0",
+   "status": "partial",
+   "acceptance": [
+    "Removes a marked range and ripples applicable tracks."
+   ],
+   "tests": {
+    "unit": [
+     "RippleDeleteClosesTheGap"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "core/project/ProjectStore.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "trim_mode_feedback",
+   "name": "Trim mode feedback",
+   "priority": "P1",
+   "status": "planned",
+   "acceptance": [
+    "UI reports active trim mode and affected edit sides accurately."
+   ]
+  }
+ ]
+}

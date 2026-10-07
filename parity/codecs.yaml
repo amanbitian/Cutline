@@ -1,0 +1,206 @@
+{
+ "domain": "codecs",
+ "feature_defaults": {
+  "implementation": {
+   "components": [],
+   "notes": "No dedicated production runtime exists."
+  },
+  "tests": {
+   "unit": [],
+   "integration": [],
+   "fixture": []
+  },
+  "platforms": {
+   "windows": "target",
+   "macos": "future",
+   "linux": "future"
+  },
+  "hardware": {
+   "cpu_fallback": "required",
+   "gpu_optional": true,
+   "pro_io": "not_required"
+  },
+  "known_gaps": [
+   "No validated native runtime yet."
+  ],
+  "licensing_notes": "No license review recorded."
+ },
+ "features": [
+  {
+   "id": "ffmpeg_media_abstraction",
+   "name": "Production media abstraction",
+   "priority": "P0",
+   "status": "implemented",
+   "acceptance": [
+    "Provides legal/configured codec capability discovery and structured errors."
+   ],
+   "tests": {
+    "unit": [
+     "TheRegistryOpensSyntheticPaths",
+     "FFmpegProviderRegistersWhenAvailable"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "media/Source.h",
+     "media/ffmpeg/FFmpegSource.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "h264_decode",
+   "name": "H.264 decode",
+   "priority": "P0",
+   "status": "implemented",
+   "acceptance": [
+    "Software decoder produces timestamped frames from supported H.264 media."
+   ],
+   "tests": {
+    "unit": [
+     "FractionalFrameRatesAreReportedExactly",
+     "SeekingBackwardsReturnsTheCorrectFrame"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "media/ffmpeg/FFmpegSource.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "hevc_decode",
+   "name": "HEVC decode",
+   "priority": "P0",
+   "status": "partial",
+   "acceptance": [
+    "Decodes available/licensed HEVC profiles or reports explicit support limits."
+   ]
+  },
+  {
+   "id": "mp4_mov_demux",
+   "name": "MP4/MOV demux",
+   "priority": "P0",
+   "status": "implemented",
+   "acceptance": [
+    "Extracts streams, timestamps, metadata, and packet data from MP4/MOV."
+   ],
+   "tests": {
+    "unit": [
+     "FractionalFrameRatesAreReportedExactly",
+     "InterleavedH264AndAacKeepTheirAudioWhileTheVideoSeeks",
+     "AlternatingAudioAndVideoReadsDoNotCorruptEachOther"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "media/ffmpeg/FFmpegSource.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "common_audio_decode",
+   "name": "Common audio decode",
+   "priority": "P0",
+   "status": "implemented",
+   "acceptance": [
+    "Decodes common audio formats into the audio engine format."
+   ],
+   "tests": {
+    "unit": [
+     "AudioDecodesToTheRequestedRateAndLayout",
+     "AudioReadsAreContinuousAcrossBlocks",
+     "AudioMatchesTheReferenceSignalAtAnyStartSample",
+     "ConsecutiveAudioBlocksReproduceTheWholeSignal",
+     "AudioAtAnotherRateStaysAlignedWithTheSource",
+     "TheTailOfAResampledFileIsNotDiscarded"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "media/ffmpeg/FFmpegSource.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "still_image_decode",
+   "name": "Still image decode",
+   "priority": "P0",
+   "status": "partial",
+   "acceptance": [
+    "Loads supported still images with orientation and color metadata."
+   ]
+  },
+  {
+   "id": "vfr_timestamp_map",
+   "name": "VFR timestamp map",
+   "priority": "P0",
+   "status": "implemented",
+   "implementation": {
+    "components": [
+     "media/TimestampMap.cpp",
+     "media/ffmpeg/FFmpegSource.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   },
+   "acceptance": [
+    "Maps decoded VFR frame timestamps without nominal frame-duration assumptions."
+   ],
+   "tests": {
+    "unit": [
+     "TimestampMapIsBuiltFromRealPackets",
+     "VariableFrameRateSourcesHoldFramesForLonger",
+     "TimestampsAreRelativeToSourceTimeZero",
+     "ScanningTimestampsDoesNotDisturbAReadInProgress"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   }
+  },
+  {
+   "id": "codec_license_reporting",
+   "name": "Codec license reporting",
+   "priority": "P1",
+   "status": "planned",
+   "acceptance": [
+    "Build/runtime reports enabled codec provenance and license constraints."
+   ]
+  }
+ ]
+}

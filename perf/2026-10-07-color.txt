@@ -1,0 +1,39 @@
+Cutline colour benchmark: what one colour tool costs on a 1080p frame (scripts\bench.bat --color)
+Machine: AMD Radeon AI PRO R9700, 32 hardware threads, Windows 11, Release build (MSVC /O2), float source, 8-bit output.
+Each case is one clip with one effect; "software" is the whole frame composed on the CPU (decode excluded: the source is a held
+picture), "GPU" is the whole frame on the card including the upload and the read-back, "on the card" is the shaders alone.
+The first case has no effect at all and is the floor every other case sits on.
+
+BEFORE (one thread; software compositor as it was at the start of the day, 20 frames per case):
+  basic color (grade)   software     24.4 ms   GPU    4.4 ms (on the card 0.33)
+  LUT 17^3              software     55.8 ms   GPU: not on the card (the lut effect)
+  LUT 33^3              software     60.6 ms   GPU: not on the card (the lut effect)
+  LUT 65^3              software     62.6 ms   GPU: not on the card (the lut effect)
+  color wheels          software     67.5 ms   GPU: not on the card (the color_wheels effect)
+  curves                software     39.6 ms   GPU: not on the card (the curves effect)
+  hue curves            software    141.8 ms   GPU: not on the card (the hue_curves effect)
+  color adjust          software     44.0 ms   GPU: not on the card (the color_adjust effect)
+  HSL secondary         software     80.8 ms   GPU: not on the card (the hsl_secondary effect)
+  channel mixer         software     22.7 ms   GPU: not on the card (the channel_mixer effect)
+  tint                  software     25.5 ms   GPU: not on the card (the tint effect)
+  black and white       software     26.9 ms   GPU: not on the card (the black_and_white effect)
+
+AFTER (rows on every core, LUT sampler restructured, colour tools on the card; 40 frames per case):
+  (no effect: the floor)software     12.0 ms   GPU    4.0 ms (on the card 0.34)
+  basic color (grade)   software     12.3 ms   GPU    3.6 ms (on the card 0.34)
+  LUT 17^3              software     13.9 ms   GPU    3.6 ms (on the card 0.34)
+  LUT 33^3              software     14.9 ms   GPU    3.7 ms (on the card 0.35)
+  LUT 65^3              software     14.5 ms   GPU    3.7 ms (on the card 0.35)
+  color wheels          software     14.1 ms   GPU    4.2 ms (on the card 0.34)
+  curves                software     14.0 ms   GPU    3.6 ms (on the card 0.34)
+  hue curves            software     18.4 ms   GPU    3.7 ms (on the card 0.35)
+  color adjust          software     14.1 ms   GPU    3.6 ms (on the card 0.34)
+  HSL secondary         software     16.7 ms   GPU    3.7 ms (on the card 0.34)
+  channel mixer         software     12.2 ms   GPU    5.0 ms (on the card 0.34)
+  tint                  software     12.0 ms   GPU    3.7 ms (on the card 0.35)
+  black and white       software     13.8 ms   GPU    3.7 ms (on the card 0.34)
+
+What this does and does not say. The software figures depend on the number of cores (32 threads here; a 4-core machine will
+gain a third of this). The floor of about 12 ms is the rest of the frame (picture copy, compositing, float to 8-bit), not
+colour work, and is not yet optimised. The GPU wall time is dominated by uploading the picture and reading the result back
+(about 3.3 ms together), not by the shaders. One adapter, one vendor.

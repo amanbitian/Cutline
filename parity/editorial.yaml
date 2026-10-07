@@ -1,0 +1,258 @@
+{
+ "domain": "editorial",
+ "feature_defaults": {
+  "implementation": {
+   "components": [],
+   "notes": "No dedicated production runtime exists."
+  },
+  "tests": {
+   "unit": [],
+   "integration": [],
+   "fixture": []
+  },
+  "platforms": {
+   "windows": "target",
+   "macos": "future",
+   "linux": "future"
+  },
+  "hardware": {
+   "cpu_fallback": "required",
+   "gpu_optional": true,
+   "pro_io": "not_required"
+  },
+  "known_gaps": [
+   "No validated native runtime yet."
+  ],
+  "licensing_notes": "No license review recorded."
+ },
+ "features": [
+  {
+   "id": "source_monitor",
+   "name": "Source Monitor",
+   "priority": "P0",
+   "status": "planned",
+   "acceptance": [
+    "Loads a selected source and presents decoded source frames."
+   ]
+  },
+  {
+   "id": "program_monitor",
+   "name": "Program Monitor",
+   "priority": "P0",
+   "status": "partial",
+   "acceptance": [
+    "Presents compiled sequence frames without browser-video authority."
+   ],
+   "tests": {
+    "unit": [
+     "ThePresenterRendersTheLatestRequestAndDropsWhatWasOvertaken",
+     "TheMonitorPicksARenderSizeFitsThePictureAndDrawsSafeMargins"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "ui/Monitor.cpp",
+     "app/MonitorItem.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "source_mark_in",
+   "name": "Source mark in",
+   "priority": "P0",
+   "status": "planned",
+   "acceptance": [
+    "Sets an exact RationalTime source in point."
+   ]
+  },
+  {
+   "id": "source_mark_out",
+   "name": "Source mark out",
+   "priority": "P0",
+   "status": "planned",
+   "acceptance": [
+    "Sets an exact RationalTime source out point."
+   ]
+  },
+  {
+   "id": "source_clear_marks",
+   "name": "Clear source marks",
+   "priority": "P0",
+   "status": "planned",
+   "acceptance": [
+    "Clears source in/out without changing media metadata."
+   ]
+  },
+  {
+   "id": "subclip_creation",
+   "name": "Subclip creation",
+   "priority": "P1",
+   "status": "planned",
+   "acceptance": [
+    "Creates a durable source range reference that survives reopen."
+   ]
+  },
+  {
+   "id": "match_frame",
+   "name": "Match frame",
+   "priority": "P1",
+   "status": "planned",
+   "acceptance": [
+    "Finds the source frame used by the selected sequence clip."
+   ]
+  },
+  {
+   "id": "reverse_match_frame",
+   "name": "Reverse match frame",
+   "priority": "P1",
+   "status": "planned",
+   "acceptance": [
+    "Finds each sequence use of the current source frame."
+   ]
+  },
+  {
+   "id": "three_point_edit",
+   "name": "Three-point edit",
+   "priority": "P0",
+   "status": "implemented",
+   "acceptance": [
+    "Resolves source and sequence marks into a valid insert or overwrite command."
+   ],
+   "tests": {
+    "unit": [
+     "ThreePointEditsResolveTheMissingPointAndRefuseWhatCannotBe",
+     "InsertingAndOverwritingASourcePlacesLinkedPictureAndSoundAndPastingCarriesEffects"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "ui/EditPlanner.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "four_point_edit",
+   "name": "Four-point edit",
+   "priority": "P1",
+   "status": "planned",
+   "acceptance": [
+    "Applies an explicit fit policy when source and target durations differ."
+   ]
+  },
+  {
+   "id": "source_patching",
+   "name": "Source patching",
+   "priority": "P0",
+   "status": "planned",
+   "acceptance": [
+    "Maps source AV components to explicitly selected destination tracks."
+   ]
+  },
+  {
+   "id": "track_targeting",
+   "name": "Track targeting",
+   "priority": "P0",
+   "status": "planned",
+   "acceptance": [
+    "Restricts edit commands to intended sequence tracks."
+   ]
+  },
+  {
+   "id": "transport_jkl",
+   "name": "J/K/L transport",
+   "priority": "P0",
+   "status": "implemented",
+   "acceptance": [
+    "Shortcuts change the real transport state, including reverse playback."
+   ],
+   "tests": {
+    "unit": [
+     "TheTransportPlaysShuttlesStepsAndStopsOrLoopsAtTheEnds"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "ui/Transport.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "frame_step",
+   "name": "Frame step",
+   "priority": "P0",
+   "status": "implemented",
+   "acceptance": [
+    "Steps exact sequence frames at the sequence timebase."
+   ],
+   "tests": {
+    "unit": [
+     "TheTransportPlaysShuttlesStepsAndStopsOrLoopsAtTheEnds"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "ui/Transport.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "sequence_start_end",
+   "name": "Sequence start/end navigation",
+   "priority": "P0",
+   "status": "planned",
+   "acceptance": [
+    "Moves playhead to deterministic sequence boundaries."
+   ]
+  },
+  {
+   "id": "master_clip_properties",
+   "name": "Master clip properties",
+   "priority": "P1",
+   "status": "planned",
+   "acceptance": [
+    "Edits supported media interpretation settings through commands."
+   ]
+  },
+  {
+   "id": "replace_edit",
+   "name": "Replace edit",
+   "priority": "P1",
+   "status": "planned",
+   "acceptance": [
+    "Replaces a target clip while preserving declared timing and links."
+   ]
+  }
+ ]
+}

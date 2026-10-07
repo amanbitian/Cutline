@@ -1,0 +1,29 @@
+# Local toolchains and downloaded dependencies
+/.tools/
+/vcpkg_installed/
+
+# CMake and compiler output
+/build/
+/out/
+/cmake-build-*/
+CMakeUserPresets.json
+
+# Generated local artifacts
+/artifacts/
+/__pycache__/
+*.py[cod]
+*.tmp
+*.log
+
+# Local application state
+/project-state.json
+
+# IDE and operating-system files
+/.vs/
+/.vscode/
+/.idea/
+*.user
+*.suo
+.DS_Store
+Thumbs.db
+

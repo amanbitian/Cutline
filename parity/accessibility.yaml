@@ -1,0 +1,13 @@
+{
+  "domain": "accessibility",
+  "feature_defaults": {"implementation":{"components":[],"notes":"No accessibility implementation has been validated."},"tests":{"unit":[],"integration":[],"fixture":[]},"platforms":{"windows":"target","macos":"future","linux":"future"},"hardware":{"cpu_fallback":"required","gpu_optional":false,"pro_io":"not_required"},"known_gaps":["Accessibility validation must involve platform APIs and user testing."],"licensing_notes":"No license review recorded."},
+  "features": [
+    {"id":"keyboard_navigation","name":"Keyboard navigation","priority":"P1","status":"planned","acceptance":["All primary editorial actions have discoverable keyboard operation." ]},
+    {"id":"screen_reader_semantics","name":"Screen reader semantics","priority":"P1","status":"planned","acceptance":["Native UI exposes meaningful names, roles, values, and state." ]},
+    {"id":"high_contrast","name":"High contrast","priority":"P1","status":"planned","acceptance":["UI remains usable under supported system contrast settings." ]},
+    {"id":"ui_scaling","name":"UI scaling","priority":"P1","status":"planned","acceptance":["UI supports documented DPI/text scale ranges without obscuring controls." ]},
+    {"id":"color_accessibility","name":"Color accessibility","priority":"P1","status":"planned","acceptance":["Critical state is not communicated by color alone." ]},
+    {"id":"shortcut_customization","name":"Shortcut customization","priority":"P2","status":"planned","acceptance":["Allows conflict-checked remapping of supported shortcuts." ]},
+    {"id":"caption_accessibility","name":"Caption accessibility","priority":"P2","status":"planned","acceptance":["Provides authoring checks for reading speed, overlap, and safe area." ]}
+  ]
+}

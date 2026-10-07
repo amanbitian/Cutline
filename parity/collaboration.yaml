@@ -1,0 +1,13 @@
+{
+  "domain": "collaboration",
+  "feature_defaults": {"implementation":{"components":[],"notes":"No collaboration service exists."},"tests":{"unit":[],"integration":[],"fixture":[]},"platforms":{"windows":"target","macos":"future","linux":"future"},"hardware":{"cpu_fallback":"required","gpu_optional":true,"pro_io":"not_required"},"known_gaps":["Multi-user synchronization is outside P0."],"licensing_notes":"Identity, tenancy, encryption, retention, and audit policy are required before deployment."},
+  "features": [
+    {"id":"project_permissions","name":"Project permissions","priority":"P3","status":"planned","acceptance":["Authorizes read/edit/review/export actions by authenticated role." ]},
+    {"id":"shared_project_state","name":"Shared project state","priority":"P3","status":"planned","acceptance":["Synchronizes command envelopes with conflict and revision rules." ]},
+    {"id":"bin_locks","name":"Bin locks","priority":"P3","status":"planned","acceptance":["Coordinates exclusive operations while permitting safe reads." ]},
+    {"id":"sequence_locks","name":"Sequence locks","priority":"P3","status":"planned","acceptance":["Protects conflict-prone sequence edits with explicit lock lifecycle." ]},
+    {"id":"conflict_resolution","name":"Conflict resolution","priority":"P3","status":"planned","acceptance":["Reports and resolves concurrent edit conflicts without silent data loss." ]},
+    {"id":"production_history","name":"Production history","priority":"P3","status":"planned","acceptance":["Records attributable collaborative command history and restorability." ]},
+    {"id":"shared_media_manifest","name":"Shared media manifest","priority":"P3","status":"planned","acceptance":["Shares media identity/alias metadata without assuming identical paths." ]}
+  ]
+}

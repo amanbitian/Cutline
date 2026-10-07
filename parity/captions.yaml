@@ -1,0 +1,14 @@
+{
+  "domain": "captions",
+  "feature_defaults": {"implementation":{"components":[],"notes":"No dedicated production runtime exists."},"tests":{"unit":[],"integration":[],"fixture":[]},"platforms":{"windows":"target","macos":"future","linux":"future"},"hardware":{"cpu_fallback":"required","gpu_optional":true,"pro_io":"not_required"},"known_gaps":["No validated native runtime yet."],"licensing_notes":"No license review recorded."},
+  "features": [
+    {"id":"caption_track","name":"Caption track","priority":"P1","status":"prototype","implementation":{"components":["app.js"],"notes":"Browser prototype state only."},"acceptance":["Stores timed caption cues as durable sequence entities." ]},
+    {"id":"caption_editing","name":"Caption editing","priority":"P1","status":"planned","acceptance":["Edits text and timing through commands with range validation." ]},
+    {"id":"caption_styles","name":"Caption styles","priority":"P1","status":"planned","acceptance":["Applies reusable styles in preview and supported exports." ]},
+    {"id":"caption_import","name":"Caption import","priority":"P1","status":"planned","acceptance":["Imports supported timed text while retaining parse diagnostics." ]},
+    {"id":"caption_export","name":"Caption export","priority":"P1","status":"planned","acceptance":["Exports selected caption standards with timing verification." ]},
+    {"id":"auto_caption","name":"Automatic captions","priority":"P2","status":"planned","acceptance":["Stores model/provider provenance and requires human review." ]},
+    {"id":"caption_translation","name":"Caption translation","priority":"P2","status":"planned","acceptance":["Produces reviewable translated cues without overwriting originals." ]},
+    {"id":"caption_accessibility_qc","name":"Caption accessibility QC","priority":"P2","status":"planned","acceptance":["Reports timing, length, and overlap violations deterministically." ]}
+  ]
+}

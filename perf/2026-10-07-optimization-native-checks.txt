@@ -1,0 +1,972 @@
+Start testing: Oct 07 16:00 India Standard Time
+----------------------------------------------------------
+1/12 Testing: cutline_core_tests
+1/12 Test: cutline_core_tests
+Command: "F:/AAA Project/video_editor/build/native/cutline_core_tests.exe"
+Directory: F:/AAA Project/video_editor/build/native
+"cutline_core_tests" start time: Oct 07 16:00 India Standard Time
+Output:
+----------------------------------------------------------
+  ok   RationalTimeArithmeticStaysExact
+  ok   RationalTimeConvertsFramesAtFractionalRates
+  ok   DropFrameTimecodeRoundTrips
+  ok   DropFrameRejectsSkippedFrameNumbers
+  ok   TimecodeDisplaySnapsToTheNearestFrame
+  ok   NegativeTimesFormatWithASign
+  ok   TickTimebaseIsLosslessForBroadcastRates
+  ok   TickTimebaseIsLosslessForAudioSampleRates
+  ok   RationalTimeRejectsZeroDenominator
+  ok   RationalTimeDetectsOverflow
+  ok   TickConversionSurvivesLongTimelinesAtEveryBroadcastRate
+  ok   TickOrderingFollowsTimeOrderingNearAnHour
+  ok   RescaleAndFrameConversionSurviveLargeTimes
+  ok   GenuineOverflowStillThrowsRatherThanWrapping
+  ok   RoundingModesAreUnchangedByTheWiderArithmetic
+  ok   AnimatedValueHoldsConstantWithoutKeyframes
+  ok   AnimatedValueInterpolatesLinearly
+  ok   AnimatedValueClampsOutsideTheKeyframeRange
+  ok   HoldInterpolationDoesNotRamp
+  ok   EaseInOutIsMonotonicAndSymmetric
+  ok   BezierHandlesShapeTheCurve
+  ok   SettingAKeyframeAtTheSameTimeReplacesIt
+  ok   RemovingAKeyframeReportsWhetherItExisted
+  ok   KeyframesSortRegardlessOfInsertionOrder
+  ok   MultiComponentValuesInterpolatePerComponent
+  ok   InterpolationNamesRoundTrip
+  ok   SplitKeyframesReproducesTheOriginalCurveOnBothSides
+  ok   SplitKeyframesPlacesBoundaryKeysAndRebasesTheRightHalf
+  ok   SplitKeyframesHandlesNothingAndRejectsDisorder
+  ok   SplitKeyframesTurnsEasedSegmentsIntoExplicitBezierHandles
+  ok   CommandTypeNamesRoundTrip
+  ok   ValidateRejectsAMismatchedPayload
+  ok   ValidateRequiresEnvelopeFields
+  ok   CreateProjectIsTheOnlyCommandAllowedWithoutAProjectId
+  ok   ClipSourceReferenceMustMatchItsSourceKind
+  ok   ClipRangeAndRateMustBePositive
+  ok   DropFrameSequencesMustUseA1001BasedRate
+  ok   TrackGainAndPanAreBounded
+  ok   TrackRoutingIsValidatedBeforeItReachesTheStore
+  ok   TransitionNeedsAtLeastOneSide
+  ok   EffectParameterNamesMustBeUnique
+  ok   EffectRegistryDescribesUniqueBuiltInsWithValidDefaults
+  ok   RegisteredEffectsRejectInvalidParametersButUnknownPluginEffectsRemainSerializable
+  ok   MediaStreamsMustHaveDistinctIndicesAndValidGeometry
+  ok   ImportMediaRequiresAPositiveDuration
+  ok   PayloadJsonEscapesControlCharactersAndQuotes
+  ok   PayloadJsonWritesRationalTimesAsPairs
+  ok   RenderVersionsSelectNamedDecisionsAndUnknownOnesAreRefused
+core: 48/48 passed
+<end of output>
+Test time =   0.27 sec
+----------------------------------------------------------
+Test Passed.
+"cutline_core_tests" end time: Oct 07 16:00 India Standard Time
+"cutline_core_tests" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2/12 Testing: cutline_store_tests
+2/12 Test: cutline_store_tests
+Command: "F:/AAA Project/video_editor/build/native/cutline_store_tests.exe"
+Directory: F:/AAA Project/video_editor/build/native
+"cutline_store_tests" start time: Oct 07 16:00 India Standard Time
+Output:
+----------------------------------------------------------
+  ok   InitializeCreatesSchemaAtCurrentVersion
+  ok   CreateProjectEstablishesIdentityExactlyOnce
+  ok   CommandsAreRejectedBeforeAProjectExists
+  ok   CommandsForAnotherProjectAreRejected
+  ok   StaleRevisionIsRejected
+  ok   ReplayingACommandIsIdempotent
+  ok   OverlappingClipsOnOneTrackAreRejected
+  ok   MovingAClipOntoAnotherIsRejected
+  ok   ClipsCannotMoveBetweenVideoAndAudioTracks
+  ok   TrimIsClampedToTheMediaDuration
+  ok   InsertIsClampedToTheMediaDuration
+  ok   LockedTracksRefuseEdits
+  ok   SplitProducesTwoAdjacentClipsAtExactSourceTime
+  ok   SplitOutsideTheClipIsRejected
+  ok   RippleDeleteClosesTheGap
+  ok   ChangingSpeedRechecksNeighbours
+  ok   SequencesCanBeNestedInsideOtherSequences
+  ok   SelfNestingAndNestingCyclesAreRejected
+  ok   AdjustmentClipsNeedNoSourceAndOnlySitOnVideoTracks
+  ok   EffectsAttachToClipsTracksAndSequences
+  ok   EffectsOnAMissingOwnerAreRejected
+  ok   IntrinsicEffectsCannotBeRemoved
+  ok   ParameterDimensionIsEnforced
+  ok   KeyframesPersistAndReplaceAtTheSameTime
+  ok   SplitCopiesTheEffectStackIncludingKeyframes
+  ok   AnimatedMasksPersistUndoAndSplitWithTheirEffect
+  ok   MaskEditsRespectTrackLocksAndRejectInvalidDocuments
+  ok   HeadTrimKeepsMaskAnimationOnTheSameSourceFrames
+  ok   TransitionsJoinClipsOnTheSameTrack
+  ok   TransitionsCannotReferenceAClipOnAnotherTrack
+  ok   ASingleSidedTransitionIsAFadeFromBlack
+  ok   DeletingAClipRemovesTransitionsThatTouchIt
+  ok   MarkersAttachToSequencesClipsAndMedia
+  ok   UndoAndRedoRestoreExactState
+  ok   UndoWalksBackMultipleLevels
+  ok   UndoRestoresCascadedEffectsAndKeyframes
+  ok   UndoRestoresAWholeTrackWithItsContents
+  ok   UndoReversesARippleDeleteIncludingTheShift
+  ok   UndoingAnEffectRemovesItsParametersWithoutConflicting
+  ok   RedoingADeleteReplaysItsTriggerCascade
+  ok   ADeepUndoRedoCycleOverEveryKindOfEditStaysConsistent
+  ok   ANewCommandDiscardsTheRedoStack
+  ok   UndoAndRedoRefuseWhenTheStackIsEmpty
+  ok   UndoAdvancesTheRevisionRatherThanRewindingIt
+  ok   UndoDoesNotEraseTheJournal
+  ok   HistoryIsBoundedByItsLimit
+  ok   ChangesetHistoryStaysSmallRelativeToTheProject
+  ok   HistoryLabelsDescribeTheEdits
+  ok   MediaInUseCannotBeRemoved
+  ok   RelinkUpdatesThePathAndClearsTheMissingFlag
+  ok   ProxiesAreUndoableAndBecomeStaleWhenSourceIdentityChanges
+  ok   MediaStreamsReplaceWholesale
+  ok   DeletingABinUnfilesItsMediaRatherThanDestroyingIt
+  ok   BinCyclesAreRejected
+  ok   NestedSequenceCannotBeDeletedWhileInUse
+  ok   DuplicateIdentifiersAreRejected
+  ok   TracksCannotShareAnOrderWithinOneSequenceAndType
+  ok   PackageRoundTripsThroughDisk
+  ok   OpeningSomethingThatIsNotAPackageFails
+  ok   CreatingOverAnExistingPackageFails
+  ok   SnapshotsAreWrittenOnTheConfiguredInterval
+  ok   GeneratedProjectIdsAreWellFormedAndUnique
+  ok   SnapshotPolicyIsValidated
+  ok   ATransitionBetweenTwoClipsRequiresThemToBeAdjacent
+  ok   ATransitionMustCoverTheCutItJoins
+  ok   TransitionAlignmentIsEnforcedNotJustRecorded
+  ok   ChangingATransitionsTimingIsValidatedLikeCreatingIt
+  ok   ATransitionCannotBeMovedOntoAnotherTransition
+  ok   SplittingTheOutgoingClipMovesItsTransitionToTheHalfThatNowEndsAtTheCut
+  ok   SplittingTheIncomingClipLeavesItsTransitionOnTheHalfThatStartsAtTheCut
+  ok   MovingAClipAwayDetachesItsTransitionInsteadOfLeavingItDangling
+  ok   MovingAClipToAnotherTrackDetachesItsTransition
+  ok   TrimmingTheJoinedEdgeDetachesTheTransitionButTheFarEdgeDoesNot
+  ok   ChangingSpeedDetachesATransitionOnlyWhenTheJoinedEdgeMoves
+  ok   ValidateDatabaseReportsATransitionThatNoLongerJoinsItsClips
+  ok   ALockedTrackRefusesEveryEditToItsContents
+  ok   ALockedTrackStillAllowsWhatTheLockIsNotFor
+  ok   MovingAClipOntoALockedTrackIsRefusedEvenFromAnUnlockedOne
+  ok   RippleDeleteShiftsATransitionBetweenLaterClips
+  ok   ARandomSessionOfEditsNeverLeavesTheProjectInvalidAndUndoesCompletely
+  ok   AFailureToWriteTheJournalCopyDoesNotFailTheCommand
+  ok   AFailureToWriteASnapshotIsReportedAndLaterEditsStillWork
+  ok   SnapshotsAndJournalFilesAreKeptToAPolicyNotForever
+  ok   ASnapshotIsAValidProjectOfTheRevisionItIsNamedFor
+  ok   SnapshotsAreTakenWhileEditsContinueAndEveryOneIsValid
+  ok   DurabilityIsAChoiceAndTheDefaultIsStatedNotAssumed
+  ok   ClipsCanBeLinkedAndUnlinkedAndTheEditUndoes
+  ok   MovingALinkedClipMovesItsPartnerByTheSameTime
+  ok   ALinkedMoveThatAnyMemberCannotTakeChangesNothing
+  ok   TrimmingALinkedClipsEdgesTrimsItsPartnerByTheSameTime
+  ok   TrimmingLinkedRetimedAndReversedClipsKeepsThemInStep
+  ok   CuttingALinkedClipCutsItsPartnersAndKeepsEachSideJoined
+  ok   ASplitSortsPartnersThatDoNotSpanTheCutIntoTheSideTheyBelongTo
+  ok   CuttingOneLinkedClipAloneLeavesItsRightHalfUnlinked
+  ok   DeletingALinkedClipDeletesItsPartnersAndRippleClosesEachTracksGap
+  ok   EnablingAndRetimingALinkedClipAppliesToItsPartner
+  ok   ARandomSessionOfLinkedEditsKeepsEveryTakeInStepAndUndoesCompletely
+  ok   NewSequencesAreMadeUnderTheCurrentRenderVersionAndAnExplicitOneIsHonoured
+  ok   UpdatingASequenceKeepsItsRenderVersionUnlessAskedToChangeItAndThatIsUndoable
+  ok   APackageMadeBeforeRenderVersionsOpensUnderTheOriginalRules
+  ok   AProjectMadeUnderANewerRenderVersionIsRefusedNotRenderedDifferently
+  ok   EveryRevisionHasAReplayableJournalRecordIncludingUndoAndRedo
+  ok   ACorruptDatabaseIsRebuiltExactlyFromASnapshotAndTheJournal
+  ok   RecoveryFromAnyRevisionBoundaryLandsOnThatRevisionExactly
+  ok   ATornOrMissingRecordStopsRecoveryAtTheLastGoodRevisionAndSaysSo
+  ok   AHealthyDatabaseIsLeftAloneAndAnOlderOneCanBeRolledForward
+  ok   WithNothingToRebuildFromRecoveryFailsClearlyAndTouchesNothing
+  ok   AnOldFormatJournalRecordIsReportedAsNotReplayableNotMisread
+  ok   AClipCanAskToKeepItsPitchWhenRetimedAndTheChoiceSurvivesSplitUndoAndLinks
+  ok   APackageFromBeforeThePitchPolicyOpensWithEveryClipVarispeed
+  ok   APackageFromBeforeAudioRoutingOpensWithEveryTrackGoingToTheMaster
+  ok   RoutingIsRecordedInTheJournalSoRecoveryCanReplayIt
+  ok   TrackingDataIsStoredWithItsClipAndIsAnUndoableEdit
+  ok   TrackingDataThatCouldNotBeReadBackIsRefused
+  ok   ATrackWhoseMediaHasChangedIsReportedStaleAndOthersAreNot
+  ok   APackageFromBeforeStoredTrackingOpensWithAnEmptyTable
+  ok   CollectingAProjectCopiesExactlyWhatItUsesAndTheCopyOpensFromTheFolderAlone
+  ok   WhatCannotBeCollectedIsNamedAndTheFolderIsNotCalledComplete
+  ok   ACollectionIsResumableAndRepairsWhatWasDamagedSinceTheLastRun
+  ok   ACollectedFolderThatIsMovedIsMadeToOpenAgainFromItsManifest
+  ok   CollectionCanBeLimitedToASequenceOrWidenedToEverythingAndCanBeStopped
+  ok   ATranscoderThePlatformSuppliesTakesTheCopiesPlaceAndAFailureIsReported
+  ok   AProjectWithNoPackageOnDiskStillCollectsItsMediaAndSaysNoPackageWasCopied
+  ok   CaptionTracksAndCuesAreProjectDataWithUndoAndImportIsOneEdit
+  ok   CaptionsThatCouldNotBeShownOrReadBackAreRefusedAndNothingIsHalfAdded
+  ok   CaptionsSurviveReopeningAndAnOlderPackageOpensWithNoCaptions
+  ok   AProjectFromBeforeMulticamGetsEmptyMulticamTablesAndMulticamWorkAfterwards
+  ok   AGroupOfCommandsIsOneUndoStepAndHappensWholeOrNotAtAll
+  ok   TheUndoLimitCountsStepsSoAHugeEditIsOneStepAndIsNeverCutInTwo
+store: 129/129 passed
+<end of output>
+Test time =   9.28 sec
+----------------------------------------------------------
+Test Passed.
+"cutline_store_tests" end time: Oct 07 16:01 India Standard Time
+"cutline_store_tests" time elapsed: 00:00:09
+----------------------------------------------------------
+
+3/12 Testing: cutline_timeline_tests
+3/12 Test: cutline_timeline_tests
+Command: "F:/AAA Project/video_editor/build/native/cutline_timeline_tests.exe"
+Directory: F:/AAA Project/video_editor/build/native
+"cutline_timeline_tests" start time: Oct 07 16:01 India Standard Time
+Output:
+----------------------------------------------------------
+  ok   CompileResolvesTheActiveClipAndSourceTime
+  ok   TimeRemapCurvesCreateRampsFreezesAndReverseSegments
+  ok   ClipRangesAreHalfOpen
+  ok   CompileIsEmptyInAGap
+  ok   DisabledClipsContributeNothing
+  ok   CompileRejectsAnInvalidSequence
+  ok   CompositeOrderFollowsTrackOrderNotTrackId
+  ok   AudioIsOrderedToo
+  ok   MulticamSynchronisesBuildsAnAngleMonitorRecordsCutsAndFlattens
+  ok   MulticamAudioSyncUsesLocalCrossCorrelationAndReportsConfidence
+  ok   MutedVideoTracksAreExcluded
+  ok   MutedAudioTracksAreExcluded
+  ok   SoloSuppressesOtherTracksOfTheSameMedium
+  ok   ExportCanIgnoreMonitoringState
+  ok   LockedTracksStillPlay
+  ok   TrackGainAndPanReachTheAudioPlan
+  ok   PlaybackRateCompressesTimelineAndAdvancesSourceFaster
+  ok   SlowMotionStretchesTheTimeline
+  ok   ReversedClipsReadBackwardsFromTheOutPoint
+  ok   SourceTimeStaysExactAtFractionalRates
+  ok   ATransitionReportsBothSidesAndItsProgress
+  ok   TransitionProgressRunsFromZeroToOne
+  ok   ASingleSidedTransitionReportsOneSource
+  ok   TransitionSourceTimesAreClampedToTheirClips
+  ok   ClipEffectsAreSampledInClipLocalTime
+  ok   TrackEffectsFollowClipEffects
+  ok   DisabledEffectsAreDropped
+  ok   EffectsAreSampledInStackOrder
+  ok   SequenceEffectsReachThePlan
+  ok   NestedSequencesResolveThroughToTheirSources
+  ok   ANestedSequencesOwnEffectsDoNotBecomeTheOuterSequencesEffects
+  ok   NestedContentCompositesBeneathItsHost
+  ok   NestingDepthIsBounded
+  ok   TimelineBoundariesMatchFullScanAcrossGapsTransitionsAndExactEdges
+  ok   CompileRangeReportsEverySourceInTheWindow
+  ok   CompileRangeFindsClipsShorterThanAFrame
+  ok   CompileRangeRejectsAnEmptyWindow
+  ok   SequenceDurationIsTheEndOfItsLastClip
+  ok   LoaderBuildsASnapshotThatCompiles
+  ok   LoadedKeyframesSampleCorrectly
+  ok   LoadedTransitionsAreActiveAtTheRightTimes
+  ok   LoaderReflectsEditsAfterAReload
+  ok   LoadingAnUnknownSequenceFails
+  ok   LoaderFollowsNestedSequences
+  ok   CompilingASequenceInPlaceMatchesCompilingItsGraph
+  ok   PerFrameCompileCostDoesNotGrowWithTheNumberOfClips
+  ok   LoadingASequenceDoesNotReadOtherSequencesEffects
+  ok   SplittingAClipLeavesItsPlaybackUnchangedAtEveryRateAndDirection  (2 s)
+  ok   SplittingAReversedClipGivesTheLeftHalfTheTailOfItsSource
+  ok   SplittingAnAnimatedClipPreservesItsAnimationForEveryInterpolation
+  ok   SplittingPreservesMultiComponentAnimationOnARetimedClip
+  ok   SplittingTwiceStillPreservesTheAnimation
+  ok   RippleDeleteShiftsTransitionsByTheClipsTheyAreAttachedTo
+  ok   UndoingASplitRestoresPlaybackAndAnimationExactly
+  ok   TrimmingAClipsHeadKeepsEveryKeyframeOnTheFrameItWasOn
+  ok   OnlyAHeadTrimMovesKeyframesAndUndoPutsThemBack
+  ok   MovingAClipTakesItsAnimationWithIt
+  ok   TheRenderVersionTravelsFromTheDatabaseThroughTheSnapshotToThePlan
+  ok   ThePitchPolicyReachesTheSnapshot
+  ok   RoutingReachesTheSnapshotAndSurvivesUndoAndRedo
+  ok   RoutingRefusesWhatCouldNeverSoundRight
+  ok   DeletingABusSendsItsInputsToTheMasterAndUndoRestoresThem
+  ok   ABusStaysAudibleWhileTheTracksFeedingItAreSoloed
+  ok   CaptionsReachTheSnapshotInOrderWithTheirStylesResolvedAndOnlyShowWhenAsked
+  ok   ASpeedRampSetsTheClipsLengthAndPlaysTheSourceThroughItsSegmentsExactlyAtTheirBoundaries
+  ok   ASegmentThatRunsBackwardsReachesBackAndTheWindowGrowsToIt
+  ok   SplittingARampedClipPlaysExactlyWhatItPlayedBeforeAndUndoPutsItBack
+  ok   ARampKeepsTheAudioPartnerInStepAndCanBeTakenOffToLeaveSteadyPlayback
+  ok   ARampIsRefusedWhereItCouldNotPlayAndTheEditsItWouldBreakAreRefused
+  ok   ARampSurvivesClosingAndReopeningTheProject
+  ok   AMulticamGroupIsStoredWithItsAnglesOffsetsAndCutsAndUndoTakesThemBack
+  ok   CutsReplaceCoalesceAndRemoveLikeTheInMemoryEngineAndTheEditsThatCouldNotWorkAreRefused
+  ok   FlatteningLaysTheCutsOutAsOrdinaryClipsWithTheSoundFollowingOrFixedAndEveryAngleStaysReachable
+  ok   AStoredGroupSurvivesReopeningAndAnAudioSyncResultIsStoredAsItsOffsets
+  ok   AGraphicLivesInTheProjectAndItsClipDrawsItAnimatedWithNoFileOutsideTheProject
+  ok   GraphicEditsThatCouldNotDrawAreRefusedBeforeTheyReachTheProject
+  ok   TemplatePackagesAreInstalledByVersionAndAnInstanceKeepsDrawingTheVersionItWasMadeWith
+  ok   GraphicsAndTemplatesSurviveReopeningAndAProjectFromBeforeThemGetsEmptyTables
+timeline: 78/78 passed
+<end of output>
+Test time =   5.84 sec
+----------------------------------------------------------
+Test Passed.
+"cutline_timeline_tests" end time: Oct 07 16:01 India Standard Time
+"cutline_timeline_tests" time elapsed: 00:00:05
+----------------------------------------------------------
+
+4/12 Testing: cutline_media_tests
+4/12 Test: cutline_media_tests
+Command: "F:/AAA Project/video_editor/build/native/cutline_media_tests.exe"
+Directory: F:/AAA Project/video_editor/build/native
+"cutline_media_tests" start time: Oct 07 16:01 India Standard Time
+Output:
+----------------------------------------------------------
+  ok   FrameAllocationRejectsEmptySizes
+  ok   FrameRowsAreAlignedAndBoundsChecked
+  ok   FrameCloneCopiesPixelsAndMetadata
+  ok   EightBitRoundTripsThroughFloatExactly
+  ok   SixteenBitRoundTripsThroughFloatExactly
+  ok   FloatConversionClampsOutOfRangeValues
+  ok   ConvertingAnEmptyFrameFails
+  ok   LocalProxyGenerationResizesAndCanBeCancelled
+  ok   ProxyAutomationUsesMediaComplexityPlaybackMissesAndMemoryPressure
+  ok   AudioBufferAllocationIsValidated
+  ok   MixingSumsChannelsWithGain
+  ok   MixingRefusesMismatchedFormats
+  ok   SilenceAndPeakBehaveAsExpected
+  ok   DecibelConversionHasASilenceFloor
+  ok   StereoPanHoldsConstantPower
+  ok   ChannelLayoutsMapToCounts
+  ok   TimestampMapResolvesByPresentationTime
+  ok   TimestampMapDetectsVariableCadence
+  ok   TimestampMapRejectsNonsense
+  ok   SyntheticPathsRoundTrip
+  ok   SyntheticPathsAreValidated
+  ok   SyntheticProbeDescribesItsStreams
+  ok   CounterFramesIdentifyWhichFrameWasDecoded
+  ok   ReadingOutsideTheSourceReturnsNothing
+  ok   VariableFrameRateSourcesHoldFramesForLonger
+  ok   SyntheticAudioIsContinuousAcrossBlocks
+  ok   SilentSourcesReturnNoAudio
+  ok   AudioPastTheEndIsSilenceNotARepeat
+  ok   TheRegistryOpensSyntheticPaths
+  ok   TheRegistryRefusesWhatItCannotRead
+  ok   RegisteringTheSyntheticProviderTwiceIsHarmless
+  ok   FFmpegProviderRegistersWhenAvailable
+  ok   LosslessRgbDecodesToAUniformFrame
+  ok   Rec709LimitedYuvDecodesToTheSameColourAsItsRgbTwin
+  ok   ProbeDescribesARealFile
+  ok   FractionalFrameRatesAreReportedExactly
+  ok   SeekingBackwardsReturnsTheCorrectFrame
+  ok   DecodedFramesCarryTheirPresentationTime
+  ok   ReadingPastTheEndOfAFileReturnsNothing
+  ok   TimestampMapIsBuiltFromRealPackets
+  ok   DecodingStillWorksAfterTheTimestampScan
+  ok   AudioDecodesToTheRequestedRateAndLayout
+  ok   AudioReadsAreContinuousAcrossBlocks
+  ok   AudioAndVideoFromOneFileShareATimeline
+  ok   OpeningSomethingThatIsNotMediaFails
+  ok   EveryFrameOfAReferenceFileIdentifiesItself
+  ok   AudioMatchesTheReferenceSignalAtAnyStartSample
+  ok   ConsecutiveAudioBlocksReproduceTheWholeSignal
+  ok   AlternatingAudioAndVideoReadsDoNotCorruptEachOther
+  ok   ReadOrderDoesNotChangeWhatIsRead
+  ok   TwoSourcesOnOneFileKeepSeparateState
+  ok   AStreamThatStartsLateIsPlacedAtItsOwnStartTime
+  ok   SourceTimeZeroIsTheFirstPictureNotTheContainersOwnClock
+  ok   AudioAtAnotherRateStaysAlignedWithTheSource
+  ok   TheTailOfAResampledFileIsNotDiscarded
+  ok   PacketsWithAHoleBetweenThemKeepTheHoleAsSilence
+  ok   ResamplingAfterASeekIntoACoarseTimeBaseStreamIsStillAligned
+  ok   LossyAudioWithEncoderPrimingIsPlacedOnTheSampleItBelongsTo
+  ok   InterleavedH264AndAacKeepTheirAudioWhileTheVideoSeeks
+  ok   ScanningTimestampsDoesNotDisturbAReadInProgress
+  ok   TimestampsAreRelativeToSourceTimeZero
+  ok   AudioReadsRecoverAfterReachingTheEndOfTheFile
+  ok   AConstantFrameRateStoredInMillisecondsIsStillConstant
+  ok   ARealVariableFrameRateFileIsReportedVariableAndIndexedByItsOwnTimes
+  ok   DuplicateTimestampsAreReportedNotHiddenAndDecodingStillWorks
+  ok   ProbeDurationIsTheContentsNotTheContainersOffsetFigure
+media: 66/66 passed
+<end of output>
+Test time =   1.14 sec
+----------------------------------------------------------
+Test Passed.
+"cutline_media_tests" end time: Oct 07 16:01 India Standard Time
+"cutline_media_tests" time elapsed: 00:00:01
+----------------------------------------------------------
+
+5/12 Testing: cutline_render_tests
+5/12 Test: cutline_render_tests
+Command: "F:/AAA Project/video_editor/build/native/cutline_render_tests.exe"
+Directory: F:/AAA Project/video_editor/build/native
+"cutline_render_tests" start time: Oct 07 16:01 India Standard Time
+Output:
+----------------------------------------------------------
+  ok   ASingleOpaqueClipFillsTheFrame
+  ok   AnEmptyPlanProducesTheBackground
+  ok   AMissingFrameIsReportedAndLeavesTheBackground
+  ok   ComposeRejectsAPlanWithNoSize
+  ok   UpperTracksCompositeOverLowerOnes
+  ok   SemiTransparentUpperTrackBlendsWithWhatIsBeneath
+  ok   ProductionBlendModesUseStraightColourAndPremultipliedCoverage
+  ok   FrameInterpolationSynthesisesAFractionalTimeRequestedByARemap
+  ok   OpacityEffectScalesContribution
+  ok   GeometricMaskLimitsAnEffectToItsRectangleAndFeather
+  ok   AnimatedEllipseMaskIsSampledInClipLocalTime
+  ok   KeyframedOpacityRampsOverTheClip
+  ok   CrossDissolveMixesByProgress
+  ok   AOneSidedTransitionFadesFromWhatIsBeneath
+  ok   ExposureIsMeasuredInStops
+  ok   SaturationPivotsAroundRec709Luma
+  ok   ContrastPivotsAroundMidGrey
+  ok   GradeIgnoresFullyTransparentPixels
+  ok   BlurUsesASeparableNormalisedKernel
+  ok   SharpenRaisesLocalContrastWithoutChangingAlpha
+  ok   VignetteDarkensCornersAndPreservesTheCentre
+  ok   LensCorrectionRemapsPixelsRadially
+  ok   CubeLutLoadsOnceAndBlendsByIntensity
+  ok   MissingLutIsReportedAndBypassed
+  ok   StabilizerAnalysisFindsAndSmoothsCameraShake
+  ok   StabilizerCorrectionIsAppliedAsReversibleMotion
+  ok   ScalingShrinksTheImageAboutTheCentre
+  ok   PositionTranslatesTheImage
+  ok   CropRemovesPartOfTheSource
+  ok   AnAdjustmentClipGradesEverythingBeneathIt
+  ok   SequenceEffectsApplyToTheFinishedComposite
+  ok   UnknownEffectsAreReportedRatherThanSilentlyIgnored
+  ok   ASolidGeneratorNeedsNoDecodedSource
+  ok   GoldenColourBars
+  ok   GoldenDissolveMidpoint
+  ok   GoldenTransformedPictureInPicture
+  ok   GoldenGradedBars
+  ok   GaussianBlurConservesLightAndSpreadsItWithTheRequestedSigma
+  ok   ADirectionalBlurSmearsAlongItsAngleAndNowhereElse
+  ok   UnsharpMaskOvershootsAnEdgeAndLeavesFlatAreasAlone
+  ok   GlowAddsLightAroundBrightAreasAndNeverPastFullScale
+  ok   ADropShadowFallsBehindTheSubjectInItsDirection
+  ok   ChannelMixerRoutesChannelsByTheMatrix
+  ok   BlackAndWhiteWeighsTheChannelsItIsGiven
+  ok   TintMapsTheTonalRangeOntoTwoColours
+  ok   PosterizeSnapsEachChannelToTheNearestLevel
+  ok   AWaveWarpDisplacesRowsByTheSineAndKeepsTheRestOfThePicture
+  ok   AMeshWarpInterpolatesControlOffsetsAcrossThePicture
+  ok   TheMeshWarpEffectBendsTheGridPointsItIsGivenAndLeavesTheRestAlone
+  ok   RollingShutterRepairChangesEachScanLineByItsCaptureTime
+  ok   ABulgeMagnifiesTheCentreAndLeavesEverythingOutsideItsRadius
+  ok   AChromaKeyRemovesAScreenOfAnyBrightnessAndKeepsTheSubject
+  ok   ChromaKeySuppressesSpillSoNoGreenHaloRemainsAtTheEdge
+  ok   GarbageAndCoreMattesOverrideTheKey
+  ok   ShrinkAndFeatherCleanUpTheMatteEdge
+  ok   ALumaKeyRemovesTheDarksOrWithInvertTheLights
+  ok   LiftGammaAndGainFollowTheirDefinitions
+  ok   TonalWheelsTintOnlyTheirPartOfTheTonalRange
+  ok   CurveTablesAreMonotoneAndPassThroughTheirPoints
+  ok   CurvesReshapeTheTonesAndTheLumaCurveKeepsHue
+  ok   HueCurvesMoveOnlyTheHuesTheyAreSetFor
+  ok   ColorAdjustWarmsTheWhiteBalanceAndShapesVibranceAndTone
+  ok   AnHslSecondaryCorrectsOnlyWhatItsQualifierSelects
+  ok   EveryNewEffectHasADescriptorAndItsDefaultsLeaveThePictureAloneWhereTheyShould
+  ok   FilterParametersCanBeKeyframedAcrossAClip
+  ok   ScopeAxesMapLevelsToRowsAndScales
+  ok   ALumaWaveformPutsEachColumnAtItsOwnLevel
+  ok   AParadeSeparatesTheChannelsAndAnRgbWaveformOverlaysThem
+  ok   WaveformsAndHistogramsCountOutOfRangeValuesInsteadOfHidingThem
+  ok   AVectorscopePlacesColoursAtTheirHueAndSaturation
+  ok   HistogramBinsHoldTheFractionOfThePictureAtEachLevel
+  ok   TheScopesUseTheChosenMatrixAndAcceptEightBitFrames
+  ok   AsyncScopesDownsampleAndPublishWithoutBlockingPlayback
+  ok   TransferFunctionsMatchTheirPublishedReferenceValues
+  ok   PrimariesRotateBetweenGamutsAsTheStandardsSay
+  ok   ColourSpacesAreNamedAndFrameTagsAreUnderstood
+  ok   ATransformConvertsGamutsAndHoldsGreysAndRoundTrips
+  ok   HdrLightIsFittedIntoSdrByASoftKneeAndNothingBelowTheKneeMoves
+  ok   HlgAndPqAgreeOnTheLightTheyCarryAndRoundTrip
+  ok   FramesInTheSequenceSpaceAreLeftAloneAndOtherSpacesAreConvertedUnderTheCurrentVersion
+  ok   ThePictureIsConvertedToTheDisplaySpaceAndTaggedAsItsOutput
+  ok   ALinearWorkingSpaceBlendsInLinearLight
+  ok   ColourSpacesThisBuildDoesNotDefineAreReportedAndTreatedAsRec709
+  ok   APointTrackFollowsAFeatureToAFractionOfAPixel
+  ok   AChangeOfExposureDoesNotPullATrackButAnObstructionIsReportedAndRecoveredFrom
+  ok   TrackingCanBeCancelledAndReportsItsProgressAndRefusesWhatIsNotTrackable
+  ok   APlanarTrackRecoversTranslationRotationAndScaleOfAPlane
+  ok   ATrackBecomesAnOrdinaryMotionEffectThatMovesALayerWithIt
+  ok   SimilarityStabilisationMeasuresTheCamerasRotationZoomAndShift  (2 s)
+  ok   AStabilisedPictureHoldsStillAndTheCropHidesEveryBorder  (4 s)
+  ok   StabilisationOfAFrameWithNothingToFollowSaysSoAndLeavesItAlone
+  ok   EachKindOfShakeIsCorrectedTheRightWayRoundThroughTheCompositor  (4 s)
+  ok   TrackingResultsWriteAsReadableJsonAndReadBackExactly
+  ok   SpatialNoiseReductionRaisesTheSignalToNoiseRatioAndKeepsAnEdge
+  ok   ChromaNoiseReductionSmoothsColourAndLeavesLuminanceAlone
+  ok   DetailPreservationKeepsFineTextureThatStrongSmoothingWouldFlatten
+  ok   TemporalNoiseReductionAveragesStillAreasAcrossFrames
+  ok   TemporalNoiseReductionLeavesNoGhostBehindAMovingObject
+  ok   NoiseReductionDoesNothingUntilItIsAskedTo
+  ok   OpticalFlowMatchesExhaustiveSearchIncludingConfidenceAndOcclusion
+  ok   OpticalFlowFindsTranslationAndSynthesisesTheMiddleFrame
+  ok   OpticalFlowRejectsMismatchedFramesAndMarksUncertainBlocks
+  ok   APicturesAddressChangesExactlyWhenSomethingItIsMadeFromChanges
+  ok   TheMemoryTierHoldsToItsBudgetAndDropsTheLeastRecentlyUsed
+  ok   TheDiskTierSurvivesARestartAndDistrustsAnythingDamaged
+  ok   TheDiskTierStaysWithinItsBudgetByDroppingTheOldest
+  ok   TextIsRasterisedAtTheSizeAskedWrappedAndAlignedAndAFontThatIsMissingIsSaid
+  ok   GraphicsDocumentsDrawShapesImagesAndRoundTripTheirVersionedFormat
+  ok   MotionGraphicsTemplatesExposeVersionedReusableControls
+  ok   GraphicGeneratorPackagesRenderWithoutADecodedMediaFrame
+  ok   CaptionsAreBurnedIntoThePictureOnlyWhenAskedAndSitInTheTitleSafeAreaAtTheBottom
+  ok   ACaptionsStyleDecidesItsColourBackgroundPositionWidthAndOutline
+  ok   CuesShowingTogetherStackAndAMissingFontIsReported
+  ok   RollingShutterAnalysisMeasuresThePanAndTurnsItIntoTheScanLineCorrection
+  ok   AGlobalShutterNeedsNoRepairAndTheOtherScanDirectionIsRepairedToo
+  ok   CameraProfilesAreDataThatIsValidatedAndFramesWithNothingToMeasureAreHeldNotGuessed
+  ok   TheAngleMonitorTilesEveryAngleKeepsEachPicturesShapeAndMarksTheLiveOne
+  ok   AnimatedGraphicPropertiesFollowTheirKeysAndEachInterpolationKeepsItsEndpoints
+  ok   AnchoredGraphicElementsKeepTheirMarginsAndSizeWhenThePictureChangesShape
+  ok   TemplateControlsTakeColoursAndRangesAndFontListsFallBackToWhatIsInstalled
+  ok   AFlowKeyIsTheContentOfTheTwoPicturesAndTheSettingsAndNothingElse
+  ok   AnAnalysisIsDoneOnceThenFoundInMemoryThenOnDiskAndADamagedFileIsNotBelieved
+  ok   TheFlowCacheKeepsToItsMemoryBudgetAndNeverComputesAPairTwiceAtOnce
+  ok   SharedQuotaEvictsCheapRenderFramesBeforeExpensiveFlowAnalysis
+  ok   ResourcePressureShrinksEveryBudgetAndRunsCallbacksOutsideTheManagerLock
+  ok   TheFlowCacheDiskTierStaysWithinItsBudgetKeepingTheNewest
+  ok   ABackgroundAnalysisFillsTheCacheReportsProgressAndCanBeStoppedAndPlaybackFindsTheWorkDone
+  ok   TheCompositorReusesAnAnalysisForEveryFractionalFrameBetweenTwoSourceFrames
+  ok   RenderGraphEliminatesDeadWorkFusesUnaryNodesAndKeepsStableContentAddresses
+  ok   RenderGraphInvalidatesOnlyDependentBranchesAndRejectsInvalidGraphs
+  ok   GpuSelectionIsCapabilityBasedAcrossAmdNvidiaIntelAndApple
+  ok   GpuSelectionUsesCpuForSupportedWorkAndRefusesImpossibleZeroCopy
+  ok   PlaybackPlansLowerToAStableRenderGraphWithSourceVersionInvalidation
+render: 133/133 passed
+<end of output>
+Test time =  15.94 sec
+----------------------------------------------------------
+Test Passed.
+"cutline_render_tests" end time: Oct 07 16:01 India Standard Time
+"cutline_render_tests" time elapsed: 00:00:15
+----------------------------------------------------------
+
+6/12 Testing: cutline_audio_tests
+6/12 Test: cutline_audio_tests
+Command: "F:/AAA Project/video_editor/build/native/cutline_audio_tests.exe"
+Directory: F:/AAA Project/video_editor/build/native
+"cutline_audio_tests" start time: Oct 07 16:01 India Standard Time
+Output:
+----------------------------------------------------------
+  ok   AudioClockDerivesTimeFromRenderedSamples
+  ok   AudioClockIgnoresNonPositiveAdvances
+  ok   AudioClockResetsAndReconfigures
+  ok   AudioClockRejectsAnImpossibleRate
+  ok   ASingleClipPassesThroughAtUnityGain
+  ok   TracksSumRatherThanOcclude
+  ok   MutedAndSoloedTracksBehaveAsTheyDoForPicture
+  ok   TrackGainIsAppliedInDecibels
+  ok   TrackPanHoldsPowerAcrossTheImage
+  ok   ClipVolumeEffectIsAppliedBeforeTheTrackStrip
+  ok   AutomationIsEvaluatedAtEverySampleNotOncePerBlock
+  ok   ClipEdgesFallOnTheirOwnSample
+  ok   ClipEndsOnItsOwnSample
+  ok   AClipAtItsOwnRateIsAnExactCopyOfItsSource
+  ok   AReversedClipPlaysItsSourceBackwards
+  ok   ARetimedClipReadsItsSourceAtItsRate
+  ok   AudioFollowsTheSameSpeedRampFreezeAndReverseCurveAsVideo
+  ok   ARetimedClipIsAPitchShiftNotATimeStretch
+  ok   InterpolationBetweenSamplesIsCubicNotLinear
+  ok   BlocksOfAnySizeTileToTheSameAudioAsOneLargeBlock
+  ok   TrackEffectsApplyInTimelineTimeToTheWholeTrack
+  ok   NestedSequenceAudioIsMixed
+  ok   NestedAudioFollowsTheOuterClipsRetimingAndDirection
+  ok   EffectsStayInsideTheSequenceTheyBelongTo
+  ok   ANestedSequenceThatContainsItselfIsSilentNotAHang
+  ok   AudioTransitionsCrossFade
+  ok   ASequenceMadeUnderTheOriginalRulesStillCrossfadesConstantPowerLinearly
+  ok   AConstantPowerTransitionHoldsLoudnessAcrossTheCut
+  ok   ACrossfadePlaysTheMediaOnEitherSideOfTheCut
+  ok   WhereTheMediaHasNoHandleTheCrossfadeIsSilenceNotAHeldSample
+  ok   AFadeOnOneClipHasNoHandle
+  ok   MissingSourcesAreSilenceNotFailure
+  ok   ADisabledClipIsSilent
+  ok   AnOverloadedMixIsClampedAndReported
+  ok   PictureEffectsOnAudioClipsAreNotReportedAsSkipped
+  ok   MixingALongTimelineReadsOnlyTheClipsInTheBlock
+  ok   TheOfflineSinkPullsBlocksAndAdvancesTheClock
+  ok   ASinkNeedsARenderCallback
+  ok   OpeningTheDefaultSinkAlwaysYieldsSomething
+  ok   Sha256MatchesTheKnownAnswers
+  ok   Sha256HandlesTheBlockBoundary
+  ok   Sha256RefusesToBeReused
+  ok   AStretchedClipKeepsItsPitchAtEverySpeedWhileVarispeedChangesIt
+  ok   AStretchedClipsDurationIsExactAndItIsSilentAfterward
+  ok   AStretchedToneIsStillATone  (3 s)
+  ok   AReversedStretchedClipKeepsItsPitchToo
+  ok   StretchedAudioIsTheSameWhateverTheBlockSizes
+  ok   StretchedChainsAreComputedOnceAndThenServedFromTheCache
+  ok   ASpeedTooExtremeToStretchFallsBackToVarispeedAndSaysSo
+  ok   StretchingWithWholeSignalsHelperHasExactLengthAndKeepsAmplitude
+  ok   TheEqualiserMatchesItsDesignedResponseAtEveryBand
+  ok   TheCompressorFollowsItsStaticCurve
+  ok   TheCompressorsAttackArrivesBeforeTheLoudPartAndItsReleaseIsGradual
+  ok   TheLimiterNeverExceedsItsCeilingAndLeavesQuietAudioAlone
+  ok   TheGateClosesOnQuietNoiseAndOpensForSpeechLevelSignals
+  ok   TheDuckerLowersTheMusicWhileTheDialogueSpeaksAndRestoresIt
+  ok   SpectralProcessingWithNothingToRemoveIsTransparent
+  ok   DenoiseRaisesTheSignalToNoiseRatioAndKeepsTheTone
+  ok   DereverbReducesTheTailBetweenBurstsAndKeepsTheBursts
+  ok   LoudnessIsMeasuredAsEbuR128Specifies
+  ok   TruePeakSeesTheOvershootBetweenSamples
+  ok   ACompressorOnATrackFollowsItsCurveThroughTheMixer
+  ok   EveryProcessorGivesTheSameSamplesWhateverTheBlockSizes  (46 s)
+  ok   ALimiterOnTheSequenceHoldsItsCeilingInEveryBlockOfEverySize  (9 s)
+  ok   AnAutoDuckerKeyedByAnotherTrackLowersTheMusicWhileThatTrackSpeaks
+  ok   ATrackKeyedByItselfOrInALoopFindsNoSidechainInsteadOfRecursing
+  ok   AnEffectOnAClipSeesSilenceBeforeTheClipBeganNotTheMediaBeforeIt
+  ok   StatefulEffectCellsAreComputedOnceAndThenServedFromTheCache
+  ok   ABusIsTheSumOfItsTracksAtItsOwnFader
+  ok   ABusRunsItsOwnEffectsOverTheSummedSignal
+  ok   AFaderSendTakesTheSignalAfterTheFaderAndAPreFaderSendBefore
+  ok   ASendAddsToTheTracksOwnOutputWithoutTakingAnythingFromIt
+  ok   AMutedBusSilencesWhatIsRoutedToItAndAMutedTrackSendsNothing
+  ok   SoloingATrackKeepsItsBusAndSilencesTheOthersFeedingIt
+  ok   AHandBuiltRoutingLoopIsSilentAndReportedNotEndless
+  ok   AMeterReadsATrackAfterItsFaderAndBeforeTheMaster
+  ok   AMeterReportsLoudnessInLufs
+  ok   APitchKeepingClipRetimedByARampKeepsItsPitchWhereVarispeedFollowsTheSpeed
+  ok   ARetimedPitchKeepingClipIsTheSameWhateverBlocksItIsAskedForInAndHoldsAndReversesFallBackAndSaySo  (2 s)
+audio: 79/79 passed
+<end of output>
+Test time =  70.17 sec
+----------------------------------------------------------
+Test Passed.
+"cutline_audio_tests" end time: Oct 07 16:02 India Standard Time
+"cutline_audio_tests" time elapsed: 00:01:10
+----------------------------------------------------------
+
+7/12 Testing: cutline_playback_tests
+7/12 Test: cutline_playback_tests
+Command: "F:/AAA Project/video_editor/build/native/cutline_playback_tests.exe"
+Directory: F:/AAA Project/video_editor/build/native
+"cutline_playback_tests" start time: Oct 07 16:02 India Standard Time
+Output:
+----------------------------------------------------------
+  ok   TheEngineNeedsASequenceAndALocator
+  ok   TheEngineRendersTheCorrectSourceFrame
+  ok   TheMonitorPrefersAProxyAndFallsBackToTheOriginal
+  ok   ClipSourceOffsetsReachTheDecoder
+  ok   RetimedClipsReadTheirSourceFaster
+  ok   ReversedClipsReadTheirSourceBackwards
+  ok   TheFrameCacheServesRepeatedRequests
+  ok   TheFrameCacheIsBounded
+  ok   PrimeReadAheadWarmsTheRequestedScrubFrame
+  ok   RenderingQueuesTheFollowingFramesForReadAhead
+  ok   DuplicateClipsShareOneDecodedMediaFrame
+  ok   OfflineMediaRendersAsAGapAndIsOnlyAttemptedOnce
+  ok   EditingDropsCachedPicturesButKeepsDecodersOpen
+  ok   NestedSequencesAreComposedRecursively
+  ok   TheEngineMixesAudioForTheSamePlan
+  ok   TheEngineReadsARealFileAtTheClipsRateAndDirection
+  ok   TheEnginePlaysARealFileThroughANestedSequence
+  ok   RenderingInBlocksGivesTheSameSamplesAsRenderingAtOnce
+  ok   PlaybackAdvancesOnTheAudioClock
+  ok   PositionIsCompensatedForOutputLatency
+  ok   SeekingMovesTheTransport
+  ok   PlaybackStopsAtTheEndOfTheSequence
+  ok   IngestRecordsMediaAndItsStreams
+  ok   IngestingTheSameMediaTwiceDoesNotDuplicateIt
+  ok   IngestIsOneCommandAndUndoesAsAUnit
+  ok   IngestingMediaThatWasLeftWithoutStreamsRepairsIt
+  ok   RelinkingMediaMakesTheEngineReadTheNewFile
+  ok   AudioRenderingPublishesPostFaderTrackAndMasterMeters
+  ok   MediaThatWasOfflineIsTriedAgainAfterAnEdit
+  ok   IngestIsValidated
+  ok   FingerprintsIdentifyMediaForRelink
+  ok   FileFingerprintsAreStableAndDiscriminating
+  ok   FingerprintsNoticeAChangeAnywhereInTheFile
+  ok   IngestFeedsTheEngineEndToEnd
+  ok   ASeekWhileABlockIsBeingRenderedDropsThatBlockAndKeepsTheNewPosition
+  ok   ThePlayheadStopsAtTheEndAndSeekingBackRestartsPlayback
+  ok   AFailureWhileRenderingAudioIsReportedNotThrown
+  ok   AudioIsRenderedAtTheDevicesRateNotTheEnginesOwn
+  ok   PicturesAudioEditsAndSeeksFromThreeThreadsDoNotCorruptEachOther
+  ok   ARealDeviceSinkFlushesFinishesAndReportsFailure
+  ok   ARenderedFrameIsServedFromTheCacheTheSecondTimeAndAnEditOnlyRemakesWhatItTouches
+  ok   AnIncompletePictureIsNotKeptToBeServedAgain
+  ok   ChangedMediaIsNotServedFromAPictureMadeFromTheOldFile
+  ok   RenderingARangeAheadMakesPlayingItAMatterOfReadingAndTheIndicatorShowsWhatIsReady
+  ok   APreviewAndAnExportShareWhatEitherHasAlreadyRenderedThroughTheDiskTier
+  ok   CaptionsBurnedInForAnExportAreTheSameAsTheMonitorsAndTheCacheKeepsThemApart  (16 s)
+  ok   PrioritySchedulerRunsAVisibleFrameBeforeQueuedBackgroundAnalysis
+  ok   PrioritySchedulerMakesRoomForInteractiveWorkAndCancelsOldGenerations
+playback: 48/48 passed
+<end of output>
+Test time =  19.62 sec
+----------------------------------------------------------
+Test Passed.
+"cutline_playback_tests" end time: Oct 07 16:02 India Standard Time
+"cutline_playback_tests" time elapsed: 00:00:19
+----------------------------------------------------------
+
+8/12 Testing: cutline_export_tests
+8/12 Test: cutline_export_tests
+Command: "F:/AAA Project/video_editor/build/native/cutline_export_tests.exe"
+Directory: F:/AAA Project/video_editor/build/native
+"cutline_export_tests" start time: Oct 07 16:02 India Standard Time
+Output:
+----------------------------------------------------------
+    a 1280-step ramp through ProRes 422 HQ decodes to 704 distinct green levels
+Svt[info]: -------------------------------------------
+Svt[info]: SVT [version]:	SVT-AV1 Encoder Lib v4.2.0-151-g5ed9ffbcb
+Svt[info]: SVT [build]  :	GCC 16.2.0	 64 bit
+Svt[info]: LIB Build date: Oct  4 2026 16:42:30
+Svt[info]: -------------------------------------------
+Svt[info]: Level of Parallelism: 6
+Svt[info]: Number of PPCS 178
+Svt[info]: [asm level on system : up to avx512icl]
+Svt[info]: [asm level selected : up to avx512icl]
+Svt[info]: -------------------------------------------
+Svt[info]: SVT [config]: main profile	tier (auto)	level (auto)
+Svt[info]: SVT [config]: width / height / fps numerator / fps denominator 		: 1280 / 720 / 25 / 1
+Svt[info]: SVT [config]: bit-depth / color format 					: 8 / YUV420
+Svt[info]: SVT [config]: preset / tune / pred struct 					: 8 / PSNR / random access
+Svt[info]: SVT [config]: gop size / mini-gop size / key-frame type 			: 161 / 16 / key frame
+Svt[info]: SVT [config]: BRC mode / target bitrate (kbps)				: VBR / 2000 
+Svt[info]: SVT [config]: AQ mode / Variance Boost 					: 2 / 0
+Svt[info]: SVT [config]: sharpness / luminance-based QP bias 				: 0 / 0
+Svt[info]: SVT [config]: QP scale compress strength 					: 0
+Svt[info]: -------------------------------------------
+Svt[info]: -------------------------------------------
+Svt[info]: SVT [version]:	SVT-AV1 Encoder Lib v4.2.0-151-g5ed9ffbcb
+Svt[info]: SVT [build]  :	GCC 16.2.0	 64 bit
+Svt[info]: LIB Build date: Oct  4 2026 16:42:30
+Svt[info]: -------------------------------------------
+Svt[info]: Level of Parallelism: 6
+Svt[info]: Number of PPCS 178
+Svt[info]: [asm level on system : up to avx512icl]
+Svt[info]: [asm level selected : up to avx512icl]
+Svt[info]: -------------------------------------------
+Svt[info]: SVT [config]: main profile	tier (auto)	level (auto)
+Svt[info]: SVT [config]: width / height / fps numerator / fps denominator 		: 192 / 112 / 25 / 1
+Svt[info]: SVT [config]: bit-depth / color format 					: 8 / YUV420
+Svt[info]: SVT [config]: preset / tune / pred struct 					: 8 / PSNR / random access
+Svt[info]: SVT [config]: gop size / mini-gop size / key-frame type 			: 50 / 16 / key frame
+Svt[info]: SVT [config]: BRC mode / target bitrate (kbps)				: VBR / 1000 
+Svt[info]: SVT [config]: AQ mode / Variance Boost 					: 2 / 0
+Svt[info]: SVT [config]: sharpness / luminance-based QP bias 				: 0 / 0
+Svt[info]: SVT [config]: QP scale compress strength 					: 0
+Svt[info]: -------------------------------------------
+    15 presets exported and checked; 6 not usable on this machine: web.hevc web.hevc.10bit mezzanine.dnxhr.sq mezzanine.dnxhr.hq mezzanine.dnxhr.hqx mezzanine.dnxhr.444
+[matroska,webm @ 000001d977186a40] File ended prematurely
+[matroska,webm @ 000001d977185f40] File ended prematurely
+    web.hevc                 hevc_amf       (hardware) 0.0 MB
+    web.hevc.10bit           hevc_amf       (hardware) 0.0 MB
+    web.av1                  av1_amf        (hardware) 0.0 MB
+    mezzanine.dnxhr.sq       dnxhd          (software) 6.9 MB
+    mezzanine.dnxhr.hq       dnxhd          (software) 10.4 MB
+    mezzanine.dnxhr.hqx      dnxhd          (software) 10.4 MB
+    mezzanine.dnxhr.444      dnxhd          (software) 20.6 MB
+    mezzanine.prores.4444    prores_ks      (software) 0.7 MB
+    broadcast.xdcam422       mpeg2video     (software) 6.0 MB
+  skip ExportIsRefusedWhenNothingCanWrite (this build can encode, so nothing refuses)
+  ok   ExportSettingsAreResolvedFromTheSequence
+  ok   ExportRangeIsValidated
+  ok   ExportWritesTheExpectedFrameCount
+  ok   ExportedVideoDecodesBackToWhatTheMonitorRendered
+  ok   ExportUsesOriginalsWhenTheMonitorPrefersAProxy
+  ok   EveryChannelOfExportedAudioKeepsItsOwnSamples
+  ok   ExportedAudioStaysLockedToVideo
+  ok   FractionalRatesDoNotDriftOverALongExport  (2 s)
+  ok   ExportHonoursAnInAndOutPoint
+  ok   ExportIgnoresMonitoringStateByDefault
+  ok   ExportReportsProgressAndCanBeCancelled
+  ok   AudioOnlyAndVideoOnlyExportsWork
+  ok   ALossyExportStillCarriesTheRightPictures
+  ok   AudioAtAnotherRateIsResampledNotReinterpreted
+  ok   ExportAtAnotherRateKeepsThePitchEndToEnd
+  ok   AudioLayoutIsNegotiatedRatherThanRejected
+  ok   ExportAppliesTheSamePolicyToSoundAsToPicture
+  ok   AnExistingDeliveryIsNeverTruncatedByACancelledExport
+  ok   AnExistingDeliverySurvivesAWriterFailure
+  ok   AnExistingFileIsRefusedUnlessOverwriteIsAllowed
+  ok   TheDestinationAppearsOnlyWhenTheExportIsComplete
+  ok   ExportAtAnotherSizeIsRefusedBeforeAnythingIsWritten
+  ok   EveryPresetNamesRealEncodersAndResolvesToSettingsThatMatchItsPromises
+  ok   ABitrateScalesWithThePictureAndIsClampedAndAProfileCodecIsLeftToItsProfile
+  ok   HardwareEncodersAreUsedWhenTheyWorkSkippedWithAReasonWhenTheyDoNotAndSoftwareStaysAvailable
+  ok   APresetRefusesASequenceItCannotDeliverAndCorrectsTheFileExtension
+  ok   EncoderSettingsReachTheEncoderAndAnUnknownOneIsAnErrorNotSilentlyIgnored
+  ok   APictureWithMoreThanEightBitsKeepsThemThroughAProResExport
+  ok   EveryPresetThatWorksOnThisMachineProducesAFileThatPassesTheCheck  (2 s)
+  ok   TheCheckOfAFinishedExportNamesWhatIsWrongWithATruncatedWrongOrMissingFile
+  ok   TheHardwareAndFinishingPresetsThatNeedAnHdPictureExportAtOneAndPassTheCheck  (40 s)
+  ok   QueuedExportsRunOneAtATimeInOrderAndKeepTheirProgressAndOutcome
+  ok   AFailedExportIsRecordedWithItsReasonAndCanBeRetriedAndACancelledOneStopsPromptly
+  ok   WaitingJobsCanBeCancelledRemovedReorderedAndPausedWithoutDisturbingTheRunningOne
+  ok   TheQueueSurvivesARestartAJobThatWasRunningIsInterruptedAndADamagedRecordIsKeptAside
+export: 35/36 passed, 1 skipped
+<end of output>
+Test time =  50.50 sec
+----------------------------------------------------------
+Test Passed.
+"cutline_export_tests" end time: Oct 07 16:03 India Standard Time
+"cutline_export_tests" time elapsed: 00:00:50
+----------------------------------------------------------
+
+9/12 Testing: cutline_interchange_tests
+9/12 Test: cutline_interchange_tests
+Command: "F:/AAA Project/video_editor/build/native/cutline_interchange_tests.exe"
+Directory: F:/AAA Project/video_editor/build/native
+"cutline_interchange_tests" start time: Oct 07 16:03 India Standard Time
+Output:
+----------------------------------------------------------
+  ok   AProjectIsDescribedByTheNeutralModelWithEverythingItHolds
+  ok   AudioBusesAndAdjustmentClipsAreReportedNotSilentlyDropped
+  ok   OtioRoundTripsAProjectWithoutChangingAnythingItCarries
+  ok   TimesFallOnFramesAtTheSequenceRateEvenAtFractionalRates
+  ok   ANestedSequenceTravelsInsideTheClipThatUsesItWithItsOwnEffectsAndSettings
+  ok   AFileFromAnotherToolIsReadFromItsStandardFieldsAndWhatWasAssumedIsSaid
+  ok   WhatCannotBeReadIsReportedAndTheRestOfTheFileIsStillUsed
+  ok   AnImportThatTheProjectRefusesPartlyReportsWhereAndKeepsTheRest
+  ok   RatesFromTheOtherSideOfTheFileBecomeTheExactBroadcastRates
+  ok   AnEdlHasTheEventsTheDissolveTheSpeedChangeAndTheLocator
+  ok   AnEdlRoundTripsEverythingItCanHold
+  ok   ADissolveCentredOnACutIsWrittenFromItsStartWithTheSamePictureAfterwards
+  ok   DropFrameTimecodeRoundTripsAtTwentyNinePointNineSeven
+  ok   AListFromAnotherSystemIsReadAndWhatItCannotSayIsReported
+  ok   WhatAnEdlCannotHoldIsReportedOnTheWayOut
+  ok   TheXmlReaderBuildsTheTreeAndRefusesWhatIsNotWellFormed
+  ok   FcpXmlRoundTripsEverythingItCarriesAtWholeFrames
+  ok   TimesBetweenFramesAreRoundedAndSaidSoWhenWritingFcpXml
+  ok   AFileFromAnotherEditorIsReadWithItsFilesLinksSpeedAndTransitions
+  ok   AnXmlFileThatIsNotAFinalCutSequenceIsRefusedWithAReason
+  ok   ANestedSequenceIsAClipItemThatContainsASequence
+  ok   SubRipIsReadWithItsTimesExactToTheMillisecond
+  ok   CaptionsWrittenAndReadAgainAreTheSameCuesToTheLastMillisecond
+  ok   ACueThatCannotBeReadIsSkippedWithItsLineNumberAndTheRestStillComeThrough
+  ok   LenientWhereLenienceCannotChangeTheMeaning
+  ok   InlineMarkupIsRemovedAndSaidSoAndAPositionOverrideBecomesAnAlignment
+  ok   WebVttHasItsHeaderIdentifiersNotesAndSettingsAndEscapesWhatItMust
+  ok   ATimeThatIsNotAWholeMillisecondIsRoundedAndTheWriterSaysSo
+  ok   OnlyTheCuesShowingAtATimeAreActiveAndOverlappingOnesShowTogether
+  ok   StylesAreFractionsOfThePictureAndBadOnesFallBackToTheDefaultWithoutFailing
+  ok   SidecarFilesAreWrittenPerTrackAndLanguageAndReadBackTheSame
+interchange: 31/31 passed
+<end of output>
+Test time =   0.89 sec
+----------------------------------------------------------
+Test Passed.
+"cutline_interchange_tests" end time: Oct 07 16:03 India Standard Time
+"cutline_interchange_tests" time elapsed: 00:00:00
+----------------------------------------------------------
+
+10/12 Testing: cutline_ui_tests
+10/12 Test: cutline_ui_tests
+Command: "F:/AAA Project/video_editor/build/native/cutline_ui_tests.exe"
+Directory: F:/AAA Project/video_editor/build/native
+"cutline_ui_tests" start time: Oct 07 16:03 India Standard Time
+Output:
+----------------------------------------------------------
+  ok   ShortcutsParseInAnyCaseAndOrderAndPrintCanonically
+  ok   TheBuiltInCommandsAreUniqueHaveNoSharedDefaultAndCanBeSearched
+  ok   BindingAChordTakesItFromItsOwnerAndOnlyTheDifferencesAreSaved
+  ok   EveryBuiltInWorkspaceIsAValidLayoutAndArrangesWithinTheWindow
+  ok   DockingAPanelSplitsTabsOrFloatsAndEveryOperationLeavesATidyTree
+  ok   DraggingASplitterMovesTheBoundaryWithinLimitsAndTheLayoutKeepsItsShape
+  ok   LayoutsRoundTripAsJsonAndBadOnesAreRefusedOrRepaired
+  ok   WorkspacesSwitchSaveResetAndComeBackAfterARestart
+  ok   PreferencesAreDeclaredTypedValidatedObservedAndOnlyDifferencesAreSaved
+  ok   PreferencesAreSavedAtomicallyToAFileAndADamagedFileFallsBackToDefaults
+  ok   MovingClipsOverwritesRefusesOrInsertsAsAskedAndIsOneUndoStep
+  ok   MovingLinkedClipsMovesTheirPartnersAndTracksMoveByRows
+  ok   TrimmingMovesOneEdgeWithinTheMediaAndNeighboursAndARippleClosesUpEverywhere
+  ok   LinkedClipsAreTrimmedTogetherAndRollSlipAndSlideDoWhatTheyAreFor
+  ok   CuttingDeletingLiftingAndExtractingKeepTheTimelineConsistent
+  ok   InsertingAndOverwritingASourcePlacesLinkedPictureAndSoundAndPastingCarriesEffects
+  ok   ThreePointEditsResolveTheMissingPointAndRefuseWhatCannotBe
+  ok   EnablingLinkingAndUnlinkingClipsArePlansToo
+  ok   TheViewportMapsTimeToPixelsZoomsAboutAPointAndFollowsThePlayhead
+  ok   TheRulerChoosesReadableStepsAndLabelsThemAsTimecode
+  ok   TheTimelineLayoutStacksTracksLikeAnEditorAndHitTestingFindsEdgesAndEditPoints
+  ok   TimelineLayoutVirtualizesHundredsOfTracksAndLongClipLists
+  ok   SelectionLinksClipsRectanglesAndTracksAndSnappingPrefersWhatMattersMost
+  ok   TheMonitorPicksARenderSizeFitsThePictureAndDrawsSafeMargins
+  ok   ThePresenterRendersTheLatestRequestAndDropsWhatWasOvertaken
+  ok   TheTransportPlaysShuttlesStepsAndStopsOrLoopsAtTheEnds
+  ok   TheInspectorShowsEachEffectWithItsValuesAtTheTimeAndEditsThemAsOneStepEach
+  ok   AnEffectTheRegistryDoesNotKnowIsStillShownWithoutRanges
+  ok   JobsReportProgressCanBeCancelledAndFailuresAreRecordedNotThrown
+  ok   TheLutBrowserFindsCubeFilesReportsBrokenOnesSearchesAndPreviewsTheLook
+  ok   ARampIsEditedAsASpeedGraphAndEveryEditKeepsItsShapeAndLength
+  ok   ARampWrittenToAClipComesBackAsTheSameGraphAndReEditingKeepsWhereItStarts
+  ok   AMulticamGroupIsSetUpFromClipsWithUniqueNamesAReferenceAndASyncAndStartsOnTheReference
+  ok   LiveCutsAreSnappedToFramesAndRefinedByMovingNudgingChangingAndRemovingThemWithinTheirNeighbours
+  ok   AMulticamProgrammeIsLaidOnTheTimelineWithTheSoundFollowingThePictureOrTakenFromOneAngle
+  ok   TheAngleMonitorReadsEveryAnglesPictureTilesThemMarksTheLiveOneAndFindsAnAnglesEnvelope
+  ok   ARectangleAndAnEllipseOfferTheirHandlesWhereTheCompositorDrawsThemEvenWhenRotated
+  ok   DraggingAHandleMovesResizesAndTurnsAShapeWithoutAccumulatingErrorAndKeepsTheOppositeEdgeStill
+  ok   APathIsBuiltFromPointsSmoothedCurvedWithTangentsAndGainsAndLosesVerticesWithoutChangingItsShape
+  ok   AValueThatIsKeyedGetsAKeyAtTheCurrentTimeAndOneThatIsNotChangesForTheWholeClip
+  ok   AMaskFollowsATrackByTheDistanceItMovedSinceTheMaskWasDrawnAndSkipsWhatWasLost
+  ok   AddingEditingAndRemovingAMaskIsOneUndoStepEachAndRefusesWhatCannotBeDone
+  ok   WordsAreMappedOntoTrimmedAndRepeatedClipsAtTheirTimelineTimes
+  ok   DeletingWordsRemovesTheirTimeFromEveryTrackAsOneUndoStepAndTheRestStaysInSync
+  ok   RemovingSeveralRangesPlansEachAgainstTheClipsTheEarlierOnesLeave
+  ok   PausesBetweenWordsAreRemovedByLengthAndFillersAreFoundAsWordPositions
+  ok   CaptionsAreMadeFromTheWordsOnTheTimelineAtTheirTimelineTimesInOneStep
+ui: 47/47 passed
+<end of output>
+Test time =   2.17 sec
+----------------------------------------------------------
+Test Passed.
+"cutline_ui_tests" end time: Oct 07 16:03 India Standard Time
+"cutline_ui_tests" time elapsed: 00:00:02
+----------------------------------------------------------
+
+11/12 Testing: cutline_gpu_tests
+11/12 Test: cutline_gpu_tests
+Command: "F:/AAA Project/video_editor/build/native/cutline_gpu_tests.exe"
+Directory: F:/AAA Project/video_editor/build/native
+"cutline_gpu_tests" start time: Oct 07 16:03 India Standard Time
+Output:
+----------------------------------------------------------
+    adapter: AMD Radeon AI PRO R9700 (AMD), 32476 MB dedicated
+    1080p, 3 layers with motion and grade (8-bit sources, AMD Radeon AI PRO R9700):
+    software 698.0 ms   GPU 11.7 ms (upload 6.4, device 0.47, readback 2.5), 59.7x
+    t=0.0 software frame at 0.0000 s: mean difference 0.57
+    t=0.5 software frame at 0.4671 s: mean difference 0.56
+    t=1.0 software frame at 0.9676 s: mean difference 0.56
+    t=2.5 software frame at 2.4691 s: mean difference 0.55
+    t=3.2 software frame at 3.1698 s: mean difference 0.55
+    hardware decode vs software decode, 5 pictures, 8x8 block averages: mean difference 0.56 levels, 0.00% of blocks more than 4 levels apart (largest 3)
+    1080p H.264, 50 frames in sequence: software decode + upload + GPU compose 6.66 ms/frame (upload 0.47); hardware decode + GPU compose 2.29 ms/frame
+    against the software engine, mean difference per picture: hardware decode 0.56 levels, software decode uploaded 0.00 levels
+  ok   TheAdaptersAreListedWithCapabilitiesAndOneIsChosenByTheSelector
+  ok   LayersOpacityAndGradeMatchTheSoftwareCompositorOnPicturesWithEdgesAndTransparency
+  ok   MotionCropAndAnchorPlaceAPictureTheSameWayOnBothCompositorsForAnySourceShape
+  ok   DissolvesAdjustmentClipsGeneratorsAndSequenceEffectsMatchTheSoftwareCompositor
+  ok   WhatTheGpuCannotRenderIsRefusedWithAReasonSoTheSoftwareCompositorDoesIt
+  ok   TheGpuPathIsFasterThanTheSoftwarePathAtFullHdAndSaysWhereTheTimeGoes  (4 s)
+  ok   HardwareDecodedPicturesAreComposedWhereTheyAreAndMatchTheSoftwareDecode
+  ok   HardwareDecodeAtFullHdSkipsTheCopiesAndTheColourConversionOfTheSoftwarePath
+  ok   AnEngineAskedForTheGpuComposesOnItAndRendersTheSamePicturesAsTheSoftwareEngine
+  ok   AFrameTheGpuCannotRenderIsComposedInSoftwareAndCountedAndAnExportEngineNeverUsesTheGpu
+  ok   AnEngineDecodesH264OnTheGpuAndComposesItWithoutUploadingAPicture
+gpu: 11/11 passed
+<end of output>
+Test time =   6.19 sec
+----------------------------------------------------------
+Test Passed.
+"cutline_gpu_tests" end time: Oct 07 16:03 India Standard Time
+"cutline_gpu_tests" time elapsed: 00:00:06
+----------------------------------------------------------
+
+12/12 Testing: cutline_speech_tests
+12/12 Test: cutline_speech_tests
+Command: "F:/AAA Project/video_editor/build/native/cutline_speech_tests.exe"
+Directory: F:/AAA Project/video_editor/build/native
+"cutline_speech_tests" start time: Oct 07 16:03 India Standard Time
+Output:
+----------------------------------------------------------
+  ok   TheEnginesWordsBecomeTimedWordsWithoutControlTokensAndWithTheSpokenEnd
+  ok   ASegmentWithoutTokensSharesItsTimeAmongItsWords
+  ok   TheTranscriptIsAFileThatComesBackWholeAndAWronglyShapedOneIsRefused
+  ok   FillersPausesAndPhrasesAreFoundIgnoringCaseAndPunctuation
+  ok   CaptionsBreakAtPausesSentencesAndFullLinesAndLinesAreBalanced
+  ok   TheEngineIsFoundByExplicitPathOrBySearchingAndNeedsAModel
+  ok   ARecordedSentenceIsTranscribedByTheRealEngineAndFollowsTheWordsSpoken
+speech: 7/7 passed
+<end of output>
+Test time =   1.18 sec
+----------------------------------------------------------
+Test Passed.
+"cutline_speech_tests" end time: Oct 07 16:03 India Standard Time
+"cutline_speech_tests" time elapsed: 00:00:01
+----------------------------------------------------------
+
+End testing: Oct 07 16:03 India Standard Time

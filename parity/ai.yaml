@@ -1,0 +1,164 @@
+{
+ "domain": "ai",
+ "feature_defaults": {
+  "implementation": {
+   "components": [],
+   "notes": "No AI execution runtime exists."
+  },
+  "tests": {
+   "unit": [],
+   "integration": [],
+   "fixture": []
+  },
+  "platforms": {
+   "windows": "target",
+   "macos": "future",
+   "linux": "future"
+  },
+  "hardware": {
+   "cpu_fallback": "policy_required",
+   "gpu_optional": true,
+   "pro_io": "not_required"
+  },
+  "known_gaps": [
+   "AI and generative features are expressly outside P0."
+  ],
+  "licensing_notes": "Every provider/model, consent, retention, and generated asset needs durable provenance."
+ },
+ "features": [
+  {
+   "id": "transcription",
+   "name": "Transcription",
+   "priority": "P2",
+   "status": "partial",
+   "acceptance": [
+    "Stores timed transcript with provider/model, language, confidence, and review state."
+   ],
+   "tests": {
+    "unit": [
+     "TheEnginesWordsBecomeTimedWordsWithoutControlTokensAndWithTheSpokenEnd",
+     "TheTranscriptIsAFileThatComesBackWholeAndAWronglyShapedOneIsRefused",
+     "ARecordedSentenceIsTranscribedByTheRealEngineAndFollowsTheWordsSpoken",
+     "TheEngineIsFoundByExplicitPathOrBySearchingAndNeedsAModel"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "speech/Transcript.cpp",
+     "speech/Whisper.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "text_based_editing",
+   "name": "Text-based editing",
+   "priority": "P2",
+   "status": "partial",
+   "acceptance": [
+    "Turns reviewed transcript selections into normal validated edit commands."
+   ],
+   "tests": {
+    "unit": [
+     "WordsAreMappedOntoTrimmedAndRepeatedClipsAtTheirTimelineTimes",
+     "DeletingWordsRemovesTheirTimeFromEveryTrackAsOneUndoStepAndTheRestStaysInSync",
+     "RemovingSeveralRangesPlansEachAgainstTheClipsTheEarlierOnesLeave",
+     "PausesBetweenWordsAreRemovedByLengthAndFillersAreFoundAsWordPositions",
+     "CaptionsAreMadeFromTheWordsOnTheTimelineAtTheirTimelineTimesInOneStep",
+     "FillersPausesAndPhrasesAreFoundIgnoringCaseAndPunctuation"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "ui/TextEdit.cpp",
+     "ui/EditPlanner.cpp",
+     "app/SessionTranscript.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "semantic_search",
+   "name": "Semantic search",
+   "priority": "P2",
+   "status": "deferred",
+   "acceptance": [
+    "Indexes approved embeddings with model/version and invalidation provenance."
+   ]
+  },
+  {
+   "id": "scene_edit_detection",
+   "name": "Scene edit detection",
+   "priority": "P2",
+   "status": "deferred",
+   "acceptance": [
+    "Creates reviewable cut candidates with source evidence."
+   ]
+  },
+  {
+   "id": "speech_enhancement",
+   "name": "Speech enhancement",
+   "priority": "P2",
+   "status": "deferred",
+   "acceptance": [
+    "Creates a reversible effect configuration with model provenance."
+   ]
+  },
+  {
+   "id": "auto_reframe",
+   "name": "Auto reframe",
+   "priority": "P2",
+   "status": "deferred",
+   "acceptance": [
+    "Creates reviewable tracked framing commands, not hidden destructive edits."
+   ]
+  },
+  {
+   "id": "object_selection",
+   "name": "Object selection",
+   "priority": "P2",
+   "status": "deferred",
+   "acceptance": [
+    "Stores masks with model/version, prompt/input, confidence, and review status."
+   ]
+  },
+  {
+   "id": "generative_extend",
+   "name": "Generative extend",
+   "priority": "P3",
+   "status": "deferred",
+   "acceptance": [
+    "Records provider, input, output, consent, and reversible insertion provenance."
+   ]
+  },
+  {
+   "id": "llm_edit_control",
+   "name": "LLM editing control",
+   "priority": "P1",
+   "status": "prototype",
+   "implementation": {
+    "components": [
+     "mcp-server.js"
+    ],
+    "notes": "MCP controls prototype state only; it cannot control native media/rendering."
+   },
+   "acceptance": [
+    "Converts constrained authorized requests to validated project commands with audit trail."
+   ]
+  }
+ ]
+}

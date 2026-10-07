@@ -1,0 +1,12 @@
+Cutline render benchmark: 1920x1080, Release, 3 frames per case
+
+Spatial effects (one float source track; includes base composite and Rgba8 output):
+  blur, radius 12 px    38.428 ms/frame    26.0 fps
+  sharpen, amount 1     30.135 ms/frame    33.2 fps
+  vignette              26.023 ms/frame    38.4 fps
+  lens correction       44.819 ms/frame    22.3 fps
+
+Control:
+  one float track, opacity only    18.531 ms/frame    54.0 fps
+
+Short local microbenchmark on one machine. No decode, disk, GPU upload, UI, or presentation.

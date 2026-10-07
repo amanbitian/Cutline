@@ -1,0 +1,116 @@
+[0/1] Re-running CMake...
+-- FFmpeg found: F:/AAA Project/video_editor/.tools/ffmpeg/include
+-- Configuring done (0.9s)
+-- Generating done (0.0s)
+-- Build files have been written to: F:/AAA Project/video_editor/build/release
+[1/24] Building CXX object CMakeFiles\cutline_core.dir\core\project\Schema.cpp.obj
+[2/24] Building CXX object CMakeFiles\cutline_core.dir\audio\TimeStretch.cpp.obj
+[3/24] Building CXX object CMakeFiles\cutline_core.dir\media\Source.cpp.obj
+[4/24] Building CXX object CMakeFiles\cutline_core.dir\core\util\JsonParse.cpp.obj
+[5/24] Building CXX object CMakeFiles\cutline_core.dir\render\Stabilizer.cpp.obj
+[6/24] Building CXX object CMakeFiles\cutline_core.dir\audio\Dsp.cpp.obj
+[7/24] Building CXX object CMakeFiles\cutline_core.dir\timeline\TimelineCompiler.cpp.obj
+[8/24] Building CXX object CMakeFiles\cutline_core.dir\core\commands\Command.cpp.obj
+[9/24] Building CXX object CMakeFiles\cutline_core.dir\media\SyntheticSource.cpp.obj
+[10/24] Building CXX object CMakeFiles\cutline_core.dir\playback\DecodePool.cpp.obj
+[11/24] Building CXX object CMakeFiles\cutline_core.dir\effects\EffectRegistry.cpp.obj
+[12/24] Building CXX object CMakeFiles\cutline_core.dir\core\commands\CommandService.cpp.obj
+[13/24] Building CXX object CMakeFiles\cutline_core.dir\audio\AudioMixer.cpp.obj
+[14/24] Building CXX object CMakeFiles\cutline_core.dir\exporter\ExportWorker.cpp.obj
+[15/24] Building CXX object CMakeFiles\cutline_core.dir\media\Ingest.cpp.obj
+[16/24] Building CXX object CMakeFiles\cutline_core.dir\media\ffmpeg\FFmpegSource.cpp.obj
+[17/24] Building CXX object CMakeFiles\cutline_core.dir\playback\PlaybackEngine.cpp.obj
+[18/24] Building CXX object CMakeFiles\cutline_core.dir\timeline\SequenceLoader.cpp.obj
+[19/24] Building CXX object CMakeFiles\cutline_core.dir\render\Compositor.cpp.obj
+[20/24] Building CXX object CMakeFiles\cutline_core.dir\core\project\ProjectStore.cpp.obj
+[21/24] Linking CXX static library cutline_core.lib
+[22/24] Building CXX object CMakeFiles\cutline_bench.dir\app\bench_main.cpp.obj
+[23/24] Linking CXX executable cutline_bench.exe
+Cutline render benchmark: 1920x1080, 60 frames per case
+
+== Compile ====================================================
+  1 video track(s)                           0.731 us/call
+  4 video track(s)                           2.095 us/call
+  16 video track(s)                          7.423 us/call
+
+== Composite (8-bit sources) ==================================
+  1 track(s), 3 effects each                36.996 ms/frame     27.0 fps
+  2 track(s), 3 effects each                73.573 ms/frame     13.6 fps  (over a 25 fps budget)
+  4 track(s), 3 effects each               138.648 ms/frame      7.2 fps  (over a 25 fps budget)
+
+== Composite (float sources, no conversion) ===================
+  1 track(s), 3 effects each                32.387 ms/frame     30.9 fps
+  2 track(s), 3 effects each                62.166 ms/frame     16.1 fps  (over a 25 fps budget)
+  4 track(s), 3 effects each               117.902 ms/frame      8.5 fps  (over a 25 fps budget)
+
+== Effect stack depth (1 track) ===============================
+  1 effect(s)                               17.813 ms/frame     56.1 fps
+  5 effect(s)                               46.833 ms/frame     21.4 fps  (over a 25 fps budget)
+  17 effect(s)                             132.993 ms/frame      7.5 fps  (over a 25 fps budget)
+
+== Spatial effects (1 float track) ============================
+  blur, radius 12 px                        36.605 ms/frame     27.3 fps
+  sharpen, amount 1                         29.498 ms/frame     33.9 fps
+  vignette                                  25.606 ms/frame     39.1 fps
+  lens correction                           43.171 ms/frame     23.2 fps  (over a 25 fps budget)
+
+== Mix (1024-frame blocks, 48 kHz stereo) =====================
+  4 tracks, plain clips                     17.542 us/call
+  4 tracks, retimed 3/2 (interpolated)      21.149 us/call
+  4 tracks, reversed and retimed            21.021 us/call
+  4 tracks, gain keyframed per sample        0.562 ms/frame   1778.2 fps
+  1 track of 10,000 clips                    5.038 us/call
+  4 tracks, eq+compressor+limiter, no cache    16.162 ms/frame     61.9 fps
+  4 tracks, eq+compressor+limiter, cell cache     1.071 ms/frame    934.0 fps
+
+== Compile scaling: clips in the sequence ======================
+  Compile(sequence), 10 clips                0.289 us/call
+  Compile(graph),    10 clips                0.287 us/call
+  Compile(sequence), 1000 clips              0.333 us/call
+  Compile(graph),    1000 clips              0.315 us/call
+  Compile(sequence), 10000 clips             0.322 us/call
+  Compile(graph),    10000 clips             0.333 us/call
+  Compile(sequence), 50000 clips             0.486 us/call
+  Compile(graph),    50000 clips             0.446 us/call
+
+== Load one sequence from a project with many ===============
+  load 'target' beside 0 animated sequences     0.228 ms/frame   4388.4 fps
+      read 1 effects, 1 parameters, 0 keyframes
+  load 'target' beside 20 animated sequences     0.231 ms/frame   4320.9 fps
+      read 1 effects, 1 parameters, 0 keyframes
+  load 'target' beside 80 animated sequences     0.239 ms/frame   4187.2 fps
+      read 1 effects, 1 parameters, 0 keyframes
+
+== Decode and seek (real files, no store) ==================
+
+  audio, 1024-frame blocks read in order (a playback-sized request)
+  PCM, 48 kHz stereo                 n= 185  median    0.001  p95    0.005  p99    0.006  max    0.764 ms
+  AAC, 48 kHz mono                   n= 185  median    0.004  p95    0.006  p99    0.012  max    0.131 ms
+  PCM 44.1 -> 48 kHz mono            n= 185  median    0.000  p95    0.009  p99    0.010  max    0.089 ms
+
+  audio, a block at a random place (each read seeks)
+  PCM in Matroska, stereo            n= 300  median    0.024  p95    0.069  p99    0.085  max    0.122 ms
+      (first read, which includes any one-off index: 0.475 ms)
+  AAC in MP4, mono                   n= 300  median    0.042  p95    0.167  p99    0.182  max    0.205 ms
+      (first read, which includes any one-off index: 0.147 ms)
+  PCM 44.1 -> 48 kHz, Matroska       n= 300  median    0.048  p95    0.103  p99    0.123  max    0.169 ms
+      (first read, which includes any one-off index: 0.497 ms)
+  PCM 44.1 -> 48 kHz, WAV            n= 300  median    0.025  p95    0.071  p99    0.086  max    0.141 ms
+      (first read, which includes any one-off index: 0.102 ms)
+
+  video, frames read in order, and at random places (each random read seeks)
+  H.264 320x180, GOP 30, in order    n=  90  median    0.032  p95    0.072  p99    0.091  max    2.791 ms
+  H.264 320x180, GOP 30, random      n= 200  median    1.301  p95    2.284  p99    2.580  max    2.808 ms
+  FFV1 64x48, intra-only, in order   n=  90  median    0.012  p95    0.023  p99    0.060  max    1.712 ms
+  FFV1 64x48, intra-only, random     n= 200  median    0.254  p95    0.388  p99    0.465  max    0.470 ms
+
+  audio and video from one file, alternating (what playback does)
+  H.264 + AAC, 40 ms of each per step n= 150  median    0.024  p95    0.054  p99    0.448  max    2.252 ms
+
+== Playback read-ahead (H.264 320x180, random seeks) =======
+  seek request -> raw frame cached   n=  80  median    1.317  p95    1.978  p99    2.285  max    3.612 ms
+  cached raw frame -> composed frame n=  80  median    0.371  p95    0.638  p99    0.685  max    0.771 ms
+      queued 84, completed 84, consumed from read-ahead 80
+
+== Edit command latency (store only; excludes UI and rendering) ===
+cutline_bench failed: Effect grade has no parameter named position

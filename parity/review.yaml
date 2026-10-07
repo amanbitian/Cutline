@@ -1,0 +1,12 @@
+{
+  "domain": "review",
+  "feature_defaults": {"implementation":{"components":[],"notes":"No review service exists."},"tests":{"unit":[],"integration":[],"fixture":[]},"platforms":{"windows":"target","macos":"future","linux":"future"},"hardware":{"cpu_fallback":"required","gpu_optional":true,"pro_io":"not_required"},"known_gaps":["Web review, identity, and media delivery are outside P0."],"licensing_notes":"External sharing must comply with media security and retention policy."},
+  "features": [
+    {"id":"review_link","name":"Review link","priority":"P3","status":"planned","acceptance":["Creates a revocable scoped link to a versioned review asset." ]},
+    {"id":"frame_comments","name":"Frame comments","priority":"P3","status":"planned","acceptance":["Anchors comments to sequence time/frame and asset revision." ]},
+    {"id":"drawing_annotations","name":"Drawing annotations","priority":"P3","status":"planned","acceptance":["Stores vector annotations separately from source media." ]},
+    {"id":"review_approvals","name":"Review approvals","priority":"P3","status":"planned","acceptance":["Records approver identity, target version, decision, and timestamp." ]},
+    {"id":"review_version_compare","name":"Review version compare","priority":"P3","status":"planned","acceptance":["Compares declared output versions with source/provenance identifiers." ]},
+    {"id":"review_notification","name":"Review notifications","priority":"P3","status":"planned","acceptance":["Delivers configured notifications without embedding secrets in the project." ]}
+  ]
+}

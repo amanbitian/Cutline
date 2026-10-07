@@ -1,0 +1,141 @@
+{
+ "domain": "performance",
+ "feature_defaults": {
+  "implementation": {
+   "components": [],
+   "notes": "No end-to-end performance pipeline exists."
+  },
+  "tests": {
+   "unit": [],
+   "integration": [],
+   "fixture": []
+  },
+  "platforms": {
+   "windows": "target",
+   "macos": "future",
+   "linux": "future"
+  },
+  "hardware": {
+   "cpu_fallback": "required",
+   "gpu_optional": true,
+   "pro_io": "not_required"
+  },
+  "known_gaps": [
+   "Benchmarks require real decode, render, audio, and export paths."
+  ],
+  "licensing_notes": "No license review recorded."
+ },
+ "features": [
+  {
+   "id": "background_job_scheduler",
+   "name": "Background job scheduler",
+   "priority": "P1",
+   "status": "partial",
+   "implementation": {
+    "components": [
+     "core/job-scheduler.js"
+    ],
+    "notes": "Prototype Node scheduler unit tests exist; it is not a native worker service."
+   },
+   "acceptance": [
+    "Schedules bounded background jobs with cancellation, retry, and durable state."
+   ]
+  },
+  {
+   "id": "playback_frame_budget",
+   "name": "Playback frame budget",
+   "priority": "P1",
+   "status": "planned",
+   "acceptance": [
+    "Measures decode, render, queue, and present latency per playback frame."
+   ]
+  },
+  {
+   "id": "audio_callback_budget",
+   "name": "Audio callback budget",
+   "priority": "P0",
+   "status": "partial",
+   "acceptance": [
+    "Verifies audio callback avoids allocation, I/O, and unbounded locks."
+   ]
+  },
+  {
+   "id": "render_cache",
+   "name": "Render cache",
+   "priority": "P1",
+   "status": "planned",
+   "acceptance": [
+    "Caches render results with complete dependency invalidation."
+   ]
+  },
+  {
+   "id": "media_cache",
+   "name": "Media cache",
+   "priority": "P1",
+   "status": "planned",
+   "acceptance": [
+    "Caches conformed/indexed media with versioned invalidation and eviction."
+   ]
+  },
+  {
+   "id": "proxy_generation",
+   "name": "Proxy generation",
+   "priority": "P1",
+   "status": "implemented",
+   "implementation": {
+    "components": [
+     "media/ProxyWorkflow",
+     "media/Writer"
+    ],
+    "notes": "ProxyJob runs cancellable generation on a background thread through local source/writer providers with bounded target dimensions."
+   },
+   "tests": {
+    "unit": [
+     "LocalProxyGenerationResizesAndCanBeCancelled"
+    ],
+    "integration": [
+     "TheMonitorPrefersAProxyAndFallsBackToTheOriginal",
+     "ExportUsesOriginalsWhenTheMonitorPrefersAProxy"
+    ],
+    "fixture": []
+   },
+   "acceptance": [
+    "Creates tracked proxy jobs without blocking interactive playback."
+   ]
+  },
+  {
+   "id": "crash_recovery",
+   "name": "Crash recovery",
+   "priority": "P0",
+   "status": "partial",
+   "implementation": {
+    "components": [
+     "core/project journal",
+     "core/project snapshots"
+    ],
+    "notes": "Journal/snapshot foundation exists but has not been validated against process interruption."
+   },
+   "acceptance": [
+    "Reopens the last valid state after interrupted write with user-readable recovery report."
+   ]
+  },
+  {
+   "id": "telemetry_diagnostics",
+   "name": "Diagnostics",
+   "priority": "P1",
+   "status": "planned",
+   "acceptance": [
+    "Captures opt-in local diagnostics with redaction and export controls."
+   ]
+  },
+  {
+   "id": "memory_pressure_handling",
+   "name": "Memory pressure handling",
+   "priority": "P1",
+   "status": "planned",
+   "acceptance": [
+    "Evicts reclaimable caches and degrades gracefully under declared thresholds."
+   ]
+  }
+ ]
+}

@@ -1,0 +1,73 @@
+﻿[1/3] Building CXX object CMakeFiles\cutline_core.dir\core\project\ProjectStore.cpp.obj
+[2/3] Linking CXX static library cutline_core.lib
+[3/3] Linking CXX executable cutline_bench.exe
+Cutline render benchmark: 1920x1080, 10 frames per case
+
+== Compile ====================================================
+  1 video track(s)                           0.802 us/call
+  4 video track(s)                           1.897 us/call
+  16 video track(s)                          6.700 us/call
+
+== Composite (8-bit sources) ==================================
+  1 track(s), 3 effects each                37.398 ms/frame     26.7 fps
+  2 track(s), 3 effects each                70.725 ms/frame     14.1 fps  (over a 25 fps budget)
+  4 track(s), 3 effects each               137.756 ms/frame      7.3 fps  (over a 25 fps budget)
+
+== Composite (float sources, no conversion) ===================
+  1 track(s), 3 effects each                32.579 ms/frame     30.7 fps
+  2 track(s), 3 effects each                64.012 ms/frame     15.6 fps  (over a 25 fps budget)
+  4 track(s), 3 effects each               123.501 ms/frame      8.1 fps  (over a 25 fps budget)
+
+== Effect stack depth (1 track) ===============================
+  1 effect(s)                               18.847 ms/frame     53.1 fps
+  5 effect(s)                               47.734 ms/frame     20.9 fps  (over a 25 fps budget)
+  17 effect(s)                             135.412 ms/frame      7.4 fps  (over a 25 fps budget)
+
+== Mix (1024-frame blocks) ====================================
+  1 audio track                              3.493 us/call
+
+== Compile scaling: clips in the sequence ======================
+  Compile(sequence), 10 clips                0.286 us/call
+  Compile(graph),    10 clips                0.280 us/call
+  Compile(sequence), 1000 clips              0.312 us/call
+  Compile(graph),    1000 clips              0.326 us/call
+  Compile(sequence), 10000 clips             0.317 us/call
+  Compile(graph),    10000 clips             0.315 us/call
+  Compile(sequence), 50000 clips             0.501 us/call
+  Compile(graph),    50000 clips             0.428 us/call
+
+== Load one sequence from a project with many ===============
+  load 'target' beside 0 animated sequences     0.268 ms/frame   3735.4 fps
+      read 1 effects, 1 parameters, 0 keyframes
+  load 'target' beside 20 animated sequences     0.277 ms/frame   3614.6 fps
+      read 1 effects, 1 parameters, 0 keyframes
+  load 'target' beside 80 animated sequences     0.234 ms/frame   4277.6 fps
+      read 1 effects, 1 parameters, 0 keyframes
+
+== Edit command latency (store only; excludes UI and rendering) ===
+
+  in-memory database: 1000 clips on 4 tracks, 25 transitions, 125 animated clips (built in 0.1 s)
+  MoveClip                           n= 150  median    0.059  p95    0.080  p99    0.117  max    0.144 ms
+  TrimClip (slip)                    n= 150  median    0.056  p95    0.071  p99    0.110  max    0.132 ms
+  SplitClip, animated                n= 125  median    0.222  p95    0.364  p99    0.451  max    0.461 ms
+  SetClipSpeed                       n= 125  median    0.054  p95    0.063  p99    0.081  max    0.094 ms
+  AddTransition                      n= 115  median    0.052  p95    0.086  p99    0.155  max    0.176 ms
+  SetTransitionTiming                n=  24  median    0.040  p95    0.067  p99    0.074  max    0.074 ms
+  Undo                               n= 150  median    0.357  p95    0.482  p99    0.603  max    0.634 ms
+
+  on-disk package (WAL + journal files): 1000 clips on 4 tracks, 25 transitions, 125 animated clips (built in 1.1 s)
+  MoveClip                           n= 150  median    0.596  p95    0.836  p99    3.270  max    6.079 ms
+  TrimClip (slip)                    n= 150  median    0.591  p95    0.839  p99    3.292  max    3.880 ms
+  SplitClip, animated                n= 125  median    0.908  p95    1.236  p99    4.486  max    4.913 ms
+  SetClipSpeed                       n= 125  median    0.584  p95    0.718  p99    4.213  max    6.148 ms
+  AddTransition                      n= 115  median    0.591  p95    0.740  p99    1.246  max    5.488 ms
+  SetTransitionTiming                n=  24  median    0.564  p95    0.652  p99    0.687  max    0.687 ms
+  Undo                               n= 150  median    0.398  p95    0.656  p99    3.813  max    3.974 ms
+cmd : cutline_bench failed: remove_all: The process cannot access the file because it is being used by another 
+process.: "C:\Users\user\AppData\Local\Temp\cutline-bench-edits.vproj"
+At line:1 char:487
++ ... "=== checks DISABLED ==="; cmd /c "scripts\bench.bat 10" 2>&1 | Tee-O ...
++                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (cutline_bench f...ch-edits.vproj":String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 

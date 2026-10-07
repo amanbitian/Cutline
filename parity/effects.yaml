@@ -1,0 +1,440 @@
+{
+ "domain": "effects",
+ "feature_defaults": {
+  "implementation": {
+   "components": [],
+   "notes": "No dedicated production runtime exists."
+  },
+  "tests": {
+   "unit": [],
+   "integration": [],
+   "fixture": []
+  },
+  "platforms": {
+   "windows": "target",
+   "macos": "future",
+   "linux": "future"
+  },
+  "hardware": {
+   "cpu_fallback": "required",
+   "gpu_optional": true,
+   "pro_io": "not_required"
+  },
+  "known_gaps": [
+   "No validated native runtime yet."
+  ],
+  "licensing_notes": "Third-party effect hosting requires a separate compatibility policy."
+ },
+ "features": [
+  {
+   "id": "effect_graph",
+   "name": "Effect graph",
+   "priority": "P1",
+   "status": "partial",
+   "acceptance": [
+    "Compiles ordered effect nodes into an immutable render request."
+   ]
+  },
+  {
+   "id": "transform_effect",
+   "name": "Transform effect",
+   "priority": "P1",
+   "status": "implemented",
+   "implementation": {
+    "components": [
+     "render/Compositor.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   },
+   "acceptance": [
+    "Applies position, scale, rotation, and anchor in composited output."
+   ],
+   "tests": {
+    "unit": [
+     "ScalingShrinksTheImageAboutTheCentre",
+     "PositionTranslatesTheImage",
+     "GoldenTransformedPictureInPicture"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   }
+  },
+  {
+   "id": "opacity_effect",
+   "name": "Opacity effect",
+   "priority": "P1",
+   "status": "implemented",
+   "implementation": {
+    "components": [
+     "render/Compositor.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   },
+   "acceptance": [
+    "Applies alpha consistently in preview and export."
+   ],
+   "tests": {
+    "unit": [
+     "OpacityEffectScalesContribution",
+     "KeyframedOpacityRampsOverTheClip"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   }
+  },
+  {
+   "id": "crop_effect",
+   "name": "Crop effect",
+   "priority": "P1",
+   "status": "implemented",
+   "acceptance": [
+    "Applies pixel-accurate crop including keyframed bounds."
+   ],
+   "tests": {
+    "unit": [
+     "CropRemovesPartOfTheSource"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "render/Compositor.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "motion_keyframes",
+   "name": "Motion keyframes",
+   "priority": "P1",
+   "status": "implemented",
+   "acceptance": [
+    "Evaluates supported interpolation deterministically at render time."
+   ],
+   "tests": {
+    "unit": [
+     "ClipEffectsAreSampledInClipLocalTime",
+     "AnimatedValueInterpolatesLinearly",
+     "BezierHandlesShapeTheCurve",
+     "SplitKeyframesReproducesTheOriginalCurveOnBothSides",
+     "SplittingAnAnimatedClipPreservesItsAnimationForEveryInterpolation",
+     "UndoingASplitRestoresPlaybackAndAnimationExactly"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "core/anim/Keyframe.cpp",
+     "render/Compositor.cpp",
+     "core/project/ProjectStore.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "effect_presets",
+   "name": "Effect presets",
+   "priority": "P1",
+   "status": "planned",
+   "acceptance": [
+    "Stores versioned reusable parameter sets."
+   ]
+  },
+  {
+   "id": "effect_bypass",
+   "name": "Effect bypass",
+   "priority": "P1",
+   "status": "implemented",
+   "acceptance": [
+    "Bypasses an effect without discarding parameters or keyframes."
+   ],
+   "tests": {
+    "unit": [
+     "DisabledEffectsAreDropped",
+     "IntrinsicEffectsCannotBeRemoved"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "render/Compositor.cpp",
+     "core/project/ProjectStore.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "blur_effect",
+   "name": "Blur",
+   "priority": "P1",
+   "status": "implemented",
+   "acceptance": [
+    "Applies a keyframeable, bounded blur without per-frame allocations."
+   ],
+   "implementation": {
+    "components": [
+     "render/Compositor.cpp"
+    ],
+    "notes": "Separable sliding-window CPU reference implementation."
+   },
+   "tests": {
+    "unit": [
+     "BlurUsesASeparableNormalisedKernel"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden"
+    ]
+   }
+  },
+  {
+   "id": "sharpen_effect",
+   "name": "Sharpen",
+   "priority": "P1",
+   "status": "implemented",
+   "acceptance": [
+    "Raises local contrast while preserving alpha."
+   ],
+   "implementation": {
+    "components": [
+     "render/Compositor.cpp"
+    ],
+    "notes": "Bounded premultiplied-alpha CPU reference implementation."
+   },
+   "tests": {
+    "unit": [
+     "SharpenRaisesLocalContrastWithoutChangingAlpha"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden"
+    ]
+   }
+  },
+  {
+   "id": "vignette_effect",
+   "name": "Vignette",
+   "priority": "P1",
+   "status": "implemented",
+   "acceptance": [
+    "Provides keyframeable amount, midpoint, feather, and centre controls."
+   ],
+   "implementation": {
+    "components": [
+     "render/Compositor.cpp"
+    ],
+    "notes": "Runs in place over the layer dirty rectangle."
+   },
+   "tests": {
+    "unit": [
+     "VignetteDarkensCornersAndPreservesTheCentre"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden"
+    ]
+   }
+  },
+  {
+   "id": "lens_correction",
+   "name": "Lens and wide-angle correction",
+   "priority": "P1",
+   "status": "implemented",
+   "acceptance": [
+    "Corrects radial distortion with centre, scale, and quadratic controls."
+   ],
+   "implementation": {
+    "components": [
+     "render/Compositor.cpp"
+    ],
+    "notes": "Bilinear radial resampling; available as lens_correction and wide_angle."
+   },
+   "tests": {
+    "unit": [
+     "LensCorrectionRemapsPixelsRadially"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden"
+    ]
+   }
+  },
+  {
+   "id": "cube_lut",
+   "name": "3D .cube LUT",
+   "priority": "P1",
+   "status": "implemented",
+   "acceptance": [
+    "Loads a project-relative .cube asset, interpolates it in 3D, and blends by intensity."
+   ],
+   "implementation": {
+    "components": [
+     "render/CubeLut.cpp",
+     "render/Compositor.cpp",
+     "render/D3D11Compositor.cpp",
+     "timeline/SequenceLoader.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   },
+   "tests": {
+    "unit": [
+     "CubeLutLoadsOnceAndBlendsByIntensity",
+     "MissingLutIsReportedAndBypassed",
+     "OneDimensionalCubeTablesAreCurvesPerChannelAndAdobeRangesAreRead",
+     "TheLutSamplerMapsEveryColourTheSameWhicheverCallIsUsedAndDecimalsDoNotDependOnTheLocale",
+     "ALutOnTheCardGivesTheSamePictureAsTheSoftwareCompositorForCubesCurvesDomainsAndIntensity"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   }
+  },
+  {
+   "id": "masks",
+   "name": "Masks",
+   "priority": "P2",
+   "status": "implemented",
+   "acceptance": [
+    "Renders serialized geometric masks with feather and expansion."
+   ],
+   "implementation": {
+    "components": [
+     "effects/MaskDocument.cpp",
+     "core/project/ProjectStore.cpp",
+     "timeline/SequenceLoader.cpp",
+     "render/Compositor.cpp"
+    ],
+    "notes": "Versioned rectangle, ellipse and cubic Bezier masks support animation, feather, expansion, inversion, opacity and ordered combine modes."
+   },
+   "tests": {
+    "unit": [
+     "GeometricMaskLimitsAnEffectToItsRectangleAndFeather",
+     "AnimatedEllipseMaskIsSampledInClipLocalTime",
+     "AnimatedMasksPersistUndoAndSplitWithTheirEffect",
+     "HeadTrimKeepsMaskAnimationOnTheSameSourceFrames"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden"
+    ]
+   }
+  },
+  {
+   "id": "mask_tracking",
+   "name": "Mask tracking",
+   "priority": "P2",
+   "status": "planned",
+   "acceptance": [
+    "Stores reviewable tracking data with source and algorithm provenance."
+   ]
+  },
+  {
+   "id": "stabilization",
+   "name": "Stabilization",
+   "priority": "P2",
+   "status": "implemented",
+   "acceptance": [
+    "Produces a reversible analysis result and deterministic transform application."
+   ],
+   "implementation": {
+    "components": [
+     "render/Stabilizer.cpp",
+     "render/Compositor.cpp"
+    ],
+    "notes": "Offline luma-proxy translational analysis emits editable position and auto-crop scale keyframes."
+   },
+   "tests": {
+    "unit": [
+     "StabilizerAnalysisFindsAndSmoothsCameraShake",
+     "StabilizerCorrectionIsAppliedAsReversibleMotion"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden"
+    ]
+   }
+  },
+  {
+   "id": "time_remapping",
+   "name": "Time remapping",
+   "priority": "P2",
+   "status": "implemented",
+   "acceptance": [
+    "Maps output time to source time through explicit rational curves."
+   ],
+   "tests": {
+    "unit": [
+     "ASpeedRampSetsTheClipsLengthAndPlaysTheSourceThroughItsSegmentsExactlyAtTheirBoundaries",
+     "ASegmentThatRunsBackwardsReachesBackAndTheWindowGrowsToIt",
+     "SplittingARampedClipPlaysExactlyWhatItPlayedBeforeAndUndoPutsItBack",
+     "ARampKeepsTheAudioPartnerInStepAndCanBeTakenOffToLeaveSteadyPlayback",
+     "ARampIsRefusedWhereItCouldNotPlayAndTheEditsItWouldBreakAreRefused",
+     "ARampSurvivesClosingAndReopeningTheProject",
+     "AudioFollowsTheSameSpeedRampFreezeAndReverseCurveAsVideo",
+     "APitchKeepingClipRetimedByARampKeepsItsPitchWhereVarispeedFollowsTheSpeed",
+     "ARetimedPitchKeepingClipIsTheSameWhateverBlocksItIsAskedForInAndHoldsAndReversesFallBackAndSaySo"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "core/project/ProjectStore.cpp",
+     "timeline/TimelineCompiler.cpp",
+     "audio/AudioMixer.cpp",
+     "audio/TimeStretch.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  }
+ ]
+}

@@ -1,0 +1,198 @@
+{
+ "domain": "graphics",
+ "feature_defaults": {
+  "implementation": {
+   "components": [],
+   "notes": "No dedicated production runtime exists."
+  },
+  "tests": {
+   "unit": [],
+   "integration": [],
+   "fixture": []
+  },
+  "platforms": {
+   "windows": "target",
+   "macos": "future",
+   "linux": "future"
+  },
+  "hardware": {
+   "cpu_fallback": "required",
+   "gpu_optional": true,
+   "pro_io": "not_required"
+  },
+  "known_gaps": [
+   "No validated native runtime yet."
+  ],
+  "licensing_notes": "Font embedding and distribution need export policy review."
+ },
+ "features": [
+  {
+   "id": "text_graphics",
+   "name": "Text graphics",
+   "priority": "P1",
+   "status": "implemented",
+   "acceptance": [
+    "Renders editable styled text with deterministic font fallback."
+   ],
+   "tests": {
+    "unit": [
+     "TextIsRasterisedAtTheSizeAskedWrappedAndAlignedAndAFontThatIsMissingIsSaid",
+     "TemplateControlsTakeColoursAndRangesAndFontListsFallBackToWhatIsInstalled",
+     "TextAndPicturesTakeOutlinesAndRoundedCornersToo",
+     "TheDesignerAddsDuplicatesStacksAndRemovesElementsAndChecksWhatItIsGiven"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "render/TextRaster.cpp",
+     "render/Graphics.cpp",
+     "ui/GraphicsDesigner.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "shape_graphics",
+   "name": "Shape graphics",
+   "priority": "P1",
+   "status": "implemented",
+   "acceptance": [
+    "Renders editable vector shapes in the composition pipeline."
+   ],
+   "tests": {
+    "unit": [
+     "GraphicsDocumentsDrawShapesImagesAndRoundTripTheirVersionedFormat",
+     "AnchoredGraphicElementsKeepTheirMarginsAndSizeWhenThePictureChangesShape",
+     "AGraphicLivesInTheProjectAndItsClipDrawsItAnimatedWithNoFileOutsideTheProject",
+     "AGraphicElementTurnsAboutItsMiddleAndTheDocumentNeedsTheNewestSchemaOnlyWhenItUsesIt",
+     "AnOutlineIsDrawnInsideAShapeAndRoundedCornersCutTheCornersAway",
+     "AShadowFollowsTheElementInThePicturesOwnDirectionsAndSoftensWithItsBlur",
+     "ClickingTheCanvasSelectsTheTopElementAllowingForItsTurnAndGripsFollowTheTurn",
+     "DraggingMovesWithSnapResizesFromTheOppositeEdgeTurnsAndAlignsToTheDocument"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "effects/GraphicsDocument.cpp",
+     "render/Graphics.cpp",
+     "ui/GraphicsDesigner.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "essential_graphics_templates",
+   "name": "Reusable graphic templates",
+   "priority": "P2",
+   "status": "implemented",
+   "acceptance": [
+    "Packages exposed parameters, assets, and version metadata."
+   ],
+   "tests": {
+    "unit": [
+     "MotionGraphicsTemplatesExposeVersionedReusableControls",
+     "TemplateControlsTakeColoursAndRangesAndFontListsFallBackToWhatIsInstalled",
+     "TemplatePackagesAreInstalledByVersionAndAnInstanceKeepsDrawingTheVersionItWasMadeWith",
+     "GraphicsAndTemplatesSurviveReopeningAndAProjectFromBeforeThemGetsEmptyTables",
+     "EveryBuiltInTemplateIsValidDrawsWithItsDefaultsAndMakesControlsForWhatAPersonChanges",
+     "ATemplateIsInstalledOnceMadeIntoTitlesAndItsValuesChangedInOneStep",
+     "GraphicsAreCreatedPlacedOnTheTopFreeTrackEditedAndOnlyDeletedWhenNothingShowsThem"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "effects/GraphicsDocument.cpp",
+     "core/project/ProjectStore.cpp",
+     "ui/GraphicsDesigner.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "lower_thirds",
+   "name": "Lower-third templates",
+   "priority": "P1",
+   "status": "planned",
+   "acceptance": [
+    "Creates reusable lower-third templates with editable fields."
+   ]
+  },
+  {
+   "id": "responsive_design_time",
+   "name": "Responsive design time",
+   "priority": "P2",
+   "status": "planned",
+   "acceptance": [
+    "Retimes declared graphic regions without breaking protected segments."
+   ]
+  },
+  {
+   "id": "graphics_keyframes",
+   "name": "Graphics keyframes",
+   "priority": "P1",
+   "status": "implemented",
+   "acceptance": [
+    "Animates graphic properties through the shared keyframe model."
+   ],
+   "tests": {
+    "unit": [
+     "AnimatedGraphicPropertiesFollowTheirKeysAndEachInterpolationKeepsItsEndpoints",
+     "AGraphicLivesInTheProjectAndItsClipDrawsItAnimatedWithNoFileOutsideTheProject"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "effects/GraphicsDocument.cpp",
+     "render/Graphics.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "svg_import",
+   "name": "SVG import",
+   "priority": "P2",
+   "status": "planned",
+   "acceptance": [
+    "Imports a documented safe SVG subset with diagnostics."
+   ]
+  },
+  {
+   "id": "font_management",
+   "name": "Font management",
+   "priority": "P1",
+   "status": "planned",
+   "acceptance": [
+    "Records required fonts and reports substitution in project and export."
+   ]
+  }
+ ]
+}

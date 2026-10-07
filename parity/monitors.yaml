@@ -1,0 +1,113 @@
+{
+ "domain": "monitors",
+ "feature_defaults": {
+  "implementation": {
+   "components": [],
+   "notes": "No dedicated production runtime exists."
+  },
+  "tests": {
+   "unit": [],
+   "integration": [],
+   "fixture": []
+  },
+  "platforms": {
+   "windows": "target",
+   "macos": "future",
+   "linux": "future"
+  },
+  "hardware": {
+   "cpu_fallback": "required",
+   "gpu_optional": true,
+   "pro_io": "not_required"
+  },
+  "known_gaps": [
+   "No validated native runtime yet."
+  ],
+  "licensing_notes": "No license review recorded."
+ },
+ "features": [
+  {
+   "id": "source_playback",
+   "name": "Source playback",
+   "priority": "P0",
+   "status": "planned",
+   "acceptance": [
+    "Plays, pauses, seeks, and frame-steps decoded source media."
+   ]
+  },
+  {
+   "id": "program_playback",
+   "name": "Program playback",
+   "priority": "P0",
+   "status": "implemented",
+   "acceptance": [
+    "Presents compiled sequence output at the transport clock."
+   ],
+   "tests": {
+    "unit": [
+     "TheEngineRendersTheCorrectSourceFrame",
+     "PlaybackAdvancesOnTheAudioClock"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "playback/PlaybackEngine.cpp",
+     "render/Compositor.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "monitor_safe_margins",
+   "name": "Safe margins",
+   "priority": "P1",
+   "status": "planned",
+   "acceptance": [
+    "Displays title/action safe overlays independent of source pixels."
+   ]
+  },
+  {
+   "id": "monitor_overlays",
+   "name": "Monitor overlays",
+   "priority": "P1",
+   "status": "planned",
+   "acceptance": [
+    "Shows timecode, dropped-frame, and playback diagnostics accurately."
+   ]
+  },
+  {
+   "id": "monitor_zoom",
+   "name": "Monitor zoom",
+   "priority": "P1",
+   "status": "planned",
+   "acceptance": [
+    "Changes presentation scale without altering render resolution."
+   ]
+  },
+  {
+   "id": "reference_monitor",
+   "name": "Reference monitor",
+   "priority": "P2",
+   "status": "planned",
+   "acceptance": [
+    "Displays a selected still/frame for visual comparison."
+   ]
+  },
+  {
+   "id": "fullscreen_playback",
+   "name": "Fullscreen playback",
+   "priority": "P1",
+   "status": "planned",
+   "acceptance": [
+    "Presents program output in a dedicated fullscreen surface."
+   ]
+  }
+ ]
+}

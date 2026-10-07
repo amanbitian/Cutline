@@ -1,0 +1,89 @@
+﻿[1/19] Building CXX object CMakeFiles\cutline_core.dir\core\project\Schema.cpp.obj
+[2/19] Building CXX object CMakeFiles\cutline_core.dir\core\util\Json.cpp.obj
+[3/19] Building CXX object CMakeFiles\cutline_core.dir\core\anim\Keyframe.cpp.obj
+[4/19] Building CXX object CMakeFiles\cutline_core.dir\media\Source.cpp.obj
+[5/19] Building CXX object CMakeFiles\cutline_core.dir\audio\AudioMixer.cpp.obj
+[6/19] Building CXX object CMakeFiles\cutline_core.dir\core\commands\Command.cpp.obj
+[7/19] Building CXX object CMakeFiles\cutline_core.dir\timeline\TimelineCompiler.cpp.obj
+[8/19] Building CXX object CMakeFiles\cutline_core.dir\render\Compositor.cpp.obj
+[9/19] Building CXX object CMakeFiles\cutline_core.dir\playback\PlaybackEngine.cpp.obj
+[10/19] Building CXX object CMakeFiles\cutline_core.dir\media\SyntheticSource.cpp.obj
+[11/19] Building CXX object CMakeFiles\cutline_core.dir\core\commands\CommandService.cpp.obj
+[12/19] Building CXX object CMakeFiles\cutline_core.dir\exporter\ExportWorker.cpp.obj
+[13/19] Building CXX object CMakeFiles\cutline_core.dir\media\ffmpeg\FFmpegSource.cpp.obj
+[14/19] Building CXX object CMakeFiles\cutline_core.dir\media\Ingest.cpp.obj
+[15/19] Building CXX object CMakeFiles\cutline_core.dir\timeline\SequenceLoader.cpp.obj
+[16/19] Building CXX object CMakeFiles\cutline_core.dir\core\project\ProjectStore.cpp.obj
+[17/19] Linking CXX static library cutline_core.lib
+[18/19] Building CXX object CMakeFiles\cutline_bench.dir\app\bench_main.cpp.obj
+[19/19] Linking CXX executable cutline_bench.exe
+Cutline render benchmark: 1920x1080, 40 frames per case
+
+== Compile ====================================================
+  1 video track(s)                           0.679 us/call
+  4 video track(s)                           2.113 us/call
+  16 video track(s)                          7.066 us/call
+
+== Composite (8-bit sources) ==================================
+  1 track(s), 3 effects each                37.933 ms/frame     26.4 fps
+  2 track(s), 3 effects each                70.161 ms/frame     14.3 fps  (over a 25 fps budget)
+  4 track(s), 3 effects each               137.596 ms/frame      7.3 fps  (over a 25 fps budget)
+
+== Composite (float sources, no conversion) ===================
+  1 track(s), 3 effects each                32.724 ms/frame     30.6 fps
+  2 track(s), 3 effects each                62.083 ms/frame     16.1 fps  (over a 25 fps budget)
+  4 track(s), 3 effects each               117.899 ms/frame      8.5 fps  (over a 25 fps budget)
+
+== Effect stack depth (1 track) ===============================
+  1 effect(s)                               17.843 ms/frame     56.0 fps
+  5 effect(s)                               47.240 ms/frame     21.2 fps  (over a 25 fps budget)
+  17 effect(s)                             133.089 ms/frame      7.5 fps  (over a 25 fps budget)
+
+== Mix (1024-frame blocks) ====================================
+  1 audio track                              3.260 us/call
+
+== Compile scaling: clips in the sequence ======================
+  Compile(sequence), 10 clips                0.282 us/call
+  Compile(graph),    10 clips                0.286 us/call
+  Compile(sequence), 1000 clips              0.311 us/call
+  Compile(graph),    1000 clips              0.314 us/call
+  Compile(sequence), 10000 clips             0.328 us/call
+  Compile(graph),    10000 clips             0.432 us/call
+  Compile(sequence), 50000 clips             0.435 us/call
+  Compile(graph),    50000 clips             0.436 us/call
+
+== Load one sequence from a project with many ===============
+  load 'target' beside 0 animated sequences     0.253 ms/frame   3949.8 fps
+      read 1 effects, 1 parameters, 0 keyframes
+  load 'target' beside 20 animated sequences     0.234 ms/frame   4264.6 fps
+      read 1 effects, 1 parameters, 0 keyframes
+  load 'target' beside 80 animated sequences     0.233 ms/frame   4299.8 fps
+      read 1 effects, 1 parameters, 0 keyframes
+
+== Edit command latency (store only; excludes UI and rendering) ===
+
+  in-memory database: 1000 clips on 4 tracks, 25 transitions, 125 animated clips (built in 0.1 s)
+  MoveClip                           n= 150  median    0.068  p95    0.121  p99    0.157  max    0.158 ms
+  TrimClip (slip)                    n= 150  median    0.064  p95    0.108  p99    0.118  max    0.139 ms
+  SplitClip, animated                n= 125  median    0.244  p95    0.426  p99    0.490  max    0.503 ms
+  SetClipSpeed                       n= 125  median    0.068  p95    0.158  p99    0.176  max    0.223 ms
+  AddTransition                      n= 115  median    0.111  p95    0.221  p99    0.255  max    0.271 ms
+  SetTransitionTiming                n=  24  median    0.088  p95    0.113  p99    0.126  max    0.126 ms
+  Undo                               n= 150  median    0.519  p95    0.626  p99    0.736  max    0.804 ms
+
+  on-disk package (WAL + journal files): 1000 clips on 4 tracks, 25 transitions, 125 animated clips (built in 1.1 s)
+  MoveClip                           n= 150  median    0.649  p95    0.823  p99    3.408  max    5.507 ms
+  TrimClip (slip)                    n= 150  median    0.651  p95    0.849  p99    3.566  max    4.007 ms
+  SplitClip, animated                n= 125  median    0.930  p95    1.274  p99    4.349  max    4.380 ms
+  SetClipSpeed                       n= 125  median    0.628  p95    0.770  p99    4.092  max    6.243 ms
+  AddTransition                      n= 115  median    0.698  p95    0.882  p99    1.007  max    3.426 ms
+  SetTransitionTiming                n=  24  median    0.644  p95    0.767  p99    0.816  max    0.816 ms
+  Undo                               n= 150  median    0.400  p95    0.671  p99    3.366  max    3.779 ms
+cmd : cutline_bench failed: remove_all: The process cannot access the file because it is being used by another 
+process.: "C:\Users\user\AppData\Local\Temp\cutline-bench-edits.vproj"
+At line:1 char:951
++ ... "=== bench (Release) ==="; cmd /c "scripts\bench.bat 40" 2>&1 | Tee-O ...
++                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (cutline_bench f...ch-edits.vproj":String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 

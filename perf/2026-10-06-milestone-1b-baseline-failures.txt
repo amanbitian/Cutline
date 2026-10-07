@@ -1,0 +1,71 @@
+  ok   FrameAllocationRejectsEmptySizes
+  ok   FrameRowsAreAlignedAndBoundsChecked
+  ok   FrameCloneCopiesPixelsAndMetadata
+  ok   EightBitRoundTripsThroughFloatExactly
+  ok   SixteenBitRoundTripsThroughFloatExactly
+  ok   FloatConversionClampsOutOfRangeValues
+  ok   ConvertingAnEmptyFrameFails
+  ok   AudioBufferAllocationIsValidated
+  ok   MixingSumsChannelsWithGain
+  ok   MixingRefusesMismatchedFormats
+  ok   SilenceAndPeakBehaveAsExpected
+  ok   DecibelConversionHasASilenceFloor
+  ok   StereoPanHoldsConstantPower
+  ok   ChannelLayoutsMapToCounts
+  ok   TimestampMapResolvesByPresentationTime
+  ok   TimestampMapDetectsVariableCadence
+  ok   TimestampMapRejectsNonsense
+  ok   SyntheticPathsRoundTrip
+  ok   SyntheticPathsAreValidated
+  ok   SyntheticProbeDescribesItsStreams
+  ok   CounterFramesIdentifyWhichFrameWasDecoded
+  ok   ReadingOutsideTheSourceReturnsNothing
+  ok   VariableFrameRateSourcesHoldFramesForLonger
+  ok   SyntheticAudioIsContinuousAcrossBlocks
+  ok   SilentSourcesReturnNoAudio
+  ok   AudioPastTheEndIsSilenceNotARepeat
+  ok   TheRegistryOpensSyntheticPaths
+  ok   TheRegistryRefusesWhatItCannotRead
+  ok   RegisteringTheSyntheticProviderTwiceIsHarmless
+  ok   FFmpegProviderRegistersWhenAvailable
+  ok   LosslessRgbDecodesToAUniformFrame
+  ok   Rec709LimitedYuvDecodesToTheSameColourAsItsRgbTwin
+  ok   ProbeDescribesARealFile
+  ok   FractionalFrameRatesAreReportedExactly
+  ok   SeekingBackwardsReturnsTheCorrectFrame
+  ok   DecodedFramesCarryTheirPresentationTime
+  ok   ReadingPastTheEndOfAFileReturnsNothing
+  ok   TimestampMapIsBuiltFromRealPackets
+  ok   DecodingStillWorksAfterTheTimestampScan
+  ok   AudioDecodesToTheRequestedRateAndLayout
+  ok   AudioReadsAreContinuousAcrossBlocks
+  ok   AudioAndVideoFromOneFileShareATimeline
+  ok   OpeningSomethingThatIsNotMediaFails
+  ok   EveryFrameOfAReferenceFileIdentifiesItself
+  FAIL AudioMatchesTheReferenceSignalAtAnyStartSample
+       F:\AAA Project\video_editor\tests\native\media_tests.cpp:801: reference comparison -- left: worst error 0.999436 at sample 59732 (tolerance 0.000001)
+  ok   ConsecutiveAudioBlocksReproduceTheWholeSignal
+  FAIL AlternatingAudioAndVideoReadsDoNotCorruptEachOther
+       F:\AAA Project\video_editor\tests\native\media_tests.cpp:830: reference comparison -- left: worst error 0.999710 at sample 9434 (tolerance 0.000001)
+  FAIL ReadOrderDoesNotChangeWhatIsRead
+       F:\AAA Project\video_editor\tests\native\media_tests.cpp:857: reference comparison -- left: worst error 0.628928 at sample 170753 (tolerance 0.000001)
+  FAIL TwoSourcesOnOneFileKeepSeparateState
+       F:\AAA Project\video_editor\tests\native\media_tests.cpp:883: reference comparison -- left: worst error 0.999326 at sample 181043 (tolerance 0.000001)
+  FAIL AStreamThatStartsLateIsPlacedAtItsOwnStartTime
+       F:\AAA Project\video_editor\tests\native\media_tests.cpp:898: CHECK(silent->Peak(0) == 0.0f && silent->Peak(1) == 0.0f)
+  FAIL SourceTimeZeroIsTheFirstPictureNotTheContainersOwnClock
+       F:\AAA Project\video_editor\tests\native\media_tests.cpp:927: CHECK_EQ(first->presentation_time.Compare(Seconds(0)), 0) -- 1 vs 0
+  FAIL AudioAtAnotherRateStaysAlignedWithTheSource
+       F:\AAA Project\video_editor\tests\native\media_tests.cpp:957: reference comparison -- worst error 0.083888 at sample 104600 (tolerance 0.002000)
+  ok   TheTailOfAResampledFileIsNotDiscarded
+  FAIL LossyAudioWithEncoderPrimingIsPlacedOnTheSampleItBelongsTo
+       F:\AAA Project\video_editor\tests\native\media_tests.cpp:1036: reference comparison -- start 0: best lag -2
+  FAIL InterleavedH264AndAacKeepTheirAudioWhileTheVideoSeeks
+       F:\AAA Project\video_editor\tests\native\media_tests.cpp:1059: reference comparison -- step 0: correlation -0.031543
+  FAIL ScanningTimestampsDoesNotDisturbAReadInProgress
+       F:\AAA Project\video_editor\tests\native\media_tests.cpp:1081: reference comparison -- left: worst error 0.999781 at sample 15221 (tolerance 0.000001)
+  FAIL TimestampsAreRelativeToSourceTimeZero
+       F:\AAA Project\video_editor\tests\native\media_tests.cpp:1092: CHECK_EQ(map->AtOrBefore(Seconds(0)).presentation_time.Compare(Seconds(0)), 0) -- 1 vs 0
+  FAIL AudioReadsRecoverAfterReachingTheEndOfTheFile
+       F:\AAA Project\video_editor\tests\native\media_tests.cpp:1103: reference comparison -- left: worst error 0.996199 at sample 191256 (tolerance 0.000001)
+media: 46/58 passed

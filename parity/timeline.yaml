@@ -1,0 +1,417 @@
+{
+ "domain": "timeline",
+ "feature_defaults": {
+  "implementation": {
+   "components": [],
+   "notes": "No dedicated production runtime exists."
+  },
+  "tests": {
+   "unit": [],
+   "integration": [],
+   "fixture": []
+  },
+  "platforms": {
+   "windows": "target",
+   "macos": "future",
+   "linux": "future"
+  },
+  "hardware": {
+   "cpu_fallback": "required",
+   "gpu_optional": true,
+   "pro_io": "not_required"
+  },
+  "known_gaps": [
+   "No validated native runtime yet."
+  ],
+  "licensing_notes": "No license review recorded."
+ },
+ "features": [
+  {
+   "id": "sequence_records",
+   "name": "Sequence records",
+   "priority": "P0",
+   "status": "implemented",
+   "implementation": {
+    "components": [
+     "core/project/Schema.cpp",
+     "timeline/SequenceLoader.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   },
+   "acceptance": [
+    "Stores name, frame rate, geometry, and sample rate transactionally."
+   ],
+   "tests": {
+    "unit": [
+     "InitializeCreatesSchemaAtCurrentVersion",
+     "LoaderBuildsASnapshotThatCompiles"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   }
+  },
+  {
+   "id": "video_tracks",
+   "name": "Video tracks",
+   "priority": "P0",
+   "status": "implemented",
+   "implementation": {
+    "components": [
+     "core/project/Schema.cpp",
+     "timeline/TimelineCompiler.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   },
+   "acceptance": [
+    "Creates ordered, lockable video tracks through commands."
+   ],
+   "tests": {
+    "unit": [
+     "TracksCannotShareAnOrderWithinOneSequenceAndType",
+     "CompositeOrderFollowsTrackOrderNotTrackId"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   }
+  },
+  {
+   "id": "audio_tracks",
+   "name": "Audio tracks",
+   "priority": "P0",
+   "status": "implemented",
+   "implementation": {
+    "components": [
+     "core/project/Schema.cpp",
+     "audio/AudioMixer.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   },
+   "acceptance": [
+    "Creates ordered, mute/solo capable audio tracks through commands."
+   ],
+   "tests": {
+    "unit": [
+     "AudioIsOrderedToo",
+     "TracksSumRatherThanOcclude"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   }
+  },
+  {
+   "id": "clip_records",
+   "name": "Timeline clip records",
+   "priority": "P0",
+   "status": "implemented",
+   "implementation": {
+    "components": [
+     "core/project/ProjectStore.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   },
+   "acceptance": [
+    "Stores source range, timeline position, rate, and link group exactly."
+   ],
+   "tests": {
+    "unit": [
+     "OverlappingClipsOnOneTrackAreRejected",
+     "SplitProducesTwoAdjacentClipsAtExactSourceTime"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   }
+  },
+  {
+   "id": "timeline_compiler",
+   "name": "Timeline compiler",
+   "priority": "P0",
+   "status": "implemented",
+   "implementation": {
+    "components": [
+     "timeline/TimelineCompiler.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   },
+   "acceptance": [
+    "Produces immutable active-clip playback requests for a sequence time."
+   ],
+   "tests": {
+    "unit": [
+     "CompileResolvesTheActiveClipAndSourceTime",
+     "ClipRangesAreHalfOpen"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   }
+  },
+  {
+   "id": "timeline_ruler",
+   "name": "Timeline ruler",
+   "priority": "P0",
+   "status": "implemented",
+   "implementation": {
+    "components": [
+     "ui/TimelineView.cpp",
+     "app/TimelineItem.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   },
+   "acceptance": [
+    "Displays exact sequence timecode at current display scale."
+   ],
+   "tests": {
+    "unit": [
+     "TheRulerChoosesReadableStepsAndLabelsThemAsTimecode"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   }
+  },
+  {
+   "id": "playhead",
+   "name": "Playhead",
+   "priority": "P0",
+   "status": "implemented",
+   "implementation": {
+    "components": [
+     "ui/TimelineView.cpp",
+     "app/TimelineItem.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   },
+   "acceptance": [
+    "Represents authoritative sequence RationalTime."
+   ],
+   "tests": {
+    "unit": [
+     "TheViewportMapsTimeToPixelsZoomsAboutAPointAndFollowsThePlayhead"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   }
+  },
+  {
+   "id": "track_lock_mute_solo",
+   "name": "Track lock/mute/solo",
+   "priority": "P1",
+   "status": "implemented",
+   "implementation": {
+    "components": [
+     "timeline/TimelineCompiler.cpp",
+     "core/project/ProjectStore.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   },
+   "acceptance": [
+    "Compiler and commands honor lock, mute, and solo state."
+   ],
+   "tests": {
+    "unit": [
+     "MutedVideoTracksAreExcluded",
+     "SoloSuppressesOtherTracksOfTheSameMedium",
+     "LockedTracksRefuseEdits",
+     "ALockedTrackRefusesEveryEditToItsContents",
+     "ALockedTrackStillAllowsWhatTheLockIsNotFor",
+     "MovingAClipOntoALockedTrackIsRefusedEvenFromAnUnlockedOne"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   }
+  },
+  {
+   "id": "linked_av_groups",
+   "name": "Linked A/V groups",
+   "priority": "P0",
+   "status": "implemented",
+   "implementation": {
+    "components": [
+     "core/project/ProjectStore.cpp",
+     "core/commands/Command.h"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   },
+   "acceptance": [
+    "Linked AV edits preserve sync unless explicitly unlinked."
+   ],
+   "tests": {
+    "unit": [
+     "MovingALinkedClipMovesItsPartnerByTheSameTime",
+     "ALinkedMoveThatAnyMemberCannotTakeChangesNothing",
+     "TrimmingALinkedClipsEdgesTrimsItsPartnerByTheSameTime",
+     "CuttingALinkedClipCutsItsPartnersAndKeepsEachSideJoined",
+     "DeletingALinkedClipDeletesItsPartnersAndRippleClosesEachTracksGap",
+     "ARandomSessionOfLinkedEditsKeepsEveryTakeInStepAndUndoesCompletely"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   }
+  },
+  {
+   "id": "sequence_nesting",
+   "name": "Sequence nesting",
+   "priority": "P1",
+   "status": "implemented",
+   "acceptance": [
+    "Sequence clips resolve recursively with cycle detection."
+   ],
+   "tests": {
+    "unit": [
+     "NestedSequencesResolveThroughToTheirSources",
+     "SelfNestingAndNestingCyclesAreRejected",
+     "NestedSequencesAreComposedRecursively",
+     "NestedSequenceAudioIsMixed",
+     "NestedAudioFollowsTheOuterClipsRetimingAndDirection",
+     "EffectsStayInsideTheSequenceTheyBelongTo",
+     "TheEnginePlaysARealFileThroughANestedSequence",
+     "ANestedSequencesOwnEffectsDoNotBecomeTheOuterSequencesEffects"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "timeline/TimelineCompiler.cpp",
+     "playback/PlaybackEngine.cpp",
+     "core/project/Schema.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "adjustment_layers",
+   "name": "Adjustment layers",
+   "priority": "P1",
+   "status": "implemented",
+   "acceptance": [
+    "An adjustment layer applies its graph to eligible underlying clips."
+   ],
+   "tests": {
+    "unit": [
+     "AdjustmentClipsNeedNoSourceAndOnlySitOnVideoTracks",
+     "AnAdjustmentClipGradesEverythingBeneathIt"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "render/Compositor.cpp",
+     "core/project/Schema.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "markers",
+   "name": "Sequence markers",
+   "priority": "P0",
+   "status": "implemented",
+   "implementation": {
+    "components": [
+     "core/project/Schema.cpp",
+     "core/project/ProjectStore.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   },
+   "acceptance": [
+    "Creates, removes, persists, and seeks marker ranges exactly."
+   ],
+   "tests": {
+    "unit": [
+     "MarkersAttachToSequencesClipsAndMedia"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   }
+  },
+  {
+   "id": "mixed_rate_sampling",
+   "name": "Mixed source frame rates",
+   "priority": "P0",
+   "status": "implemented",
+   "acceptance": [
+    "Maps source timestamps to sequence time without nominal-frame assumptions."
+   ],
+   "tests": {
+    "unit": [
+     "SourceTimeStaysExactAtFractionalRates",
+     "TickTimebaseIsLosslessForBroadcastRates"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "core/time/RationalTime.cpp",
+     "timeline/TimelineCompiler.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  }
+ ]
+}

@@ -1,0 +1,11 @@
+{
+  "domain": "vr",
+  "feature_defaults": {"implementation":{"components":[],"notes":"No immersive-video runtime exists."},"tests":{"unit":[],"integration":[],"fixture":[]},"platforms":{"windows":"target","macos":"future","linux":"future"},"hardware":{"cpu_fallback":"required","gpu_optional":true,"pro_io":"not_required"},"known_gaps":["VR workflows are deferred beyond trusted editorial core."],"licensing_notes":"Immersive format metadata and headset SDKs require compatibility review."},
+  "features": [
+    {"id":"vr_projection_metadata","name":"VR projection metadata","priority":"P3","status":"planned","acceptance":["Reads and persists supported immersive projection metadata." ]},
+    {"id":"vr_monitor","name":"VR monitor","priority":"P3","status":"planned","acceptance":["Displays equirectangular media with interactive view orientation." ]},
+    {"id":"vr_reframe","name":"VR reframe","priority":"P3","status":"planned","acceptance":["Applies keyframed view transforms non-destructively." ]},
+    {"id":"vr_spatial_audio","name":"VR spatial audio","priority":"P3","status":"planned","acceptance":["Preserves/exports declared spatial audio metadata where supported." ]},
+    {"id":"vr_export","name":"VR export","priority":"P3","status":"planned","acceptance":["Writes output with validated immersive projection metadata." ]}
+  ]
+}

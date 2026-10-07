@@ -1,0 +1,103 @@
+[1/2] Building CXX object CMakeFiles\cutline_bench.dir\app\bench_main.cpp.obj
+F:\AAA Project\video_editor\app\bench_main.cpp(493): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+F:\AAA Project\video_editor\app\bench_main.cpp(614): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+[2/2] Linking CXX executable cutline_bench.exe
+Cutline render benchmark: 1920x1080, 40 frames per case
+
+== Compile ====================================================
+  1 video track(s)                           0.598 us/call
+  4 video track(s)                           2.039 us/call
+  16 video track(s)                          7.251 us/call
+
+== Composite (8-bit sources) ==================================
+  1 track(s), 3 effects each                36.885 ms/frame     27.1 fps
+  2 track(s), 3 effects each                70.048 ms/frame     14.3 fps  (over a 25 fps budget)
+  4 track(s), 3 effects each               136.262 ms/frame      7.3 fps  (over a 25 fps budget)
+
+== Composite (float sources, no conversion) ===================
+  1 track(s), 3 effects each                31.856 ms/frame     31.4 fps
+  2 track(s), 3 effects each                60.235 ms/frame     16.6 fps  (over a 25 fps budget)
+  4 track(s), 3 effects each               114.854 ms/frame      8.7 fps  (over a 25 fps budget)
+
+== Effect stack depth (1 track) ===============================
+  1 effect(s)                               17.559 ms/frame     57.0 fps
+  5 effect(s)                               45.891 ms/frame     21.8 fps  (over a 25 fps budget)
+  17 effect(s)                             129.661 ms/frame      7.7 fps  (over a 25 fps budget)
+
+== Mix (1024-frame blocks) ====================================
+  1 audio track                              3.411 us/call
+
+== Compile scaling: clips in the sequence ======================
+  Compile(sequence), 10 clips                0.285 us/call
+  Compile(graph),    10 clips                0.286 us/call
+  Compile(sequence), 1000 clips              0.306 us/call
+  Compile(graph),    1000 clips              0.306 us/call
+  Compile(sequence), 10000 clips             0.309 us/call
+  Compile(graph),    10000 clips             0.304 us/call
+  Compile(sequence), 50000 clips             0.416 us/call
+  Compile(graph),    50000 clips             0.427 us/call
+
+== Load one sequence from a project with many ===============
+  load 'target' beside 0 animated sequences     0.248 ms/frame   4036.7 fps
+      read 1 effects, 1 parameters, 0 keyframes
+  load 'target' beside 20 animated sequences     0.220 ms/frame   4541.7 fps
+      read 1 effects, 1 parameters, 0 keyframes
+  load 'target' beside 80 animated sequences     0.222 ms/frame   4498.2 fps
+      read 1 effects, 1 parameters, 0 keyframes
+
+== Decode and seek (real files, no store) ==================
+
+  audio, 1024-frame blocks read in order (a playback-sized request)
+  PCM, 48 kHz stereo                 n= 185  median    0.002  p95    0.005  p99    0.007  max    0.894 ms
+  AAC, 48 kHz mono                   n= 185  median    0.004  p95    0.006  p99    0.008  max    0.218 ms
+  PCM 44.1 -> 48 kHz mono            n= 185  median    0.000  p95    0.009  p99    0.016  max    0.153 ms
+
+  audio, a block at a random place (each read seeks)
+  PCM in Matroska, stereo            n= 300  median    0.023  p95    0.065  p99    0.091  max    0.219 ms
+      (first read, which includes any one-off index: 0.675 ms)
+  AAC in MP4, mono                   n= 300  median    0.042  p95    0.165  p99    0.192  max    0.259 ms
+      (first read, which includes any one-off index: 0.260 ms)
+  PCM 44.1 -> 48 kHz, Matroska       n= 300  median    0.048  p95    0.105  p99    0.122  max    0.192 ms
+      (first read, which includes any one-off index: 0.501 ms)
+  PCM 44.1 -> 48 kHz, WAV            n= 300  median    0.025  p95    0.072  p99    0.081  max    0.183 ms
+      (first read, which includes any one-off index: 0.192 ms)
+
+  video, frames read in order, and at random places (each random read seeks)
+  H.264 320x180, GOP 30, in order    n=  90  median    0.025  p95    0.063  p99    0.121  max    2.896 ms
+  H.264 320x180, GOP 30, random      n= 200  median    1.169  p95    1.912  p99    2.000  max    2.071 ms
+  FFV1 64x48, intra-only, in order   n=  90  median    0.008  p95    0.014  p99    0.020  max    1.383 ms
+  FFV1 64x48, intra-only, random     n= 200  median    0.194  p95    0.311  p99    0.354  max    0.385 ms
+
+  audio and video from one file, alternating (what playback does)
+  H.264 + AAC, 40 ms of each per step n= 150  median    0.018  p95    0.034  p99    0.549  max    2.485 ms
+
+  long audio file: 3600 s
+  random seek                        n= 300  median    0.251  p95    0.976  p99    1.242  max    1.826 ms
+      (first read, including the packet index: 99.4 ms)
+
+== Edit command latency (store only; excludes UI and rendering) ===
+
+  in-memory database: 1000 clips on 4 tracks, 25 transitions, 125 animated clips (built in 0.1 s)
+  MoveClip                           n= 150  median    0.068  p95    0.073  p99    0.086  max    0.124 ms
+  TrimClip (slip)                    n= 150  median    0.064  p95    0.072  p99    0.098  max    0.114 ms
+  SplitClip, animated                n= 125  median    0.230  p95    0.253  p99    0.277  max    0.314 ms
+  SetClipSpeed                       n= 125  median    0.062  p95    0.069  p99    0.074  max    0.096 ms
+  AddTransition                      n= 115  median    0.102  p95    0.108  p99    0.138  max    0.149 ms
+  SetTransitionTiming                n=  24  median    0.086  p95    0.094  p99    0.104  max    0.104 ms
+  Undo                               n= 150  median    0.347  p95    0.404  p99    0.423  max    0.531 ms
+
+  on-disk package (WAL + journal files): 1000 clips on 4 tracks, 25 transitions, 125 animated clips (built in 1.1 s)
+  MoveClip                           n= 150  median    0.637  p95    0.749  p99    3.160  max    5.048 ms
+  TrimClip (slip)                    n= 150  median    0.622  p95    0.733  p99    2.985  max    3.385 ms
+  SplitClip, animated                n= 125  median    0.921  p95    1.085  p99    4.294  max    4.367 ms
+  SetClipSpeed                       n= 125  median    0.617  p95    0.745  p99    3.823  max    4.912 ms
+  AddTransition                      n= 115  median    0.686  p95    0.775  p99    1.089  max    3.621 ms
+  SetTransitionTiming                n=  24  median    0.667  p95    0.773  p99    1.011  max    1.011 ms
+  Undo                               n= 150  median    0.394  p95    0.468  p99    2.816  max    3.260 ms
+
+== Time arithmetic ===========================================
+  FromFrames+ToTicks at 29.97, ~1 hour in      29.8 ns/call   (checksum 16384)
+
+A 1920x1080 frame holds 2073600 pixels; the software compositor is the
+reference implementation, not the interactive one. A GPU backend is what
+makes these numbers a frame budget rather than a throughput figure.

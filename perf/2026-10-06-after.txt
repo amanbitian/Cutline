@@ -1,0 +1,53 @@
+﻿[1/4] Building CXX object CMakeFiles\cutline_core.dir\timeline\TimelineCompiler.cpp.obj
+[2/4] Building CXX object CMakeFiles\cutline_core.dir\timeline\SequenceLoader.cpp.obj
+[3/4] Linking CXX static library cutline_core.lib
+[4/4] Linking CXX executable cutline_bench.exe
+Cutline render benchmark: 1920x1080, 40 frames per case
+
+== Compile ====================================================
+  1 video track(s)                           0.681 us/call
+  4 video track(s)                           1.980 us/call
+  16 video track(s)                          6.990 us/call
+
+== Composite (8-bit sources) ==================================
+  1 track(s), 3 effects each                37.024 ms/frame     27.0 fps
+  2 track(s), 3 effects each                69.730 ms/frame     14.3 fps  (over a 25 fps budget)
+  4 track(s), 3 effects each               135.862 ms/frame      7.4 fps  (over a 25 fps budget)
+
+== Composite (float sources, no conversion) ===================
+  1 track(s), 3 effects each                31.644 ms/frame     31.6 fps
+  2 track(s), 3 effects each                59.778 ms/frame     16.7 fps  (over a 25 fps budget)
+  4 track(s), 3 effects each               114.883 ms/frame      8.7 fps  (over a 25 fps budget)
+
+== Effect stack depth (1 track) ===============================
+  1 effect(s)                               17.563 ms/frame     56.9 fps
+  5 effect(s)                               45.865 ms/frame     21.8 fps  (over a 25 fps budget)
+  17 effect(s)                             129.762 ms/frame      7.7 fps  (over a 25 fps budget)
+
+== Mix (1024-frame blocks) ====================================
+  1 audio track                              3.204 us/call
+
+== Compile scaling: clips in the sequence ======================
+  Compile(sequence), 10 clips                0.283 us/call
+  Compile(graph),    10 clips                0.281 us/call
+  Compile(sequence), 1000 clips              0.312 us/call
+  Compile(graph),    1000 clips              0.318 us/call
+  Compile(sequence), 10000 clips             0.310 us/call
+  Compile(graph),    10000 clips             0.312 us/call
+  Compile(sequence), 50000 clips             0.398 us/call
+  Compile(graph),    50000 clips             0.500 us/call
+
+== Load one sequence from a project with many ===============
+  load 'target' beside 0 animated sequences     0.257 ms/frame   3897.6 fps
+      read 1 effects, 1 parameters, 0 keyframes
+  load 'target' beside 20 animated sequences     0.234 ms/frame   4269.9 fps
+      read 1 effects, 1 parameters, 0 keyframes
+  load 'target' beside 80 animated sequences     0.223 ms/frame   4480.0 fps
+      read 1 effects, 1 parameters, 0 keyframes
+
+== Time arithmetic ===========================================
+  FromFrames+ToTicks at 29.97, ~1 hour in      29.4 ns/call   (checksum 16384)
+
+A 1920x1080 frame holds 2073600 pixels; the software compositor is the
+reference implementation, not the interactive one. A GPU backend is what
+makes these numbers a frame budget rather than a throughput figure.

@@ -1,0 +1,286 @@
+{
+ "domain": "audio",
+ "feature_defaults": {
+  "implementation": {
+   "components": [],
+   "notes": "No dedicated production runtime exists."
+  },
+  "tests": {
+   "unit": [],
+   "integration": [],
+   "fixture": []
+  },
+  "platforms": {
+   "windows": "target",
+   "macos": "future",
+   "linux": "future"
+  },
+  "hardware": {
+   "cpu_fallback": "required",
+   "gpu_optional": true,
+   "pro_io": "not_required"
+  },
+  "known_gaps": [
+   "No validated native runtime yet."
+  ],
+  "licensing_notes": "No license review recorded."
+ },
+ "features": [
+  {
+   "id": "audio_master_clock",
+   "name": "Audio master clock",
+   "priority": "P0",
+   "status": "implemented",
+   "implementation": {
+    "components": [
+     "audio/AudioClock.cpp",
+     "audio/AudioSink.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   },
+   "acceptance": [
+    "Video presentation derives from actual audio-device sample progress."
+   ],
+   "tests": {
+    "unit": [
+     "AudioClockDerivesTimeFromRenderedSamples",
+     "PlaybackAdvancesOnTheAudioClock"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   }
+  },
+  {
+   "id": "audio_decode",
+   "name": "Audio decode",
+   "priority": "P0",
+   "status": "implemented",
+   "acceptance": [
+    "Decodes supported audio streams into float processing buffers."
+   ],
+   "tests": {
+    "unit": [
+     "AudioDecodesToTheRequestedRateAndLayout",
+     "LossyAudioWithEncoderPrimingIsPlacedOnTheSampleItBelongsTo",
+     "AStreamThatStartsLateIsPlacedAtItsOwnStartTime",
+     "SourceTimeZeroIsTheFirstPictureNotTheContainersOwnClock"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "media/ffmpeg/FFmpegSource.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "audio_device_output",
+   "name": "Audio device output",
+   "priority": "P0",
+   "status": "implemented",
+   "acceptance": [
+    "Streams audio to an OS device without callback allocation or I/O."
+   ],
+   "tests": {
+    "unit": [
+     "OpeningTheDefaultSinkAlwaysYieldsSomething",
+     "TheOfflineSinkPullsBlocksAndAdvancesTheClock"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "audio/WasapiSink.cpp",
+     "audio/AudioSink.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "audio_buffering",
+   "name": "Audio buffering",
+   "priority": "P0",
+   "status": "implemented",
+   "acceptance": [
+    "Meets bounded buffering and underrun diagnostics policy."
+   ],
+   "tests": {
+    "unit": [
+     "TheOfflineSinkPullsBlocksAndAdvancesTheClock"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "audio/WasapiSink.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "waveform_generation",
+   "name": "Waveform generation",
+   "priority": "P1",
+   "status": "planned",
+   "acceptance": [
+    "Builds cached waveform summaries from decoded audio."
+   ]
+  },
+  {
+   "id": "audio_mixer",
+   "name": "Audio mixer",
+   "priority": "P1",
+   "status": "implemented",
+   "acceptance": [
+    "Mixes track gain, pan, mute, solo, and routing sample-accurately."
+   ],
+   "tests": {
+    "unit": [
+     "TracksSumRatherThanOcclude",
+     "TrackGainIsAppliedInDecibels",
+     "TrackPanHoldsPowerAcrossTheImage",
+     "ClipEdgesFallOnTheirOwnSample",
+     "BlocksOfAnySizeTileToTheSameAudioAsOneLargeBlock",
+     "ARetimedClipReadsItsSourceAtItsRate",
+     "AReversedClipPlaysItsSourceBackwards",
+     "InterpolationBetweenSamplesIsCubicNotLinear"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "audio/AudioMixer.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "audio_keyframes",
+   "name": "Audio keyframes",
+   "priority": "P1",
+   "status": "implemented",
+   "acceptance": [
+    "Applies editable gain/pan automation at exact sample positions."
+   ],
+   "tests": {
+    "unit": [
+     "AutomationIsEvaluatedAtEverySampleNotOncePerBlock",
+     "TrackEffectsApplyInTimelineTimeToTheWholeTrack",
+     "AutomationIsWrittenByTheRuleOfItsModeThinnedAndReplacingOnlyWhatItCovers"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "audio/AudioMixer.cpp",
+     "core/anim/Keyframe.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "audio_effects",
+   "name": "Built-in audio effects",
+   "priority": "P1",
+   "status": "partial",
+   "acceptance": [
+    "Runs declared effects in a bounded real-time audio graph."
+   ],
+   "tests": {
+    "unit": [
+     "ARoleIsKeptOnTheClipCarriedBySplitsAndItsChainIsReplacedNotStacked"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "ui/AudioWorkflow.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "audio_sync_alignment",
+   "name": "Audio synchronization",
+   "priority": "P1",
+   "status": "planned",
+   "acceptance": [
+    "Produces reviewable alignment results with confidence/provenance."
+   ]
+  },
+  {
+   "id": "loudness_metering",
+   "name": "Loudness metering",
+   "priority": "P1",
+   "status": "implemented",
+   "acceptance": [
+    "Reports standards-defined peak and loudness measurements."
+   ],
+   "tests": {
+    "unit": [
+     "LoudnessIsMeasuredAsEbuR128Specifies",
+     "TruePeakSeesTheOvershootBetweenSamples",
+     "AMeterReportsLoudnessInLufs",
+     "AStreamingLoudnessMeterGivesWhatMeasuringTheWholeProgrammeGivesWhateverTheBlockSizes",
+     "LoudnessAdviceNamesTheGainAndWarnsWhenThePeakWouldPassTheCeilingAndGainsAreOrdinaryEdits"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "audio/Dsp.cpp",
+     "ui/AudioWorkflow.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  }
+ ]
+}

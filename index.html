@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cutline — Professional Video Editor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand"><span class="brand-mark">C</span><span>CUTLINE</span><small>BETA</small></div>
+        <nav class="workspace-tabs" aria-label="Workspaces">
+          <button class="active">Edit</button><button>Color</button><button>Audio</button><button>Deliver</button>
+        </nav>
+        <div class="topbar-actions">
+          <button class="status-chip" id="performanceChip"><span></span> Interactive</button>
+          <button class="icon-button" title="Project settings">⚙</button>
+          <button class="share-button">Share project</button>
+        </div>
+      </header>
+
+      <aside class="sidebar">
+        <button class="nav-item active" data-panel="media"><span>▦</span> Media</button>
+        <button class="nav-item" data-panel="effects"><span>✦</span> Effects</button>
+        <button class="nav-item" data-panel="text"><span>T</span> Text</button>
+        <button class="nav-item" data-panel="captions"><span>☷</span> Captions</button>
+        <button class="nav-item" data-panel="ai"><span>✺</span> Intelligence</button>
+        <div class="sidebar-bottom">
+          <button class="nav-item" data-panel="jobs"><span>↗</span> Jobs <b id="jobCount">0</b></button>
+          <button class="nav-item" data-panel="settings"><span>◫</span> System</button>
+        </div>
+      </aside>
+
+      <main class="workspace">
+        <section class="left-panel panel" id="assetPanel">
+          <div class="panel-heading">
+            <div><p class="eyebrow">PROJECT</p><h1>Spring Campaign</h1></div>
+            <button class="more-button">•••</button>
+          </div>
+          <div class="project-tabs"><button class="active">Assets</button><button>Bins</button><button>Search</button></div>
+          <div class="asset-toolbar">
+            <label class="import-button" for="fileImport">+ Import <input id="fileImport" type="file" multiple accept="video/*,audio/*,image/*" /></label>
+            <button class="filter-button">⌕</button><button class="filter-button">☷</button>
+          </div>
+          <div class="asset-grid" id="assetGrid"></div>
+          <div class="ingest-card">
+            <div class="ingest-icon">⇣</div>
+            <div><strong>Ingest is ready</strong><p>Checksums, proxies &amp; AI index are available for new media.</p></div>
+          </div>
+        </section>
+
+        <section class="center-stage">
+          <div class="monitor-toolbar">
+            <div class="monitor-title"><span class="live-dot"></span> PROGRAM <span class="sequence-name">Campaign Film · v07</span></div>
+            <div class="monitor-options"><button>Fit</button><button>▱</button><button>•••</button></div>
+          </div>
+          <div class="monitor" id="monitor">
+            <video id="mediaPreview" playsinline preload="metadata" hidden></video>
+            <div class="grade-wash" id="gradeWash"></div>
+            <div class="safe-area outer"></div><div class="safe-area inner"></div>
+            <div class="monitor-copy"><span>NEW SEASON</span><strong>MAKE SPACE<br />FOR LIGHT.</strong><em>Horizon / 2026</em></div>
+            <div class="monitor-badge">4K · Rec. 709</div>
+          </div>
+          <div class="transport">
+            <div class="time-readout" id="timeReadout">00:00:12:08</div>
+            <div class="transport-controls">
+              <button title="Previous edit">|◀</button><button title="Step back">◀</button><button id="playButton" class="play-button" title="Play">▶</button><button title="Step forward">▶</button><button title="Next edit">▶|</button>
+            </div>
+            <div class="viewer-tools"><button id="markerButton">M</button><button>⌖</button><button>◉</button></div>
+          </div>
+          <div class="context-bar"><span><i></i> Preview optimized</span><span>GPU 42%</span><span>23.98 fps</span><span>Display quality: Full</span></div>
+        </section>
+
+        <aside class="inspector panel">
+          <div class="inspector-heading"><div><p class="eyebrow">INSPECTOR</p><h2 id="inspectorTitle">Lake aerial</h2></div><button class="more-button">•••</button></div>
+          <div class="inspector-tabs"><button class="active">Video</button><button>Audio</button><button>Info</button></div>
+          <div class="inspector-content">
+            <details open><summary>Transform <span>↻</span></summary>
+              <div class="control-row"><label>Position</label><div class="dual-input"><input value="0.0" aria-label="Position X" /><input value="0.0" aria-label="Position Y" /></div></div>
+              <div class="control-row"><label>Scale</label><div class="input-unit"><input value="100" /><small>%</small></div></div>
+              <div class="control-row"><label>Rotation</label><div class="input-unit"><input value="0.0" /><small>°</small></div></div>
+              <div class="control-row"><label>Opacity</label><div class="range-wrap"><input type="range" value="100" /><output>100</output></div></div>
+            </details>
+            <details open><summary>Compositing <span>⌄</span></summary><div class="control-row"><label>Blend mode</label><select><option>Normal</option><option>Screen</option><option>Overlay</option></select></div></details>
+            <details open id="colorGradeControls"><summary>Color grade <span>↻</span></summary>
+              <div class="control-row"><label>Exposure</label><div class="range-wrap"><input id="gradeExposure" type="range" min="-2" max="2" value="0" step="0.05" /><output id="gradeExposureValue">0.00</output></div></div>
+              <div class="control-row"><label>Contrast</label><div class="range-wrap"><input id="gradeContrast" type="range" min="0" max="200" value="100" step="1" /><output id="gradeContrastValue">100</output></div></div>
+              <div class="control-row"><label>Saturation</label><div class="range-wrap"><input id="gradeSaturation" type="range" min="0" max="200" value="100" step="1" /><output id="gradeSaturationValue">100</output></div></div>
+              <div class="control-row"><label>Temperature</label><div class="range-wrap"><input id="gradeTemperature" type="range" min="-100" max="100" value="0" step="1" /><output id="gradeTemperatureValue">0</output></div></div>
+              <button id="resetGradeButton" class="reset-grade">Reset grade</button>
+            </details>
+            <details><summary>Effects <span>⌄</span></summary></details>
+          </div>
+          <div class="hardware-card"><div><span class="hardware-led"></span> System profile</div><strong>GPU-native path active</strong><p>Direct3D 12 · Hardware decode</p></div>
+        </aside>
+
+        <section class="timeline-panel">
+          <div class="timeline-topline">
+            <div class="sequence-label"><span class="sequence-icon">▤</span><strong>Campaign Film</strong><span>23.98 fps · 3840 × 2160</span></div>
+            <div class="timeline-actions"><button id="snapButton" class="active">⌘ Snap</button><button>⌕</button><button>···</button></div>
+          </div>
+          <div class="edit-tools"><button class="active" title="Selection">↖</button><button title="Trim">[</button><button id="splitButton" title="Split selected clip">✂ Split</button><button id="rippleButton" title="Delete selected clip and close its gap">⇤ Ripple</button><button title="Slip">↔</button><button title="Hand">✋</button><span></span><button id="addTrackButton">+ Track</button><button id="exportButton" class="export-button">Queue export</button></div>
+          <div class="timeline-wrap" id="timelineWrap">
+            <div class="ruler" id="ruler"></div>
+            <div class="playhead" id="playhead"><span></span></div>
+            <div class="track-labels" id="trackLabels"></div>
+            <div class="tracks" id="tracks"></div>
+          </div>
+        </section>
+      </main>
+      <div class="toast" id="toast" role="status"></div>
+      <div class="command-palette" id="commandPalette" hidden><input autofocus placeholder="Ask Cutline to edit…" /><p>Try “remove pauses”, “make a vertical cut”, or “add captions”</p></div>
+    </div>
+    <script src="app.js"></script>
+  </body>
+</html>

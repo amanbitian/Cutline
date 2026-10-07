@@ -1,0 +1,328 @@
+{
+ "domain": "media",
+ "feature_defaults": {
+  "implementation": {
+   "components": [],
+   "notes": "No dedicated production runtime exists."
+  },
+  "tests": {
+   "unit": [],
+   "integration": [],
+   "fixture": []
+  },
+  "platforms": {
+   "windows": "target",
+   "macos": "future",
+   "linux": "future"
+  },
+  "hardware": {
+   "cpu_fallback": "required",
+   "gpu_optional": true,
+   "pro_io": "not_required"
+  },
+  "known_gaps": [
+   "No validated native runtime yet."
+  ],
+  "licensing_notes": "No license review recorded."
+ },
+ "features": [
+  {
+   "id": "media_probe",
+   "name": "Media probe",
+   "priority": "P0",
+   "status": "implemented",
+   "acceptance": [
+    "Persists real container, stream, timing, color, audio, and timecode metadata."
+   ],
+   "tests": {
+    "unit": [
+     "ProbeDescribesARealFile",
+     "SyntheticProbeDescribesItsStreams"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "media/Source.h",
+     "media/ffmpeg/FFmpegSource.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "probe_diagnostics",
+   "name": "Probe diagnostics",
+   "priority": "P0",
+   "status": "partial",
+   "acceptance": [
+    "Returns actionable errors for unsupported or damaged media."
+   ]
+  },
+  {
+   "id": "media_fingerprint",
+   "name": "Versioned media fingerprint",
+   "priority": "P0",
+   "status": "implemented",
+   "implementation": {
+    "components": [
+     "media/Ingest.cpp",
+     "core/util/Sha256.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   },
+   "acceptance": [
+    "Uses versioned sampled/content evidence plus stream metadata, size, and duration."
+   ],
+   "tests": {
+    "unit": [
+     "FileFingerprintsAreStableAndDiscriminating",
+     "FingerprintsNoticeAChangeAnywhereInTheFile"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   }
+  },
+  {
+   "id": "duplicate_detection",
+   "name": "Duplicate detection",
+   "priority": "P0",
+   "status": "implemented",
+   "acceptance": [
+    "Flags likely duplicate imports without treating filenames as identity."
+   ],
+   "tests": {
+    "unit": [
+     "IngestingTheSameMediaTwiceDoesNotDuplicateIt"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "media/Ingest.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "path_aliases",
+   "name": "Media path aliases",
+   "priority": "P0",
+   "status": "planned",
+   "acceptance": [
+    "Stores multiple resolvable locations per media identity."
+   ]
+  },
+  {
+   "id": "relink_media",
+   "name": "Relink media",
+   "priority": "P0",
+   "status": "partial",
+   "acceptance": [
+    "Relinks a missing alias after identity verification."
+   ],
+   "tests": {
+    "unit": [
+     "RelinkUpdatesThePathAndClearsTheMissingFlag",
+     "FingerprintsIdentifyMediaForRelink"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "core/project/ProjectStore.cpp",
+     "media/Ingest.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "media_bins",
+   "name": "Media bins",
+   "priority": "P0",
+   "status": "implemented",
+   "implementation": {
+    "components": [
+     "core/project/Schema.cpp",
+     "core/project/ProjectStore.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   },
+   "acceptance": [
+    "Creates ordered nested bins through project commands."
+   ],
+   "tests": {
+    "unit": [
+     "DeletingABinUnfilesItsMediaRatherThanDestroyingIt",
+     "BinCyclesAreRejected"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   }
+  },
+  {
+   "id": "media_labels",
+   "name": "Media labels",
+   "priority": "P1",
+   "status": "prototype",
+   "implementation": {
+    "components": [
+     "app.js"
+    ],
+    "notes": "Prototype-only visual state."
+   },
+   "acceptance": [
+    "Persists label assignment as auditable metadata."
+   ]
+  },
+  {
+   "id": "media_metadata",
+   "name": "Media metadata",
+   "priority": "P1",
+   "status": "prototype",
+   "implementation": {
+    "components": [
+     "app.js"
+    ],
+    "notes": "Prototype-only UI state."
+   },
+   "acceptance": [
+    "Stores queryable user and technical metadata with field provenance."
+   ]
+  },
+  {
+   "id": "media_search",
+   "name": "Media search",
+   "priority": "P1",
+   "status": "prototype",
+   "implementation": {
+    "components": [
+     "app.js"
+    ],
+    "notes": "Browser prototype search."
+   },
+   "acceptance": [
+    "Searches persisted metadata and reports matching media identities."
+   ]
+  },
+  {
+   "id": "image_sequence_detection",
+   "name": "Image sequence detection",
+   "priority": "P1",
+   "status": "planned",
+   "acceptance": [
+    "Recognizes numbered still sequences and preserves missing-frame evidence."
+   ]
+  },
+  {
+   "id": "copy_link_ingest",
+   "name": "Copy/link ingest",
+   "priority": "P1",
+   "status": "implemented",
+   "acceptance": [
+    "Records whether media was copied, linked, and verified."
+   ],
+   "tests": {
+    "unit": [
+     "ACopyIsOnlyACopyIfReadingItBackGivesTheSameBytesAndEverythingElseLeavesNothingBehind",
+     "AnIngestPlanNamesEveryCopyWithoutOverwritingAndSaysWhenThereIsNoRoom"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "media/IngestWorkflow.cpp",
+     "app/SessionIngest.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "checksum_ingest",
+   "name": "Checksum ingest verification",
+   "priority": "P1",
+   "status": "implemented",
+   "acceptance": [
+    "Reports checksum verification result without blocking editing."
+   ],
+   "tests": {
+    "unit": [
+     "ACopyIsOnlyACopyIfReadingItBackGivesTheSameBytesAndEverythingElseLeavesNothingBehind"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "media/IngestWorkflow.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "proxy_attach",
+   "name": "Proxy attachment",
+   "priority": "P1",
+   "status": "implemented",
+   "implementation": {
+    "components": [
+     "media/ProxyWorkflow",
+     "core/project schema v9",
+     "playback/PlaybackEngine"
+    ],
+    "notes": "Associations are undoable; source fingerprints make replaced originals stale; missing or stale proxies fall back to originals."
+   },
+   "tests": {
+    "unit": [
+     "ProxiesAreUndoableAndBecomeStaleWhenSourceIdentityChanges"
+    ],
+    "integration": [
+     "TheMonitorPrefersAProxyAndFallsBackToTheOriginal",
+     "ExportUsesOriginalsWhenTheMonitorPrefersAProxy"
+    ],
+    "fixture": []
+   },
+   "acceptance": [
+    "Associates verified proxy media to a full-resolution identity."
+   ]
+  }
+ ]
+}

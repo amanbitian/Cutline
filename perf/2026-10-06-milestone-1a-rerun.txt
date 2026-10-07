@@ -1,0 +1,73 @@
+[1/4] Building CXX object CMakeFiles\cutline_core.dir\core\project\ProjectStore.cpp.obj
+[2/4] Linking CXX static library cutline_core.lib
+[3/4] Building CXX object CMakeFiles\cutline_bench.dir\app\bench_main.cpp.obj
+[4/4] Linking CXX executable cutline_bench.exe
+Cutline render benchmark: 1920x1080, 40 frames per case
+
+== Compile ====================================================
+  1 video track(s)                           0.679 us/call
+  4 video track(s)                           2.068 us/call
+  16 video track(s)                          7.146 us/call
+
+== Composite (8-bit sources) ==================================
+  1 track(s), 3 effects each                36.572 ms/frame     27.3 fps
+  2 track(s), 3 effects each                70.014 ms/frame     14.3 fps  (over a 25 fps budget)
+  4 track(s), 3 effects each               134.774 ms/frame      7.4 fps  (over a 25 fps budget)
+
+== Composite (float sources, no conversion) ===================
+  1 track(s), 3 effects each                31.604 ms/frame     31.6 fps
+  2 track(s), 3 effects each                59.552 ms/frame     16.8 fps  (over a 25 fps budget)
+  4 track(s), 3 effects each               114.236 ms/frame      8.8 fps  (over a 25 fps budget)
+
+== Effect stack depth (1 track) ===============================
+  1 effect(s)                               17.421 ms/frame     57.4 fps
+  5 effect(s)                               45.582 ms/frame     21.9 fps  (over a 25 fps budget)
+  17 effect(s)                             129.268 ms/frame      7.7 fps  (over a 25 fps budget)
+
+== Mix (1024-frame blocks) ====================================
+  1 audio track                              3.343 us/call
+
+== Compile scaling: clips in the sequence ======================
+  Compile(sequence), 10 clips                0.283 us/call
+  Compile(graph),    10 clips                0.285 us/call
+  Compile(sequence), 1000 clips              0.376 us/call
+  Compile(graph),    1000 clips              0.316 us/call
+  Compile(sequence), 10000 clips             0.309 us/call
+  Compile(graph),    10000 clips             0.310 us/call
+  Compile(sequence), 50000 clips             0.426 us/call
+  Compile(graph),    50000 clips             0.435 us/call
+
+== Load one sequence from a project with many ===============
+  load 'target' beside 0 animated sequences     0.248 ms/frame   4037.8 fps
+      read 1 effects, 1 parameters, 0 keyframes
+  load 'target' beside 20 animated sequences     0.222 ms/frame   4514.0 fps
+      read 1 effects, 1 parameters, 0 keyframes
+  load 'target' beside 80 animated sequences     0.221 ms/frame   4522.7 fps
+      read 1 effects, 1 parameters, 0 keyframes
+
+== Edit command latency (store only; excludes UI and rendering) ===
+
+  in-memory database: 1000 clips on 4 tracks, 25 transitions, 125 animated clips (built in 0.1 s)
+  MoveClip                           n= 150  median    0.067  p95    0.072  p99    0.112  max    0.124 ms
+  TrimClip (slip)                    n= 150  median    0.063  p95    0.069  p99    0.076  max    0.083 ms
+  SplitClip, animated                n= 125  median    0.228  p95    0.249  p99    0.280  max    0.323 ms
+  SetClipSpeed                       n= 125  median    0.061  p95    0.068  p99    0.084  max    0.098 ms
+  AddTransition                      n= 115  median    0.102  p95    0.110  p99    0.136  max    0.150 ms
+  SetTransitionTiming                n=  24  median    0.087  p95    0.105  p99    0.118  max    0.118 ms
+  Undo                               n= 150  median    0.338  p95    0.381  p99    0.409  max    0.515 ms
+
+  on-disk package (WAL + journal files): 1000 clips on 4 tracks, 25 transitions, 125 animated clips (built in 1.0 s)
+  MoveClip                           n= 150  median    0.613  p95    0.749  p99    2.927  max    5.841 ms
+  TrimClip (slip)                    n= 150  median    0.599  p95    0.712  p99    3.018  max    3.474 ms
+  SplitClip, animated                n= 125  median    0.899  p95    1.154  p99    4.247  max    4.416 ms
+  SetClipSpeed                       n= 125  median    0.604  p95    0.715  p99    4.086  max    5.817 ms
+  AddTransition                      n= 115  median    0.661  p95    0.759  p99    1.070  max    3.499 ms
+  SetTransitionTiming                n=  24  median    0.659  p95    0.856  p99    0.921  max    0.921 ms
+  Undo                               n= 150  median    0.381  p95    0.463  p99    2.754  max    3.317 ms
+
+== Time arithmetic ===========================================
+  FromFrames+ToTicks at 29.97, ~1 hour in      29.6 ns/call   (checksum 16384)
+
+A 1920x1080 frame holds 2073600 pixels; the software compositor is the
+reference implementation, not the interactive one. A GPU backend is what
+makes these numbers a frame budget rather than a throughput figure.

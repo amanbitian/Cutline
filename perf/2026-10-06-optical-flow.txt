@@ -1,0 +1,8 @@
+scripts\bench.bat --flow, Release, 2026-10-06
+Cutline optical-flow benchmark
+
+== Optical flow, 1080p, default search (block 8, radius 12) ===
+  estimate (forward + backward check)     4872.646 ms/frame      0.2 fps  (over a 25 fps budget)
+  synthesise one in-between picture         78.013 ms/frame     12.8 fps  (over a 25 fps budget)
+  cache key for the pair                     8.888 ms/frame    112.5 fps
+  pair already analysed: key + lookup        8.933 ms/frame    111.9 fps

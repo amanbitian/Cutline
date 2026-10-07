@@ -1,0 +1,248 @@
+{
+ "domain": "hardware",
+ "feature_defaults": {
+  "implementation": {
+   "components": [],
+   "notes": "No hardware abstraction runtime exists."
+  },
+  "tests": {
+   "unit": [],
+   "integration": [],
+   "fixture": []
+  },
+  "platforms": {
+   "windows": "target",
+   "macos": "future",
+   "linux": "future"
+  },
+  "hardware": {
+   "cpu_fallback": "required",
+   "gpu_optional": true,
+   "pro_io": "planned"
+  },
+  "known_gaps": [
+   "Multi-GPU and specialized I/O are outside P0."
+  ],
+  "licensing_notes": "GPU APIs, driver compatibility, capture/output SDKs, and device firmware require per-platform testing."
+ },
+ "features": [
+  {
+   "id": "hardware_capability_discovery",
+   "name": "Hardware capability discovery",
+   "priority": "P1",
+   "status": "partial",
+   "acceptance": [
+    "Reports GPU, codec, audio, and pro-I/O capabilities with driver evidence."
+   ],
+   "tests": {
+    "unit": [
+     "TheAdaptersAreListedWithCapabilitiesAndOneIsChosenByTheSelector",
+     "GpuSelectionIsCapabilityBasedAcrossAmdNvidiaIntelAndApple"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "render/D3D11Compositor.cpp",
+     "render/GpuDevice.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "render_backend_abstraction",
+   "name": "Render backend abstraction",
+   "priority": "P1",
+   "status": "partial",
+   "acceptance": [
+    "Selects a supported graphics backend with a CPU-safe diagnostic fallback."
+   ],
+   "tests": {
+    "unit": [
+     "GpuSelectionUsesCpuForSupportedWorkAndRefusesImpossibleZeroCopy",
+     "WhatTheGpuCannotRenderIsRefusedWithAReasonSoTheSoftwareCompositorDoesIt"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "render/GpuDevice.cpp",
+     "render/D3D11Compositor.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "software_decode_provider",
+   "name": "Software decode provider",
+   "priority": "P0",
+   "status": "implemented",
+   "acceptance": [
+    "Provides a reliable baseline decoder independent of vendor hardware."
+   ],
+   "tests": {
+    "unit": [
+     "LosslessRgbDecodesToAUniformFrame",
+     "SeekingBackwardsReturnsTheCorrectFrame",
+     "EveryFrameOfAReferenceFileIdentifiesItself",
+     "ReadOrderDoesNotChangeWhatIsRead"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "media/ffmpeg/FFmpegSource.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "nvdec_provider",
+   "name": "NVDEC provider",
+   "priority": "P2",
+   "status": "deferred",
+   "acceptance": [
+    "Adds NVIDIA decode only through the shared provider contract."
+   ]
+  },
+  {
+   "id": "amf_provider",
+   "name": "AMF provider",
+   "priority": "P2",
+   "status": "deferred",
+   "acceptance": [
+    "Adds AMD decode/encode only through the shared provider contract."
+   ]
+  },
+  {
+   "id": "qsv_provider",
+   "name": "QSV provider",
+   "priority": "P2",
+   "status": "deferred",
+   "acceptance": [
+    "Adds Intel media acceleration only through the shared provider contract."
+   ]
+  },
+  {
+   "id": "multi_gpu_scheduling",
+   "name": "Multi-GPU scheduling",
+   "priority": "P3",
+   "status": "deferred",
+   "acceptance": [
+    "Assigns workloads with measured transfer and memory constraints."
+   ]
+  },
+  {
+   "id": "professional_video_io",
+   "name": "Professional video I/O",
+   "priority": "P3",
+   "status": "planned",
+   "acceptance": [
+    "Outputs supported monitoring signals with device-state diagnostics."
+   ]
+  },
+  {
+   "id": "device_loss_recovery",
+   "name": "Device loss recovery",
+   "priority": "P1",
+   "status": "planned",
+   "acceptance": [
+    "Recovers UI/project state and reports failed work after device reset."
+   ]
+  },
+  {
+   "id": "audio_device_recovery",
+   "name": "Audio device recovery",
+   "priority": "P1",
+   "status": "planned",
+   "acceptance": [
+    "Recovers or stops safely after audio-device format/disconnect changes."
+   ]
+  },
+  {
+   "id": "gpu_compositor_d3d11",
+   "name": "GPU compositor (Direct3D 11)",
+   "priority": "P1",
+   "status": "partial",
+   "acceptance": [
+    "Renders the common editing subset of a plan on the GPU to within a level of the software compositor and hands every other frame back to it."
+   ],
+   "tests": {
+    "unit": [
+     "LayersOpacityAndGradeMatchTheSoftwareCompositorOnPicturesWithEdgesAndTransparency",
+     "MotionCropAndAnchorPlaceAPictureTheSameWayOnBothCompositorsForAnySourceShape",
+     "DissolvesAdjustmentClipsGeneratorsAndSequenceEffectsMatchTheSoftwareCompositor",
+     "WhatTheGpuCannotRenderIsRefusedWithAReasonSoTheSoftwareCompositorDoesIt",
+     "AnEngineAskedForTheGpuComposesOnItAndRendersTheSamePicturesAsTheSoftwareEngine",
+     "AFrameTheGpuCannotRenderIsComposedInSoftwareAndCountedAndAnExportEngineNeverUsesTheGpu",
+     "EveryColourToolOnTheCardGivesTheSamePictureAsTheSoftwareCompositor",
+     "ALutOnTheCardGivesTheSamePictureAsTheSoftwareCompositorForCubesCurvesDomainsAndIntensity"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "render/D3D11Compositor.cpp",
+     "render/CompositorParams.h",
+     "render/ColorOps.h",
+     "playback/PlaybackEngine.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "hardware_decode_d3d11va",
+   "name": "Hardware decode into GPU textures (D3D11VA)",
+   "priority": "P1",
+   "status": "partial",
+   "acceptance": [
+    "Decodes supported H.264-class streams on the GPU and composes the pictures without copying them to memory; unsupported streams fall back to software decode."
+   ],
+   "tests": {
+    "unit": [
+     "HardwareDecodedPicturesAreComposedWhereTheyAreAndMatchTheSoftwareDecode",
+     "AnEngineDecodesH264OnTheGpuAndComposesItWithoutUploadingAPicture"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "media/ffmpeg/FFmpegSource.cpp",
+     "media/DeviceFrame.h",
+     "render/D3D11Compositor.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  }
+ ]
+}
