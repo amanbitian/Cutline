@@ -11,9 +11,9 @@ Reproduce with `scripts\bench.bat [frames]`, which builds and runs `cutline_benc
 - "Before" and "after" are measured on the same machine in the same build configuration. The "before" figures are produced by temporarily reintroducing the old code (see *Method* below), not quoted from elsewhere.
 - Cases below 0.1 ms are reported in microseconds.
 
-## 2026-10-06 â€” spatial effects CPU baseline
+## 2026-10-06 — spatial effects CPU baseline
 
-Source: `perf/2026-10-06-spatial-effects.txt`. Release, 1920Ã—1080, three frames per case. These cases were added to `cutline_bench` so new effects have explicit budgets rather than disappearing inside a generic composite number.
+Source: `perf/2026-10-06-spatial-effects.txt`. Release, 1920×1080, three frames per case. These cases were added to `cutline_bench` so new effects have explicit budgets rather than disappearing inside a generic composite number.
 
 | One float source track | Time | Throughput |
 |---|---:|---:|
@@ -25,9 +25,9 @@ Source: `perf/2026-10-06-spatial-effects.txt`. Release, 1920Ã—1080, three fra
 
 Blur uses a separable sliding window, so increasing radius does not multiply work per output pixel. Every spatial effect reuses the compositor's retained scratch layer and performs no per-frame image allocation after warm-up. Lens correction still exceeds a 25 fps frame budget on the CPU reference path; shader execution in the planned GPU compositor remains necessary for interactive production use.
 
-## 2026-10-06 â€” review remediation: step 1 and the first part of step 2
+## 2026-10-06 — review remediation: step 1 and the first part of step 2
 
-Source: `perf/2026-10-06-before.txt` and `perf/2026-10-06-after.txt`. Release, 1920Ã—1080, 40 frames per case.
+Source: `perf/2026-10-06-before.txt` and `perf/2026-10-06-after.txt`. Release, 1920×1080, 40 frames per case.
 
 ### Per-frame compile cost against project size
 
@@ -35,21 +35,21 @@ Source: `perf/2026-10-06-before.txt` and `perf/2026-10-06-after.txt`. Release, 1
 
 | Clips in the sequence | Before | After | Speed-up |
 |---:|---:|---:|---:|
-| 10 | 1.094 Âµs | 0.283 Âµs | 3.9Ã— |
-| 1,000 | 153 Âµs | 0.312 Âµs | ~490Ã— |
-| 10,000 | 2.006 ms | 0.310 Âµs | ~6,500Ã— |
-| 50,000 | 13.039 ms | 0.398 Âµs | ~33,000Ã— |
+| 10 | 1.094 µs | 0.283 µs | 3.9× |
+| 1,000 | 153 µs | 0.312 µs | ~490× |
+| 10,000 | 2.006 ms | 0.310 µs | ~6,500× |
+| 50,000 | 13.039 ms | 0.398 µs | ~33,000× |
 
 The older multi-track cases, which have one clip per track, improved too, because even a small sequence was being copied:
 
 | Compile, one clip per track | Before | After | Speed-up |
 |---:|---:|---:|---:|
-| 1 video track | 1.260 Âµs | 0.681 Âµs | 1.9Ã— |
-| 4 video tracks | 3.906 Âµs | 1.980 Âµs | 2.0Ã— |
-| 16 video tracks | 14.283 Âµs | 6.990 Âµs | 2.0Ã— |
-| Compile + mix, 1 audio track (4 video tracks in the plan) | 5.184 Âµs | 3.204 Âµs | 1.6Ã— |
+| 1 video track | 1.260 µs | 0.681 µs | 1.9× |
+| 4 video tracks | 3.906 µs | 1.980 µs | 2.0× |
+| 16 video tracks | 14.283 µs | 6.990 µs | 2.0× |
+| Compile + mix, 1 audio track (4 video tracks in the plan) | 5.184 µs | 3.204 µs | 1.6× |
 
-At 10,000 clips the old cost was 2 ms of a 33 ms frame budget at 30 fps (6%) spent compiling one frame; at 50,000 it was 13 ms (39%). The cost is now independent of project size. `Compile(graph)` was already flat (0.28â€“0.50 Âµs before and after), which is the control: nothing else in the compile path changed.
+At 10,000 clips the old cost was 2 ms of a 33 ms frame budget at 30 fps (6%) spent compiling one frame; at 50,000 it was 13 ms (39%). The cost is now independent of project size. `Compile(graph)` was already flat (0.28–0.50 µs before and after), which is the control: nothing else in the compile path changed.
 
 Guarded by `PerFrameCompileCostDoesNotGrowWithTheNumberOfClips`, a ratio test between 10 and 20,000 clips. I confirmed it fails (41/42) when the copy is reintroduced.
 
@@ -57,15 +57,15 @@ Guarded by `PerFrameCompileCostDoesNotGrowWithTheNumberOfClips`, a ratio test be
 
 `LoadSequence` scoped its *effect* query to the sequence but read **every** parameter and keyframe in the project, and nested sequences repeated that. A project with many animated sequences paid for all of them on every load.
 
-| Other animated sequences | Before | After | Rows read before â†’ after (params / keyframes) |
+| Other animated sequences | Before | After | Rows read before → after (params / keyframes) |
 |---:|---:|---:|---|
-| 0 | 0.120 ms | 0.257 ms | 1 / 0 â†’ 1 / 0 |
-| 20 | 0.478 ms | 0.234 ms | 201 / 600 â†’ 1 / 0 |
-| 80 | 1.623 ms | 0.223 ms | 801 / 2,400 â†’ 1 / 0 |
+| 0 | 0.120 ms | 0.257 ms | 1 / 0 → 1 / 0 |
+| 20 | 0.478 ms | 0.234 ms | 201 / 600 → 1 / 0 |
+| 80 | 1.623 ms | 0.223 ms | 801 / 2,400 → 1 / 0 |
 
 After the fix the cost is flat at about 0.23 ms and the rows read are exactly those the sequence owns.
 
-**A regression I introduced, stated plainly:** with no other sequences the load is now about 2Ã— *slower* (0.257 ms against 0.120 ms). The scoped set costs a roughly constant 0.1 ms of query planning that the unscoped version did not pay. Break-even is around 8 other sequences. That is the right trade for any project that is not trivial, and it is flat rather than growing, but it is a real cost on the smallest projects. Statements are prepared on every load; caching them is the obvious way to recover it and is listed under *Not yet done*.
+**A regression I introduced, stated plainly:** with no other sequences the load is now about 2× *slower* (0.257 ms against 0.120 ms). The scoped set costs a roughly constant 0.1 ms of query planning that the unscoped version did not pay. Break-even is around 8 other sequences. That is the right trade for any project that is not trivial, and it is flat rather than growing, but it is a real cost on the smallest projects. Statements are prepared on every load; caching them is the obvious way to recover it and is listed under *Not yet done*.
 
 It took three attempts to get the flat result, and the intermediate steps are worth keeping:
 
@@ -82,7 +82,7 @@ The planner, left to choose, scanned the large tables and probed the small scope
 
 | | Before | After |
 |---|---|---|
-| `FromFrames(â€¦).ToTicks()` at 29.97, about one hour in | **threw** `RationalTime multiplication overflow` | 29.4 ns/call |
+| `FromFrames(…).ToTicks()` at 29.97, about one hour in | **threw** `RationalTime multiplication overflow` | 29.4 ns/call |
 
 This is a correctness fix rather than a speed-up: the tick conversion multiplied by 254,016,000,000 before dividing, so an unreduced time near an hour overflowed 64 bits although the result fits easily. It now multiplies and divides in 128 bits and narrows once. The new path is cheap enough that it does not show up in the compile figures above.
 
@@ -107,9 +107,9 @@ The export fixes (per-channel audio queues, resampling to the requested rate, pu
 
 **Incident worth recording.** The first "after" run following a restore reported the *old* compile cost. The restore preserved the backup's older timestamp, so the Release build saw the source as older than the object built from the temporarily patched code and skipped recompiling it; the benchmark was measuring stale code. It was caught because the figures contradicted an earlier "after" run and a passing scaling test in the Debug tree, not by any check in the process. The files were touched, rebuilt, and the run repeated; the saved logs are from that corrected run. **When swapping code in and out between benchmark builds, confirm the build log shows the file being recompiled.**
 
-## 2026-10-06 â€” milestone 1A: edit-command latency and the cost of the new invariant checks
+## 2026-10-06 — milestone 1A: edit-command latency and the cost of the new invariant checks
 
-Milestone 1A added work to editing commands (transition validity and detachment, track-lock checks, keyframe splitting). This entry measures what editing now costs and what the added checks cost. It measures the **command service and store only** â€” not UI feedback latency, not rendering.
+Milestone 1A added work to editing commands (transition validity and detachment, track-lock checks, keyframe splitting). This entry measures what editing now costs and what the added checks cost. It measures the **command service and store only** — not UI feedback latency, not rendering.
 
 **Platform.** Release build (MSVC, VS 18), AMD Ryzen 9 9950X3D (16 cores / 32 threads), 93.6 GB RAM, Windows 11 build 26200, Radeon RX 9070 XT (not used: these cases never touch the GPU). The on-disk package lives in the user temp directory; **the storage class of that drive was not established** (Get-PhysicalDisk lists an HDD first), so the on-disk figures say "WAL commit on this machine's temp drive", nothing more.
 
@@ -117,7 +117,7 @@ Milestone 1A added work to editing commands (transition validity and detachment,
 
 **Commands measured.** `MoveClip` to free space, `TrimClip` as a slip, `SplitClip` on an animated clip (divides the curves), `SetClipSpeed` on a clip with no transition, `AddTransition`, `SetTransitionTiming`, and `Undo` (changeset replay).
 
-### Results â€” in-memory database (ms)
+### Results — in-memory database (ms)
 
 | Command | n | Median | p95 | p99 | Max |
 |---|---:|---:|---:|---:|---:|
@@ -129,7 +129,7 @@ Milestone 1A added work to editing commands (transition validity and detachment,
 | SetTransitionTiming | 24 | 0.087 | 0.105 | 0.118 | 0.118 |
 | Undo | 150 | 0.338 | 0.381 | 0.409 | 0.515 |
 
-### Results â€” on-disk package, WAL (ms)
+### Results — on-disk package, WAL (ms)
 
 | Command | n | Median | p95 | p99 | Max |
 |---|---:|---:|---:|---:|---:|
@@ -145,9 +145,9 @@ Every command is far inside the 50 ms visible-feedback target *for the store*; t
 
 ### Cost of the new checks
 
-A second run with `RequireValidTransition` and `DetachBrokenTransitions` returning immediately (`perf/2026-10-06-milestone-1a-checks-disabled.txt`) approximates the old behaviour **for move, trim, speed and the two transition commands only**; it does not reproduce the old split, ripple or lock behaviour, and it is not the pre-1A code. Medians, in-memory, checks off â†’ on:
+A second run with `RequireValidTransition` and `DetachBrokenTransitions` returning immediately (`perf/2026-10-06-milestone-1a-checks-disabled.txt`) approximates the old behaviour **for move, trim, speed and the two transition commands only**; it does not reproduce the old split, ripple or lock behaviour, and it is not the pre-1A code. Medians, in-memory, checks off → on:
 
-| Command | Off | On | Î” |
+| Command | Off | On | Δ |
 |---|---:|---:|---:|
 | MoveClip | 0.059 | 0.068 | +0.009 |
 | TrimClip (slip) | 0.056 | 0.064 | +0.008 |
@@ -159,12 +159,12 @@ A second run with `RequireValidTransition` and `DetachBrokenTransitions` returni
 
 ### Caveats
 
-- **Run-to-run spread is real.** Undo's in-memory median was 0.519 ms in the first run and 0.338 ms in the re-run on identical code, and tail figures moved by up to 2Ã—. Treat differences under ~0.05 ms as noise; only the transition commands' doubling is outside it, and it is explained by the added validation query.
+- **Run-to-run spread is real.** Undo's in-memory median was 0.519 ms in the first run and 0.338 ms in the re-run on identical code, and tail figures moved by up to 2×. Treat differences under ~0.05 ms as noise; only the transition commands' doubling is outside it, and it is explained by the added validation query.
 - **The first on-disk run printed its figures and then failed to delete its temporary package** (the benchmark still held the database open). That was a benchmark bug, now fixed (`EditProject::Close`); the re-run (`perf/2026-10-06-milestone-1a-rerun.txt`) completed cleanly. Figures are from the runs named above; none were discarded for being unfavourable.
 - The Release tree was confirmed to recompile `ProjectStore.cpp` in both directions (checks off, then restored), per the incident recorded above.
 - Not measured: UI-visible latency, decode/seek, playback, the cost of `ValidateDatabase()` on open, and projects larger than 1000 clips.
 
-## 2026-10-06 â€” milestone 1B: demux and decode latency on real files
+## 2026-10-06 — milestone 1B: demux and decode latency on real files
 
 Milestone 1B changed how files are read (a demuxer per stream, sample-accurate audio placement with a discarded lead-in, a resampler that is aligned and flushed). This entry records what reading costs now. **There is no "before" column**: on alternating reads the old code returned the wrong samples, so a faster-but-wrong figure would not be a baseline for anything. The comparison that matters is correctness, and it is in the test suite.
 
@@ -178,23 +178,23 @@ Milestone 1B changed how files are read (a demuxer per stream, sample-accurate a
 |---|---:|---:|---:|---:|---:|
 | PCM, 48 kHz stereo (Matroska) | 185 | 0.002 | 0.007 | 0.018 | 8.976 |
 | AAC, 48 kHz mono (MP4) | 185 | 0.004 | 0.006 | 0.011 | 6.486 |
-| PCM 44.1 â†’ 48 kHz mono (WAV) | 185 | 0.000 | 0.009 | 0.015 | 0.163 |
+| PCM 44.1 → 48 kHz mono (WAV) | 185 | 0.000 | 0.009 | 0.015 | 0.163 |
 
 The maxima are the first read of each file, which opens the decoder and builds the converter.
 
-### Audio, a block at a random place â€” every read seeks (ms)
+### Audio, a block at a random place — every read seeks (ms)
 
 | Case | n | Median | p95 | p99 | Max |
 |---|---:|---:|---:|---:|---:|
 | PCM in Matroska, stereo | 300 | 0.022 | 0.062 | 0.088 | 0.226 |
 | AAC in MP4, mono | 300 | 0.041 | 0.164 | 0.198 | 0.271 |
-| PCM 44.1 â†’ 48 kHz, Matroska | 300 | 0.045 | 0.099 | 0.112 | 0.180 |
-| PCM 44.1 â†’ 48 kHz, WAV | 300 | 0.026 | 0.073 | 0.121 | 0.177 |
+| PCM 44.1 → 48 kHz, Matroska | 300 | 0.045 | 0.099 | 0.112 | 0.180 |
+| PCM 44.1 → 48 kHz, WAV | 300 | 0.026 | 0.073 | 0.121 | 0.177 |
 | PCM mono, Matroska, **one hour** (347 MB) | 300 | 0.251 | 0.976 | 1.242 | 1.826 |
 
 Each seek decodes an 8192-sample lead-in (about 170 ms of audio) before the samples it keeps; that is the price of being sample-accurate and is included above.
 
-**One-off index.** Matroska's millisecond timestamps need an exact packet index before the first seek (see REMEDIATION.md). The first read of the one-hour file, which includes building it, took **99.4 ms**; for the 4-second fixtures it took 0.2â€“0.7 ms. The cost is proportional to the file's packet count and, on a cold cache, to its size on disk, which was not measured. A UI that opens a long Matroska file and plays from the middle will feel it once.
+**One-off index.** Matroska's millisecond timestamps need an exact packet index before the first seek (see REMEDIATION.md). The first read of the one-hour file, which includes building it, took **99.4 ms**; for the 4-second fixtures it took 0.2–0.7 ms. The cost is proportional to the file's packet count and, on a cold cache, to its size on disk, which was not measured. A UI that opens a long Matroska file and plays from the middle will feel it once.
 
 ### Video (ms)
 
@@ -205,7 +205,7 @@ Each seek decodes an 8192-sample lead-in (about 170 ms of audio) before the samp
 | FFV1 64x48 intra-only, in order | 90 | 0.007 | 0.015 | 0.022 | 2.080 |
 | FFV1 64x48 intra-only, random | 200 | 0.200 | 0.332 | 0.367 | 0.398 |
 
-The H.264 in-order tail (13â€“14 ms) is the first frame, which opens the decoder; it is a p99 here only because *n* is 90. A random H.264 read decodes up to a GOP from the previous keyframe, so 1.1 ms at 320x180 will not transfer to a 4K long-GOP file.
+The H.264 in-order tail (13–14 ms) is the first frame, which opens the decoder; it is a p99 here only because *n* is 90. A random H.264 read decodes up to a GOP from the previous keyframe, so 1.1 ms at 320x180 will not transfer to a 4K long-GOP file.
 
 ### Audio and video from one file, alternating
 
@@ -217,21 +217,21 @@ H.264 + AAC (160x90, 25 fps), 40 ms of audio and one video frame per step, *n* =
 - Everything is a warm cache, small file or short GOP. Do not read them as scrub-to-correct-frame latency, which needs a defined local-media workload (milestone 2).
 - The benchmark section is new and has no earlier run to compare with. The edit-latency section of the same run is within the spread recorded in the previous entry.
 
-## 2026-10-06 â€” milestone 1C and hardening: audio mixing, linked edits, durability
+## 2026-10-06 — milestone 1C and hardening: audio mixing, linked edits, durability
 
 Same machine and method as the two entries above (Release, Ryzen 9 9950X3D, warm cache, `scripts\bench.bat 40`; raw output in `perf/2026-10-06-milestone-1c.txt`). The storage class of the drive holding the temporary packages was not established.
 
-### Audio mixer (1024-frame blocks, 48 kHz stereo, Âµs or ms per block)
+### Audio mixer (1024-frame blocks, 48 kHz stereo, µs or ms per block)
 
 The mixer was rewritten (it now renders per sample from the sequence snapshot), so there is **no before**: the old mixer ignored retiming and reversal, skipped nested audio, and applied one effect value per block, so a figure for it would be for different work. The block budget at 48 kHz is 21.3 ms.
 
 | Case | Per block |
 |---|---:|
-| 4 tracks of plain clips | 16.6 Âµs |
-| 4 tracks, every clip retimed 3/2 (cubic interpolation) | 19.8 Âµs |
-| 4 tracks, every clip reversed and retimed | 20.0 Âµs |
-| 4 tracks, a gain **keyframed and evaluated at every sample** | 547 Âµs (2.6% of the budget) |
-| One track of 10,000 clips (block near the end) | 4.6 Âµs |
+| 4 tracks of plain clips | 16.6 µs |
+| 4 tracks, every clip retimed 3/2 (cubic interpolation) | 19.8 µs |
+| 4 tracks, every clip reversed and retimed | 20.0 µs |
+| 4 tracks, a gain **keyframed and evaluated at every sample** | 547 µs (2.6% of the budget) |
+| One track of 10,000 clips (block near the end) | 4.6 µs |
 
 These measure the mixer alone: the resolver hands back silence, so there is no decode and no resampling in them. The keyframed case is the expensive one (about 130 ns per sample per animated parameter: a rational-time construction and a curve lookup); a block with several animated parameters on several clips would scale with it. The 10,000-clip figure is the point of the windowed search: it is the same as for a short track, where the previous design scanned every clip and transition in the project for every block (not measured).
 
@@ -243,7 +243,7 @@ These measure the mixer alone: the resolver hands back silence, so there is no d
 | On-disk package, `synchronous=NORMAL` | 0.769 | 1.072 | 0.387 |
 | On-disk package, `synchronous=FULL` | 1.148 | 1.395 | 0.919 |
 
-In-memory is unchanged within noise from the previous entry. **On disk the median moved up by roughly 0.15â€“0.25 ms** (MoveClip 0.61 ms in the milestone-1A run, 0.77 to 0.83 ms in two runs now): the journal copy is now written to a temporary and renamed, and checked, instead of written in place. That is the price of a copy that cannot be left half-written; it is within the spread seen between runs of unchanged code, so treat it as a likely cost, not a measured one. **`synchronous=FULL` (every commit forced to disk) adds about 0.3â€“0.4 ms at the median on this machine**; on a slower disk it would add much more, which is why it is a choice and `Normal` is the default.
+In-memory is unchanged within noise from the previous entry. **On disk the median moved up by roughly 0.15–0.25 ms** (MoveClip 0.61 ms in the milestone-1A run, 0.77 to 0.83 ms in two runs now): the journal copy is now written to a temporary and renamed, and checked, instead of written in place. That is the price of a copy that cannot be left half-written; it is within the spread seen between runs of unchanged code, so treat it as a likely cost, not a measured one. **`synchronous=FULL` (every commit forced to disk) adds about 0.3–0.4 ms at the median on this machine**; on a slower disk it would add much more, which is why it is a choice and `Normal` is the default.
 
 Linked edits, in-memory, 1000 clips, each edit also editing its partner (n = 60 each):
 
@@ -254,7 +254,7 @@ Linked edits, in-memory, 1000 clips, each edit also editing its partner (n = 60 
 | SplitClip, linked pair | 0.157 | 0.168 | 0.181 | 0.204 |
 | SetClipSpeed (reverse), linked pair | 0.104 | 0.109 | 0.114 | 0.116 |
 
-A linked move costs about 1.6Ã— the single-clip move (0.118 vs 0.073 ms) for twice the work.
+A linked move costs about 1.6× the single-clip move (0.118 vs 0.073 ms) for twice the work.
 
 ### Decode
 
@@ -264,22 +264,22 @@ Unchanged within noise from the 1B entry, including after the video reader began
 
 Everything above is store-only or mixer-only. No UI, no decode of production footage, no end-to-end playback latency has been measured, and none of it is a comparison with another editor.
 
-## 2026-10-06 â€” milestone 2: bounded decode pool and read-ahead
+## 2026-10-06 — milestone 2: bounded decode pool and read-ahead
 
 Source: [perf/2026-10-06-milestone-2-read-ahead.txt](perf/2026-10-06-milestone-2-read-ahead.txt). Release build, reproduced with `scripts\bench.bat --playback` on the same machine as the entries above.
 
-The playback engine now uses one independent `Source` set per decode worker, a bounded pending queue, seek/edit generations that discard stale work, and the existing byte-bounded LRU as the publication point. The benchmark uses one worker and a one-frame window so each timing is for the requested frame rather than parallel look-ahead. It makes 80 unique, nonlocal seeks through `bars-2997.mp4` (H.264, 320Ã—180, 29.97 fps, GOP 30, four seconds), waits for the worker to publish the raw frame, and then renders those cached positions.
+The playback engine now uses one independent `Source` set per decode worker, a bounded pending queue, seek/edit generations that discard stale work, and the existing byte-bounded LRU as the publication point. The benchmark uses one worker and a one-frame window so each timing is for the requested frame rather than parallel look-ahead. It makes 80 unique, nonlocal seeks through `bars-2997.mp4` (H.264, 320×180, 29.97 fps, GOP 30, four seconds), waits for the worker to publish the raw frame, and then renders those cached positions.
 
 | Stage | n | Median | p95 | p99 | Max |
 |---|---:|---:|---:|---:|---:|
-| Seek request â†’ raw frame in shared cache | 80 | 1.139 ms | 1.944 ms | 2.122 ms | 4.793 ms |
-| Cached raw frame â†’ composed RGBA frame | 80 | 0.357 ms | 0.426 ms | 0.695 ms | 0.783 ms |
+| Seek request → raw frame in shared cache | 80 | 1.139 ms | 1.944 ms | 2.122 ms | 4.793 ms |
+| Cached raw frame → composed RGBA frame | 80 | 0.357 ms | 0.426 ms | 0.695 ms | 0.783 ms |
 
 All 80 rendered frames were consumed from read-ahead. The production default is two workers, eight frames ahead, at most 64 queued decodes, and at most eight open sources per worker. Cache identity changed from clip id plus requested time to media id plus requested time, so duplicate clips now share their raw frame; a regression test proves one miss and one hit for two stacked clips.
 
 These numbers do **not** validate the proposed 150 ms product target. The media is tiny, short, local and warm-cache; there is no Qt event, GPU upload, display scheduling, proxy choice, simultaneous audio, cold disk, 1080p/4K decode, or concurrent export. They establish a reproducible baseline for the new queue-to-cache path. A declared production workload and visible-frame instrumentation remain required.
 
-## 2026-10-06 â€” processors in the mixer
+## 2026-10-06 — processors in the mixer
 
 Source: [perf/2026-10-06-audio-dsp.txt](perf/2026-10-06-audio-dsp.txt). Release build, `scripts\bench.bat`, 1024-frame blocks at 48 kHz stereo, four tracks each carrying an equaliser, a compressor and a limiter, silence as input (the cost of the processing, not of decoding).
 
@@ -305,7 +305,7 @@ Ordered by expected value. These are remaining review items; partial progress is
 | GPU compositor, hardware decode, zero-copy surfaces | Done for the common subset on one adapter: see the 2026-10-07 GPU entry below |
 | Complete-pipeline metrics: queue delay, present time, memory, p95/p99, underruns | Engine counters now expose read-ahead and render totals and the benchmark measures seek-to-cache, but there is no presentation/UI timing, memory telemetry or concurrent-export workload |
 
-## 2026-10-06 â€” optical-flow analysis and what caching it saves
+## 2026-10-06 — optical-flow analysis and what caching it saves
 
 Source: [perf/2026-10-06-optical-flow.txt](perf/2026-10-06-optical-flow.txt). Release build, `scripts\bench.bat --flow`, two 1080p textured float pictures (the second the first moved six pixels), default search (8-pixel blocks, radius 12).
 
@@ -320,7 +320,7 @@ A clip played at a quarter of its speed asks for four in-between pictures from e
 
 The estimate itself is not real time: 4.9 s per pair means uncached motion-compensated slow motion on 1080p footage is an offline operation (run the background analysis first, or accept frame blending). This is a CPU reference with an exhaustive block search, one machine and synthetic texture; real footage with larger motion, noise and flat areas was not measured, and nothing here is a statement about a GPU implementation, which does not exist.
 
-## 2026-10-07 â€” P0 scheduling and render-graph foundations
+## 2026-10-07 — P0 scheduling and render-graph foundations
 
 Implemented structural prerequisites for later GPU and pipeline benchmarks:
 
@@ -452,3 +452,27 @@ The D3D11 compositor also allocates targets on demand. A normal 4K 8-bit/no-tran
 The editor is not fully optimized. Render-cache stores and hits still copy an entire 4K frame and measured about 3.0-3.5 ms each. Every displayed GPU frame still synchronously reads back to CPU memory before Qt copies it again. An active unsupported effect sends the whole frame to software; measured 4K medians include 111.7 ms rolling shutter, 156.5 ms mesh warp, 402.0 ms Gaussian blur, 445.6 ms glow, 425.4 ms drop shadow and 3253.7 ms noise reduction. Every edit reloads the sequence and broadly clears decode/device state, while export explicitly disables GPU composition and runs render/encode work serially. The remaining order of work is shared-texture monitor presentation, GPU spatial effects plus hybrid per-layer execution, selective edit invalidation, zero-copy render-cache ownership, and a pipelined export path.
 
 After these follow-up changes, all 151 render tests pass; playback passes 46/49 and GPU passes 12/15 on the AMD adapter, with all six skips caused by generated media fixtures missing from this checkout. The offscreen app suite passes 31/32: its pre-existing bundled-look discovery case still finds fewer than eight entries, while the frame-delivery, playback and async-scope cases pass. Full raw measurements and limitations remain in [perf/2026-10-08-playback-gpu-audit.txt](perf/2026-10-08-playback-gpu-audit.txt).
+
+### Re-run of the full suites (2026-10-08, later the same day)
+
+The existing `build/app` binaries were run again with `CUTLINE_FIXTURE_DIR=build/app/fixtures` and `CUTLINE_GOLDEN_DIR=tests/golden` set, which running the executables directly (rather than through CTest) requires: without the fixture variable the media, playback and GPU suites skip the tests that read generated files, and without the golden variable some render cases fail. With both set: core 48/48, store 129/129, timeline 78/78, media 69/69, render 151/151, audio 81/81, playback 49/49, export 35 passed and 1 skipped (`ExportIsRefusedWhenNothingCanWrite`: this build can encode), interchange 31/31, ui 62/62, gpu 15/15, speech 7/7 (the Whisper integration test ran). The application suite was run in the first pass, without the fixture variable: 31 passed and 1 skipped (`FilesAreCopiedExactlyImportedAndGivenAProxy...` reads a generated media file), and the bundled-look discovery case that the entry above reports as failing passed. The binaries are those in the build directory, not rebuilt from the working tree; their timestamps predate the last commit, though every suite's test count equals the count in the source.
+
+## 2026-10-09 - Spatial effects, edit invalidation, ingest and export
+
+The remaining spatial CPU effects now divide disjoint rows over the bounded render pool. Release 4K medians on the same machine improved as follows: rolling shutter 111.7 to 46.8 ms, mesh warp 156.5 to 47.4 ms, Gaussian blur 402.0 to 50.6 ms, directional blur 1375.9 to 124.3 ms, unsharp mask 317.1 to 58.4 ms, glow 445.6 to 66.9 ms, drop shadow 425.4 to 67.2 ms, noise reduction 3253.7 to 322.2 ms, wave warp 116.9 to 49.0 ms, bulge 59.5 to 40.4 ms, chroma key 187.7 to 45.4 ms and luma key 139.9 to 45.6 ms. [Raw results](perf/2026-10-09-effects-parallel-all.txt). Heavy spatial effects remain above a 40 ms 25 fps budget and still need GPU kernels.
+
+Visual-only edits now retain decoded media/device decoders while relink, proxy and media-stream changes still invalidate them. Simultaneous ingest jobs are serialized at the project boundary to avoid revision races and competing full-file I/O. Export uses an isolated full-resolution/original-media engine and a one-packet producer/encoder pipeline; requested delivery dimensions may differ from the sequence and use FFmpeg's cached bicubic scaler. LUT discovery now falls back from failed canonicalization without collapsing distinct `.cube` files.
+
+The complete fixture-backed CTest run passed all 13 targets. With the final GPU additions, the current registry contains 791 individual passing cases plus one inapplicable export-refusal skip: 760 native cases across 12 suites and 32 offscreen Qt application cases. The export suite was rebuilt and rerun after delivery resizing was added; the application suite was rebuilt and rerun after ingest serialization. See [the full audit and remaining limits](OPTIMIZATION_AUDIT_2026-10-09.md).
+
+## 2026-10-09 - Direct Qt presentation, GPU spatial effects and shared cache frames
+
+The monitor can now present a D3D11 compositor texture directly through the Qt Quick scene graph. Qt and playback share the renderer's D3D11 device, and a small leased texture pool prevents the compositor from overwriting a texture still referenced by a scene-graph node. Ordinary supported frames skip the staging copy, synchronous GPU read-back, CPU `VideoFrame`, and QImage upload. The CPU path remains available for software Qt rendering, unsupported effects, nested-sequence plans and the periodic sample needed by visible scopes.
+
+In the GPU suite's 1920x1080 synthetic three-layer case with motion and grade, the same AMD Radeon AI PRO R9700 rendered a frame in 11.1 ms through the read-back path and 1.3 ms as a direct texture. That is about 8.5x faster for this render call; direct presentation reported zero read-back time. The CPU reference took 82.4 ms. These Debug-build figures are a focused compositor benchmark on one adapter, not an end-to-end playback p95.
+
+D3D11 compute passes now cover box blur, Gaussian blur, directional blur, sharpen, vignette, lens/wide-angle correction, rolling shutter, wave warp and bulge. Posterize joins the fused GPU colour stack. Mixed chains preserve effect order by flushing colour-operation groups around spatial passes. CPU/GPU comparisons pass for every added effect and for a motion -> grade -> blur -> grade chain. Mesh warp, unsharp mask, glow, drop shadow, noise reduction and chroma/luma-key cleanup remain on the parallel CPU path.
+
+`VideoFrame` now shares immutable pixel backing. Cache stores, cache hits and same-format conversions are O(1) snapshots until a caller requests writable pixels, at which point only that frame detaches. This removes the earlier measured 3.0-3.5 ms 4K ownership copy from normal memory-cache store/hit operations while preserving independent metadata and pixel mutation.
+
+Final sequential verification rebuilt the changed targets and passed all 13 CTest targets in 391.45 seconds: 791 individual cases passed, with the same one inapplicable export-refusal case skipped. The GPU suite is 18/18. See [the optimization audit](OPTIMIZATION_AUDIT_2026-10-09.md) for the complete function-by-function table and remaining platform/effect boundaries.

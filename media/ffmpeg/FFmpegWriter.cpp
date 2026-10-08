@@ -169,9 +169,7 @@ class FFmpegWriter final : public Writer {
   void WriteVideo(const VideoFrame& frame) override {
     if (video_ == nullptr) throw std::logic_error("This export has no video stream");
     if (published_ || failed_) throw std::logic_error("This export is no longer accepting frames");
-    if (frame.width() != video_->width || frame.height() != video_->height) {
-      throw std::invalid_argument("Frame size does not match the export settings");
-    }
+    if (!frame.valid()) throw std::invalid_argument("Cannot write an empty video frame");
 
     // The compositor hands us 8- or 16-bit RGBA; swscale converts to whatever
     // the encoder wants, with the output colour metadata stated explicitly.
@@ -183,11 +181,15 @@ class FFmpegWriter final : public Writer {
     const auto& source = frame.format() == PixelFormat::RgbaF32 ? narrowed : frame;
     const auto actual_format = source.format() == PixelFormat::Rgba16 ? AV_PIX_FMT_RGBA64LE : AV_PIX_FMT_RGBA;
 
-    if (scaler_ == nullptr || scaler_input_ != actual_format) {
-      scaler_.reset(sws_getContext(video_->width, video_->height, actual_format, video_->width, video_->height,
-                                   video_->pix_fmt, SWS_BILINEAR, nullptr, nullptr, nullptr));
+    if (scaler_ == nullptr || scaler_input_ != actual_format || scaler_width_ != source.width() ||
+        scaler_height_ != source.height()) {
+      const bool resize = source.width() != video_->width || source.height() != video_->height;
+      scaler_.reset(sws_getContext(source.width(), source.height(), actual_format, video_->width, video_->height,
+                                   video_->pix_fmt, resize ? SWS_BICUBIC : SWS_BILINEAR, nullptr, nullptr, nullptr));
       if (scaler_ == nullptr) throw std::runtime_error("Unable to create the export colour converter");
       scaler_input_ = actual_format;
+      scaler_width_ = source.width();
+      scaler_height_ = source.height();
       const int* table = sws_getCoefficients(video_->colorspace == AVCOL_SPC_UNSPECIFIED ? SWS_CS_ITU709
                                                                                          : video_->colorspace);
       const int target_range = video_->color_range == AVCOL_RANGE_JPEG ? 1 : 0;
@@ -199,7 +201,7 @@ class FFmpegWriter final : public Writer {
     const std::array<const std::uint8_t*, 4> input{reinterpret_cast<const std::uint8_t*>(source.data()), nullptr,
                                                    nullptr, nullptr};
     const std::array<int, 4> input_stride{static_cast<int>(source.stride()), 0, 0, 0};
-    sws_scale(scaler_.get(), input.data(), input_stride.data(), 0, video_->height, video_frame_->data,
+    sws_scale(scaler_.get(), input.data(), input_stride.data(), 0, source.height(), video_frame_->data,
               video_frame_->linesize);
 
     // Timestamps come from the index, so cadence is regular by construction.
@@ -521,6 +523,8 @@ class FFmpegWriter final : public Writer {
   SwsScaler scaler_;
   SwrResampler resampler_;
   AVPixelFormat scaler_input_{AV_PIX_FMT_NONE};
+  int scaler_width_{0};
+  int scaler_height_{0};
 
   // One queue per channel; see WriteAudio.
   std::vector<std::vector<float>> pending_;

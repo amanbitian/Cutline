@@ -380,9 +380,16 @@ CUTLINE_TEST(WhatTheGpuCannotRenderIsRefusedWithAReasonSoTheSoftwareCompositorDo
   CHECK(supports(with_effect("opacity", {{"value", Value::Scalar(0.5)}}), why));
   CHECK(supports(with_effect("motion", {{"scale", Value::Vec2(50.0, 50.0)}}), why));
   CHECK(supports(with_effect("blur", {{"radius", Value::Scalar(0.0)}}), why));
-  CHECK(!supports(with_effect("blur", {{"radius", Value::Scalar(4.0)}}), why) && why.find("blur") != std::string::npos);
+  CHECK(supports(with_effect("blur", {{"radius", Value::Scalar(4.0)}}), why));
   CHECK(!supports(with_effect("blend_mode", {{"mode", Value::Scalar(1.0)}}), why) && why.find("blend") != std::string::npos);
-  CHECK(!supports(with_effect("vignette", {{"amount", Value::Scalar(0.5)}}), why));
+  CHECK(supports(with_effect("vignette", {{"amount", Value::Scalar(0.5)}}), why));
+  CHECK(supports(with_effect("gaussian_blur", {{"radius", Value::Scalar(3.0)}}), why));
+  CHECK(supports(with_effect("directional_blur", {{"length", Value::Scalar(8.0)}}), why));
+  CHECK(supports(with_effect("lens_correction", {{"distortion", Value::Scalar(0.2)}}), why));
+  CHECK(supports(with_effect("wave_warp", {{"amplitude", Value::Scalar(5.0)}}), why));
+  CHECK(supports(with_effect("bulge", {{"amount", Value::Scalar(0.3)}}), why));
+  CHECK(supports(with_effect("rolling_shutter", {{"horizontal", Value::Scalar(7.0)}}), why));
+  CHECK(supports(with_effect("posterize", {{"levels", Value::Scalar(6.0)}}), why));
   CHECK(!supports(with_effect("frame_interpolation", {{"mode", Value::Scalar(2.0)}}), why));
   // A mask on an otherwise supported effect.
   {
@@ -402,6 +409,89 @@ CUTLINE_TEST(WhatTheGpuCannotRenderIsRefusedWithAReasonSoTheSoftwareCompositorDo
   }
   config.output_format = PixelFormat::Rgba16;
   CHECK(!supports(with_effect("opacity", {{"value", Value::Scalar(0.5)}}), why));
+}
+
+CUTLINE_TEST(SpatialEffectsStayOnTheGpuAndMatchTheSoftwareReference) {
+  SKIP_INAPPLICABLE(Device() != nullptr, "no Direct3D 11 device");
+  const std::vector<std::pair<const char*, Effect>> cases = {
+      {"box blur", MakeEffect("e", "blur", {{"radius", Value::Scalar(4.0)}})},
+      {"gaussian blur", MakeEffect("e", "gaussian_blur", {{"radius", Value::Scalar(3.0)}})},
+      {"directional blur", MakeEffect("e", "directional_blur", {{"length", Value::Scalar(8.0)}, {"angle", Value::Scalar(27.0)}})},
+      {"sharpen", MakeEffect("e", "sharpen", {{"amount", Value::Scalar(0.7)}})},
+      {"vignette", MakeEffect("e", "vignette", {{"amount", Value::Scalar(0.6)}, {"midpoint", Value::Scalar(0.35)}, {"feather", Value::Scalar(0.4)}})},
+      {"lens correction", MakeEffect("e", "lens_correction", {{"distortion", Value::Scalar(0.18)}, {"quadratic", Value::Scalar(-0.06)}, {"scale", Value::Scalar(105.0)}})},
+      {"wave warp", MakeEffect("e", "wave_warp", {{"amplitude", Value::Scalar(5.0)}, {"wavelength", Value::Scalar(31.0)}, {"phase", Value::Scalar(20.0)}})},
+      {"bulge", MakeEffect("e", "bulge", {{"amount", Value::Scalar(0.35)}, {"radius", Value::Scalar(0.8)}})},
+      {"rolling shutter", MakeEffect("e", "rolling_shutter", {{"horizontal", Value::Scalar(6.0)}, {"vertical", Value::Scalar(-2.0)}, {"rotation", Value::Scalar(3.0)}, {"curve", Value::Scalar(0.4)}, {"direction", Value::Scalar(1.0)}})},
+      {"posterize", MakeEffect("e", "posterize", {{"levels", Value::Scalar(6.0)}})},
+  };
+  for (const auto& [name, effect] : cases) {
+    auto sequence = MakeSequence(128, 72);
+    auto track = MakeTrack("v1", 0);
+    auto clip = MakeClip("a", "m", 0, 10);
+    clip.effects.push_back(effect);
+    track.clips.push_back(std::move(clip));
+    sequence.tracks.push_back(std::move(track));
+    Finalise(sequence);
+    Frames frames;
+    frames.Add("a", TexturedFrame(128, 72, PixelFormat::Rgba8, 9));
+    CheckParity(Render(sequence, 1, frames), name);
+  }
+
+  // Spatial and colour passes keep their order, including on an inset whose
+  // transparent boundary is part of the filter input.
+  auto sequence = MakeSequence(128, 72);
+  auto track = MakeTrack("v1", 0);
+  auto clip = MakeClip("a", "m", 0, 10);
+  clip.effects.push_back(MakeEffect("m", "motion", {{"scale", Value::Vec2(65.0, 65.0)}, {"rotation", Value::Scalar(7.0)}}));
+  clip.effects.push_back(MakeEffect("g1", "grade", {{"exposure", Value::Scalar(0.3)}}));
+  clip.effects.push_back(MakeEffect("b", "blur", {{"radius", Value::Scalar(3.0)}}));
+  clip.effects.push_back(MakeEffect("g2", "grade", {{"saturation", Value::Scalar(60.0)}}));
+  track.clips.push_back(std::move(clip));
+  sequence.tracks.push_back(std::move(track));
+  Finalise(sequence);
+  Frames frames;
+  frames.Add("a", TexturedFrame(128, 72, PixelFormat::Rgba8, 12));
+  CheckParity(Render(sequence, 1, frames), "motion, grade, blur, grade chain");
+}
+
+CUTLINE_TEST(PresentationTexturesAvoidReadbackStayAliveAndCanUseTheUiDevice) {
+  SKIP_INAPPLICABLE(Device() != nullptr, "no Direct3D 11 device");
+  gpu::D3D11Compositor::Options options;
+  options.external_device = Device()->native_device();
+  options.allow_software = true;
+  std::string why;
+  auto compositor = gpu::D3D11Compositor::Create(options, &why);
+  CHECK(compositor != nullptr);
+  CHECK(compositor->native_device() == Device()->native_device());
+
+  auto sequence = MakeSequence(128, 72);
+  auto track = MakeTrack("v1", 0);
+  track.clips.push_back(MakeClip("a", "m", 0, 10));
+  sequence.tracks.push_back(std::move(track));
+  Finalise(sequence);
+  Frames frames;
+  frames.Add("a", TexturedFrame(128, 72, PixelFormat::Rgba8, 4));
+  const auto plan = TimelineCompiler{}.Compile(sequence, Seconds(1));
+  CompositorConfig config;
+  Statistics stats;
+  gpu::GpuStatistics device_stats;
+  gpu::PresentationFrame first;
+  const auto no_pixels = compositor->Compose(plan, config, frames.Resolver(), stats, &device_stats, {}, &first);
+  CHECK(!no_pixels.valid());
+  CHECK(first.valid());
+  CHECK(first.device == Device()->native_device());
+  CHECK(device_stats.readback_ms == 0.0);
+
+  const auto first_texture = first.texture;
+  gpu::PresentationFrame second;
+  (void)compositor->Compose(plan, config, frames.Resolver(), stats, &device_stats, {}, &second);
+  CHECK(second.valid());
+  CHECK(second.texture != first_texture);  // the first texture is still leased by the scene graph
+  first = {};
+  gpu::PresentationFrame third;
+  (void)compositor->Compose(plan, config, frames.Resolver(), stats, &device_stats, {}, &third);
+  CHECK(third.texture == first_texture);   // released slots are recycled without allocating every frame
 }
 
 CUTLINE_TEST(TheGpuPathIsFasterThanTheSoftwarePathAtFullHdAndSaysWhereTheTimeGoes) {
@@ -426,7 +516,8 @@ CUTLINE_TEST(TheGpuPathIsFasterThanTheSoftwarePathAtFullHdAndSaysWhereTheTimeGoe
   gpu::GpuStatistics gpu_stats;
   (void)Device()->Compose(plan, config, frames.Resolver(), stats, &gpu_stats);
   constexpr int kRuns = 5;
-  double cpu_ms = 0, gpu_ms = 0, gpu_device_ms = 0;
+  double cpu_ms = 0, gpu_ms = 0, direct_ms = 0, gpu_device_ms = 0, readback_ms = 0;
+  gpu::PresentationFrame presented;
   for (int i = 0; i < kRuns; ++i) {
     auto start = std::chrono::steady_clock::now();
     (void)cpu.Compose(plan, frames.Resolver(), stats);
@@ -435,10 +526,16 @@ CUTLINE_TEST(TheGpuPathIsFasterThanTheSoftwarePathAtFullHdAndSaysWhereTheTimeGoe
     (void)Device()->Compose(plan, config, frames.Resolver(), stats, &gpu_stats);
     gpu_ms += std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - start).count();
     gpu_device_ms += gpu_stats.gpu_ms;
+    readback_ms = gpu_stats.readback_ms;
+    start = std::chrono::steady_clock::now();
+    (void)Device()->Compose(plan, config, frames.Resolver(), stats, &gpu_stats, {}, &presented);
+    direct_ms += std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - start).count();
   }
-  std::fprintf(stderr, "    1080p, 3 layers with motion and grade (8-bit sources, %s):\n    software %.1f ms   GPU %.1f ms (upload %.1f, device %.2f, readback %.1f), %.1fx\n",
-               Device()->device().name.c_str(), cpu_ms / kRuns, gpu_ms / kRuns, gpu_stats.upload_ms, gpu_device_ms / kRuns, gpu_stats.readback_ms, cpu_ms / gpu_ms);
+  std::fprintf(stderr, "    1080p, 3 layers with motion and grade (8-bit sources, %s):\n    software %.1f ms   GPU readback %.1f ms (upload %.1f, device %.2f, readback %.1f)   direct texture %.1f ms, %.1fx vs CPU\n",
+               Device()->device().name.c_str(), cpu_ms / kRuns, gpu_ms / kRuns, gpu_stats.upload_ms,
+               gpu_device_ms / kRuns, readback_ms, direct_ms / kRuns, cpu_ms / direct_ms);
   CHECK(gpu_ms < cpu_ms);
+  CHECK(direct_ms < gpu_ms);
 }
 
 // ------------------------------------------------------------ hardware decode ----
@@ -681,6 +778,26 @@ CUTLINE_TEST(AnEngineAskedForTheGpuComposesOnItAndRendersTheSamePicturesAsTheSof
   CHECK(software.statistics().gpu_frames == 0);
 }
 
+CUTLINE_TEST(TheMonitorEngineReturnsANativeTextureWhenItSharesThePresentationDevice) {
+  SKIP_INAPPLICABLE(Device() != nullptr, "no Direct3D 11 device");
+  cutline::media::RegisterAllProviders();
+  cutline::media::SyntheticSpec spec;
+  spec.pattern = cutline::media::SyntheticPattern::Counter;
+  spec.width = 160;
+  spec.height = 90;
+  spec.duration = Seconds(2);
+  const auto path = spec.ToPath();
+  const cutline::playback::MediaLocator locator = [path](const std::string&) { return path; };
+  auto config = EngineSettings(true, false);
+  config.gpu_external_device = Device()->native_device();
+  cutline::playback::PlaybackEngine engine(OneClipGraph(160, 90, "m", 2), locator, config);
+  const auto frame = engine.RenderForPresentation(Seconds(1));
+  CHECK(frame.on_gpu());
+  CHECK(frame.texture.device == Device()->native_device());
+  CHECK(!frame.pixels.valid());
+  CHECK_EQ(engine.statistics().gpu_frames, std::int64_t{1});
+}
+
 CUTLINE_TEST(AFrameTheGpuCannotRenderIsComposedInSoftwareAndCountedAndAnExportEngineNeverUsesTheGpu) {
   SKIP_INAPPLICABLE(Device() != nullptr, "no Direct3D 11 device");
   cutline::media::RegisterAllProviders();
@@ -692,7 +809,7 @@ CUTLINE_TEST(AFrameTheGpuCannotRenderIsComposedInSoftwareAndCountedAndAnExportEn
   const auto path = spec.ToPath();
   const cutline::playback::MediaLocator locator = [path](const std::string&) { return path; };
   std::vector<Effect> effects;
-  effects.push_back(MakeEffect("b", "blur", {{"radius", Value::Scalar(3.0)}}));
+  effects.push_back(MakeEffect("b", "drop_shadow", {{"opacity", Value::Scalar(0.7)}, {"radius", Value::Scalar(3.0)}}));
   cutline::playback::PlaybackEngine software(OneClipGraph(160, 90, "m", 10, effects), locator, EngineSettings(false));
   cutline::playback::PlaybackEngine asked(OneClipGraph(160, 90, "m", 10, effects), locator, EngineSettings(true));
   const auto a = software.RenderFrame(Seconds(1));

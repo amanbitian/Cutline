@@ -76,6 +76,21 @@ CUTLINE_TEST(FrameCloneCopiesPixelsAndMetadata) {
   CHECK_EQ(static_cast<int>(copy.row_u8(0)[0]), 42);
   CHECK_EQ(copy.presentation_time.Compare(Seconds(3)), 0);
   CHECK(copy.keyframe);
+
+  // Shared snapshots reuse the large pixel allocation but retain value
+  // semantics: the first writer detaches without affecting the other frame.
+  auto shared = frame.Share();
+  shared.presentation_time = Seconds(4);
+  shared.row_u8(0)[0] = 7;
+  const auto& original_view = frame;
+  const auto& shared_view = shared;
+  CHECK_EQ(static_cast<int>(original_view.row_u8(0)[0]), 42);
+  CHECK_EQ(static_cast<int>(shared_view.row_u8(0)[0]), 7);
+  CHECK_EQ(frame.presentation_time.Compare(Seconds(3)), 0);
+  CHECK_EQ(shared.presentation_time.Compare(Seconds(4)), 0);
+
+  frame.row_u8(0)[1] = 9;
+  CHECK_EQ(static_cast<int>(shared_view.row_u8(0)[1]), 0);
 }
 
 CUTLINE_TEST(EightBitRoundTripsThroughFloatExactly) {

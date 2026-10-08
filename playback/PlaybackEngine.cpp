@@ -40,6 +40,8 @@ PlaybackEngine::PlaybackEngine(timeline::SequenceGraph graph, MediaLocator locat
     render::gpu::D3D11Compositor::Options options;
     options.adapter_id = config_.gpu_adapter_id;
     options.allow_software = config_.gpu_allow_software;
+    options.external_device = config_.gpu_external_device;
+    options.external_context = config_.gpu_external_context;
     gpu_ = render::gpu::D3D11Compositor::Create(options, &gpu_unavailable_reason_);
   }
   if (config_.decode_workers != 0 && config_.read_ahead_frames != 0) {
@@ -426,7 +428,9 @@ media::VideoFrame PlaybackEngine::ComposeSequence(const timeline::SequenceGraph&
     key = render::KeyForPlan(plan, config_.compositor, versions, nested_keys);
     if (const auto cached = config_.render_cache->Find(key)) {
       counters_.render_cache_hits.fetch_add(1, std::memory_order_relaxed);
-      auto frame = cached->Clone();
+      // A cache hit only changes per-presentation metadata. Pixel storage stays
+      // shared until a caller explicitly asks for writable access.
+      auto frame = cached->Share();
       frame.presentation_time = plan.sequence_time;  // the same picture, at this time
       return frame;
     }
@@ -520,6 +524,61 @@ std::vector<bool> PlaybackEngine::CachedFrames(const time::RationalTime& in, std
 
 media::VideoFrame PlaybackEngine::RenderFrame(const time::RationalTime& at) {
   return RenderFrame(at, config_.compile);
+}
+
+PlaybackEngine::PresentationResult PlaybackEngine::RenderForPresentation(const time::RationalTime& at) {
+  const auto started = std::chrono::steady_clock::now();
+  const auto graph = Snapshot();
+  const auto* root = graph->root();
+  if (root == nullptr) throw std::logic_error("Playback engine has no sequence");
+  PresentationResult result;
+  {
+    const std::lock_guard<std::mutex> picture(video_mutex_);
+    nested_frames_.clear();
+    const auto plan = compiler_.Compile(*root, at, config_.compile);
+    const bool nested = std::any_of(plan.video.begin(), plan.video.end(), [](const timeline::SourceRequest& request) {
+      return request.source_kind == model::SourceKind::Sequence;
+    });
+    if (gpu_ != nullptr && config_.gpu_external_device != nullptr && !nested && gpu_->Supports(plan, config_.compositor)) {
+      try {
+        render::Statistics composed;
+        render::gpu::GpuStatistics device_stats;
+        const render::FrameResolver resolve = [this](const timeline::SourceRequest& request) { return FrameFor(request); };
+        const render::gpu::DeviceFrameResolver on_device = [this](const timeline::SourceRequest& request) {
+          return DeviceFrameFor(request);
+        };
+        (void)gpu_->Compose(plan, config_.compositor, resolve, composed, &device_stats, on_device, &result.texture);
+        counters_.gpu_frames.fetch_add(1, std::memory_order_relaxed);
+        counters_.gpu_microseconds.fetch_add(static_cast<std::int64_t>(device_stats.total_ms * 1000.0),
+                                             std::memory_order_relaxed);
+        counters_.gpu_device_microseconds.fetch_add(static_cast<std::int64_t>(device_stats.gpu_ms * 1000.0),
+                                                    std::memory_order_relaxed);
+        counters_.hardware_pictures.fetch_add(device_stats.sources_on_device, std::memory_order_relaxed);
+        counters_.uploaded_pictures.fetch_add(device_stats.sources_uploaded, std::memory_order_relaxed);
+      } catch (const render::gpu::Unsupported&) {
+        counters_.gpu_fallback_frames.fetch_add(1, std::memory_order_relaxed);
+      } catch (const std::exception& error) {
+        counters_.gpu_failures.fetch_add(1, std::memory_order_relaxed);
+        gpu_unavailable_reason_ = std::string("the GPU failed: ") + error.what();
+        device_sources_.clear();
+        gpu_.reset();
+      }
+    } else if (gpu_ != nullptr) {
+      counters_.gpu_fallback_frames.fetch_add(1, std::memory_order_relaxed);
+    }
+    if (!result.texture.valid()) result.pixels = ComposeSequence(*graph, *root, at, 0, config_.compile);
+  }
+  counters_.frames_rendered.fetch_add(1, std::memory_order_relaxed);
+  const auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(
+                           std::chrono::steady_clock::now() - started)
+                           .count();
+  counters_.total_frame_render_microseconds.fetch_add(elapsed, std::memory_order_relaxed);
+  auto maximum = counters_.max_frame_render_microseconds.load(std::memory_order_relaxed);
+  while (elapsed > maximum && !counters_.max_frame_render_microseconds.compare_exchange_weak(
+                                  maximum, elapsed, std::memory_order_relaxed)) {
+  }
+  ScheduleReadAhead(graph, at, config_.compile, false);
+  return result;
 }
 
 media::VideoFrame PlaybackEngine::RenderFrame(const time::RationalTime& at,

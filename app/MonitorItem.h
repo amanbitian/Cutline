@@ -12,6 +12,8 @@
 
 namespace cutline::app {
 
+class MonitorVideoItem;
+
 class MonitorItem : public QQuickPaintedItem {
   Q_OBJECT
   QML_NAMED_ELEMENT(MonitorItem)
@@ -40,7 +42,9 @@ class MonitorItem : public QQuickPaintedItem {
   void mouseDoubleClickEvent(QMouseEvent* event) override;
 
  private:
+  friend class MonitorVideoItem;
   void UpdateDisplay();
+  void AttachWindow(QQuickWindow* window);
   // The pointer in the picture's own coordinates (0 to 1 across and down), whether or not it is over the picture.
   [[nodiscard]] QPointF PicturePoint(const QPointF& position) const;
   [[nodiscard]] QRectF PictureRect() const;
@@ -49,6 +53,10 @@ class MonitorItem : public QQuickPaintedItem {
   Session* session_{nullptr};
   ui::MonitorView view_;
   QPointF last_;
+  MonitorVideoItem* video_item_{nullptr};
+  QQuickWindow* attached_window_{nullptr};
+  QMetaObject::Connection window_sync_connection_;
+  void* announced_device_{nullptr};
 };
 
 }  // namespace cutline::app

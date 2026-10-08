@@ -172,10 +172,29 @@
    "id": "audio_device_recovery",
    "name": "Audio device recovery",
    "priority": "P1",
-   "status": "planned",
+   "status": "partial",
    "acceptance": [
     "Recovers or stops safely after audio-device format/disconnect changes."
-   ]
+   ],
+   "tests": {
+    "unit": [
+     "ARealDeviceSinkFlushesFinishesAndReportsFailure"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "audio/WasapiSink.cpp",
+     "app/Session.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
   },
   {
    "id": "gpu_compositor_d3d11",

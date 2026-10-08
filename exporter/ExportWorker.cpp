@@ -135,19 +135,6 @@ ExportResult Export(playback::PlaybackEngine& engine, const ExportRequest& raw_r
     throw std::invalid_argument("The export range is empty");
   }
 
-  const auto* sequence = render_engine.graph()->root();
-  if (request.include_video &&
-      (request.video.width != sequence->width || request.video.height != sequence->height)) {
-    // Rendering at another size needs its own render context (the engine's
-    // compositor is sized to the sequence, and effect offsets are authored in
-    // sequence pixels). Until that exists, say so before any file is created,
-    // rather than failing on the first frame with a file already half-made.
-    throw std::invalid_argument("Exporting at a frame size other than the sequence's (" +
-                                std::to_string(sequence->width) + "x" + std::to_string(sequence->height) +
-                                ") is not supported yet; requested " + std::to_string(request.video.width) + "x" +
-                                std::to_string(request.video.height));
-  }
-
   const auto rate = request.video.frame_rate;
   if (rate.numerator <= 0 || rate.denominator <= 0) throw std::invalid_argument("The export frame rate is invalid");
   const time::RationalTime frame_duration(rate.denominator, rate.numerator);

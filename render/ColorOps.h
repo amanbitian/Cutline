@@ -25,6 +25,7 @@ enum class GpuColorKind : int {
   ColorAdjust = 9,
   HueCurves = 10,
   HslSecondary = 11,
+  Posterize = 12,
 };
 
 struct GpuColorOp final {

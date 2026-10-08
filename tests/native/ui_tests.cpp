@@ -1480,7 +1480,7 @@ CUTLINE_TEST(ThePresenterRendersTheLatestRequestAndDropsWhatWasOvertaken) {
         }
         return cutline::media::VideoFrame::Allocate(cutline::media::PixelFormat::Rgba8, size.width, size.height);
       },
-      [&](cutline::media::VideoFrame frame, const RationalTime&, std::uint64_t serial) {
+      [&](PresentedFrame frame, const RationalTime&, std::uint64_t serial) {
         const std::lock_guard<std::mutex> lock(mutex);
         if (frame.valid()) delivered_serials.push_back(serial);
       });
@@ -1518,7 +1518,7 @@ CUTLINE_TEST(ThePresenterRendersTheLatestRequestAndDropsWhatWasOvertaken) {
         if (++calls == 1) throw std::runtime_error("decoder fell over");
         return cutline::media::VideoFrame::Allocate(cutline::media::PixelFormat::Rgba8, 16, 16);
       },
-      [](cutline::media::VideoFrame, const RationalTime&, std::uint64_t) {});
+      [](PresentedFrame, const RationalTime&, std::uint64_t) {});
   (void)flaky.Request(RationalTime(0, 1), {16, 16});
   CHECK(flaky.WaitIdle());
   CHECK_EQ(flaky.statistics().failed, std::uint64_t{1});
@@ -1541,7 +1541,7 @@ CUTLINE_TEST(ThePresenterDeliversCompletedPlaybackFramesWhileTheNextFrameWaits) 
         }
         return cutline::media::VideoFrame::Allocate(cutline::media::PixelFormat::Rgba8, size.width, size.height);
       },
-      [&](cutline::media::VideoFrame frame, const RationalTime&, std::uint64_t serial) {
+      [&](PresentedFrame frame, const RationalTime&, std::uint64_t serial) {
         const std::lock_guard<std::mutex> lock(mutex);
         if (frame.valid()) delivered_serials.push_back(serial);
       });
@@ -1581,7 +1581,7 @@ CUTLINE_TEST(ALatestOnlyRequestInvalidatesPlaybackFromTheOldPosition) {
         }
         return cutline::media::VideoFrame::Allocate(cutline::media::PixelFormat::Rgba8, size.width, size.height);
       },
-      [&](cutline::media::VideoFrame, const RationalTime&, std::uint64_t serial) { delivered.push_back(serial); });
+      [&](PresentedFrame, const RationalTime&, std::uint64_t serial) { delivered.push_back(serial); });
 
   (void)presenter.Request(RationalTime(0, 1), {32, 18}, PresentationMode::Playback);
   const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(1);

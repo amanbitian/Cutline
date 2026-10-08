@@ -103,6 +103,10 @@ struct EngineConfig final {
   std::string gpu_adapter_id;
   // Allow Direct3D's software rasteriser when there is no hardware adapter. Only for machines and tests that want it.
   bool gpu_allow_software{false};
+  // When supplied by a D3D11 presentation system, the compositor uses this
+  // device so its output texture can be sampled without a CPU readback.
+  void* gpu_external_device{nullptr};
+  void* gpu_external_context{nullptr};
   // With the GPU compositor, decode on the GPU too (Direct3D 11 video acceleration) and composite the pictures where the
   // decoder left them. A stream the hardware cannot decode is decoded in software and uploaded.
   bool hardware_decode{true};
@@ -146,6 +150,13 @@ struct EngineStatistics final {
 
 class PlaybackEngine final {
  public:
+  struct PresentationResult final {
+    media::VideoFrame pixels;
+    render::gpu::PresentationFrame texture;
+    [[nodiscard]] bool on_gpu() const noexcept { return texture.valid(); }
+    [[nodiscard]] int width() const noexcept { return on_gpu() ? texture.width : pixels.width(); }
+    [[nodiscard]] int height() const noexcept { return on_gpu() ? texture.height : pixels.height(); }
+  };
   PlaybackEngine(timeline::SequenceGraph graph, MediaLocator locator, EngineConfig config = {});
   ~PlaybackEngine();
   PlaybackEngine(const PlaybackEngine&) = delete;
@@ -154,6 +165,9 @@ class PlaybackEngine final {
   // Renders the picture at a timeline position. Safe to call repeatedly for the
   // same time; the frame cache makes that cheap.
   [[nodiscard]] media::VideoFrame RenderFrame(const time::RationalTime& at);
+  // Monitor path. Produces a native texture when the plan and the presentation
+  // device support it; otherwise returns the ordinary CPU frame.
+  [[nodiscard]] PresentationResult RenderForPresentation(const time::RationalTime& at);
   // Renders every frame of [in, out) that the render cache does not already hold, so that playing
   // the range afterwards is reading it. Frames already cached are skipped. `cancel` is polled between
   // frames and `progress` told how many are done of how many.

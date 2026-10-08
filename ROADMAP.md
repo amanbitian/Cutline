@@ -2,7 +2,7 @@
 
 Written for: engineers and technical leads planning this codebase's next two to three years.
 
-Last reviewed 2026-10-06. Export is built and verified; the next dependency is the application shell. An independent code review the same day found correctness defects that should be closed before more is built on top of them â€” see [REMEDIATION.md](REMEDIATION.md) for the ordered list; it supersedes the order below wherever they conflict.
+Last reviewed 2026-10-06. Export is built and verified; the next dependency is the application shell. An independent code review the same day found correctness defects that should be closed before more is built on top of them — see [REMEDIATION.md](REMEDIATION.md) for the ordered list; it supersedes the order below wherever they conflict.
 
 This is the plan for reaching professional-NLE feature parity, together with a cross-check of the design, the tracked feature list, and the optimisation strategy. It is grounded in what the repository actually does today, which [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) records and [GAP_ANALYSIS.md](GAP_ANALYSIS.md) audits.
 
@@ -12,23 +12,23 @@ Cross-checking the 220 tracked capabilities in `parity/` against the code and th
 
 | | Count | Share |
 |---|---:|---:|
-| Implemented, with named passing tests | 64 | 29% |
-| Partial | 16 | 7% |
-| Prototype (browser-only) | 7 | 3% |
-| Planned | 114 | 52% |
-| Deferred | 19 | 9% |
+| Implemented, with named passing tests | 94 | 43% |
+| Partial | 36 | 16% |
+| Prototype (browser-only) | 4 | 2% |
+| Planned | 69 | 31% |
+| Deferred | 17 | 8% |
 
-Of the 55 P0 capabilities, **35 are implemented, 8 partial, 10 planned and 2 are browser prototypes** (the count moved with the desktop-application work of 2026-10-07).
+Of the 55 P0 capabilities, **40 are implemented, 7 partial and 8 planned** (the count moved with the desktop-application work of 2026-10-07 and with the 2026-10-08 code audit, which re-read the code behind each manifest entry and moved 30 entries that the older assessment table had left at planned, prototype or partial; the audit is the ASSESSMENT block in `scripts/cross-check-parity.js`).
 
 That ratio is the headline finding, and it is not what the manifests said before this cross-check: they recorded 0 implemented because their statuses were hand-maintained and had drifted from the code. `scripts/cross-check-parity.js` now refuses to let a capability claim implementation without naming a test that exists, and the report generator refuses to build without that evidence. The number can no longer drift upward by wishful editing.
 
-**The shape of what remains is the important part.** The engine is largely built: decode, timestamp maps, the timeline compiler, the compositor, the mixer, the audio clock and device, undo, and export all work and are tested. What is missing at P0 is almost entirely the *editing surface* â€” Source Monitor, in/out marks, three-point edit, source patching, track targeting, J/K/L transport, the ruler, the playhead, clip selection, snapping. Nineteen of the twenty-six unfinished P0 items are interaction, not engine.
+**The shape of what remains is the important part.** The engine is largely built: decode, timestamp maps, the timeline compiler, the compositor, the mixer, the audio clock and device, undo, and export all work and are tested. What is missing at P0 is almost entirely the *editing surface* — Source Monitor, in/out marks, three-point edit, source patching, track targeting, J/K/L transport, the ruler, the playhead, clip selection, snapping. Of the fifteen unfinished P0 items, seven are the source-monitor surface (Source Monitor, source mark in/out/clear, source patching, track targeting, source playback); the rest are validation and diagnostics gaps (HEVC and still-image decode, probe diagnostics, media path aliases, relink, the audio-callback budget, and the application never offering crash recovery) plus the program monitor, which is partial.
 
 That is a comfortable position to be in. The hard, slow, correctness-critical half is done and verified; the remaining P0 work is mostly building a surface on top of capabilities that already exist and are already covered by tests.
 
 ---
 
-# Part 1 â€” Design cross-check
+# Part 1 — Design cross-check
 
 ## What the current design will carry to full parity
 
@@ -48,7 +48,7 @@ These decisions should not be revisited. Each has been load-bearing already.
 
 These are not defects; they are the places where the present design meets its limits and will need deliberate change.
 
-### 1. Serial composition and presentation â€” the binding constraint
+### 1. Serial composition and presentation — the binding constraint
 
 The audio path is properly threaded with a lock-free handoff. Video decode now has a bounded worker pool, read-ahead and stale-work cancellation, but composition and presentation still run synchronously on the caller. At 37 ms per 1080p frame the software compositor cannot sustain real-time playback even with decode removed from the hot path.
 
@@ -60,7 +60,7 @@ The audio path is properly threaded with a lock-free handoff. Video decode now h
 
 `Compose` draws, applies effects in order, and composites. There is no node model and no per-node caching, so changing one parameter in a stack of twenty effects re-runs all twenty, and a clip whose inputs did not change is re-rendered from scratch each frame.
 
-*Change:* an effect DAG where each node caches its output keyed on a hash of its inputs and parameters. The benchmark shows effect cost is linear and dominant â€” 17 effects is 134 ms against 18 ms for one â€” so caching unchanged nodes is the single largest algorithmic win available on the CPU path.
+*Change:* an effect DAG where each node caches its output keyed on a hash of its inputs and parameters. The benchmark shows effect cost is linear and dominant — 17 effects is 134 ms against 18 ms for one — so caching unchanged nodes is the single largest algorithmic win available on the CPU path.
 
 *Blocks:* usable grading, masks, nested effect stacks, anything an artist iterates on.
 
@@ -74,7 +74,7 @@ The audio path is properly threaded with a lock-free handoff. Video decode now h
 
 ### 4. Compositing happens in the source's transfer function
 
-Decode normalises to full-range RGB with the correct matrix, and per-stream primaries, transfer and matrix survive end to end â€” but nothing transforms to a working space. Compositing in a gamma-encoded space is what most NLEs do by default in Rec.709 and is defensible, but it is not colour management, and HDR requires the real thing.
+Decode normalises to full-range RGB with the correct matrix, and per-stream primaries, transfer and matrix survive end to end — but nothing transforms to a working space. Compositing in a gamma-encoded space is what most NLEs do by default in Rec.709 and is defensible, but it is not colour management, and HDR requires the real thing.
 
 *Change:* a working-space transform at decode and a display transform at present, with the sequence's `working_color_space` driving both.
 
@@ -82,13 +82,13 @@ Decode normalises to full-range RGB with the correct matrix, and per-stream prim
 
 ### 5. The audio graph is flat
 
-Clip â†’ track â†’ master, with gain and pan. Premiere has submixes, sends, track and master effects, and plug-in delay compensation â€” which requires a graph that can measure each path's latency and align them.
+Clip → track → master, with gain and pan. Premiere has submixes, sends, track and master effects, and plug-in delay compensation — which requires a graph that can measure each path's latency and align them.
 
 *Change:* a proper audio node graph with latency reporting and compensation, built before plug-in hosting rather than after. Retrofitting delay compensation into a flat mixer means rewriting it.
 
 ### 6. Effects are data, with no plug-in ABI
 
-The effect model is complete as data â€” stacks, parameters, keyframes, all persisted and sampled. But the built-in effects are a `if (type == "...")` chain in the compositor, and there is no stable ABI, no process isolation, and no way for a third party to add one.
+The effect model is complete as data — stacks, parameters, keyframes, all persisted and sampled. But the built-in effects are a `if (type == "...")` chain in the compositor, and there is no stable ABI, no process isolation, and no way for a third party to add one.
 
 *Change:* an internal effect interface first (registry, declared parameter schema, render callback), then the built-ins reimplemented against it, then VST3/OFX hosts as out-of-process clients of the same interface. Doing it in that order means the internal effects prove the interface before any third-party code depends on it.
 
@@ -100,11 +100,11 @@ The store's revision check assumes one writer. That is correct for a local edito
 
 ### 8. No render-version field
 
-Stated separately because it is small, urgent and easy to miss. Any change to render semantics â€” colour management, a different resampling filter, a corrected blend mode â€” silently alters existing projects. A `render_version` on the sequence, with the compositor honouring old versions, costs little now and is close to impossible to add retroactively.
+Stated separately because it is small, urgent and easy to miss. Any change to render semantics — colour management, a different resampling filter, a corrected blend mode — silently alters existing projects. A `render_version` on the sequence, with the compositor honouring old versions, costs little now and is close to impossible to add retroactively.
 
 ---
 
-# Part 2 â€” Feature cross-check
+# Part 2 — Feature cross-check
 
 ## Gaps in the tracked list
 
@@ -144,25 +144,27 @@ The 220 capabilities are a good inventory but incomplete. Cross-checking against
 - Export queue with watch folders and presets (built 2026-10-07 without watch folders: 21 presets, persistent queue, hardware encoders where they work, checks of the finished file)
 - Direct publishing destinations
 
-Adding these would take the inventory from 220 to roughly 265. **The missing `ui` domain is the most consequential**: the 19 unfinished P0 capabilities are mostly interaction, and none of the panel, docking or shortcut infrastructure they need is tracked or estimated.
+Adding these would take the inventory from 220 to roughly 265. **The missing `ui` domain is the most consequential**: the unfinished P0 capabilities are mostly interaction (the panel, docking, workspace, shortcut and preference infrastructure they sit on was built in the Qt shell without ever being tracked or estimated in `parity/`).
 
 ## Corrections the cross-check made
 
-Capabilities the manifests recorded as planned or prototype that the code had already implemented, now corrected with test evidence: sequence nesting, adjustment layers, track lock/mute/solo, the transform, opacity and crop effects, motion keyframes, effect bypass, the transition model, cross dissolve, audio crossfade, the audio mixer, audio keyframes, and basic colour correction â€” plus the whole decode, probe, fingerprint, export and playback set.
+Capabilities the manifests recorded as planned or prototype that the code had already implemented, now corrected with test evidence: sequence nesting, adjustment layers, track lock/mute/solo, the transform, opacity and crop effects, motion keyframes, effect bypass, the transition model, cross dissolve, audio crossfade, the audio mixer, audio keyframes, and basic colour correction — plus the whole decode, probe, fingerprint, export and playback set.
 
 Capabilities recorded optimistically that the cross-check downgraded: the effect *graph* (a fixed pipeline, not a graph), transition alignment (recorded but never used to place anything), audio effects (volume, gain and pan only), linked A/V groups (stored and carried, but nothing links or unlinks), audio callback budget (underruns counted, no budget measured), and crash recovery (changesets persisted, nothing replays them).
 
 ---
 
-# Part 3 â€” The plan
+# Part 3 — The plan
 
 Phases are ordered by dependency, not by appeal. Each states what must be true to call it done.
 
-## Phase A â€” The editing surface (the current P0 gap)
+## Phase A — The editing surface (the current P0 gap)
 
-Everything here depends on an application shell that does not exist. **Build the shell first**; the editorial capabilities are comparatively cheap once there is somewhere to put them.
+**Status (2026-10-08, read from the code):** the shell exists (item 1), transport (3), timeline surface (4), trimming with ripple/roll/slip/slide (6) and linked A/V (7) are built and tested offscreen; item 2 has the program monitor with safe margins, centre/thirds overlays, fit/100% zoom, playback resolution and fullscreen but no source monitor; item 5 is engine only (`PlanInsertEdit` takes a source range and `ResolveThreePoint` resolves three-point edits, but the application places whole media items and has no source marks, patching or targeting). The text below is the original plan.
 
-1. **Application shell.** Panel system with docking and workspaces, keyboard shortcut mapping, preferences. Decide and record whether the timeline is a custom `QQuickItem` with a batched renderer â€” it must be; delegates will not sustain 60 fps with a hundred tracks.
+Everything here depends on an application shell. **Build the shell first**; the editorial capabilities are comparatively cheap once there is somewhere to put them.
+
+1. **Application shell.** Panel system with docking and workspaces, keyboard shortcut mapping, preferences. Decide and record whether the timeline is a custom `QQuickItem` with a batched renderer — it must be; delegates will not sustain 60 fps with a hundred tracks.
 2. **Monitors.** Program monitor consuming `PlaybackPlan` (the engine already produces it), then the source monitor, then safe margins, overlays, zoom and fullscreen.
 3. **Transport.** J/K/L shuttle including reverse at speed, frame step, sequence start/end, loop, and audio scrubbing.
 4. **Timeline surface.** Ruler, playhead, clip selection, snapping, drag, track headers.
@@ -172,13 +174,13 @@ Everything here depends on an application shell that does not exist. **Build the
 
 *Done when:* an editor can cut a short film end to end without touching a config file, and the result exports correctly.
 
-## Phase B â€” Performance to real time
+## Phase B — Performance to real time
 
 Covered in detail in Part 4. In summary: job system, GPU compositor, effect graph with caching, proxies, render cache, hardware decode.
 
 *Done when:* 1080p multi-track playback holds the frame budget on a mid-range machine, and 4K holds it with proxies.
 
-## Phase C â€” Finishing
+## Phase C — Finishing
 
 1. **Colour management**, after the render-version field exists. Working space, display transform, LUT management, scopes, then HDR PQ and HLG, wide gamut, colour match.
 2. **Effects.** The CPU reference now includes production filters, 12 blend modes, keying, grading, tracking/stabilisation, noise reduction, keyframed time remapping, rolling-shutter/general mesh warp and optical-flow interpolation. Optical-flow analysis is cached with a background job. Next: the GPU registry/backend, masks and perspective stabilisation.
@@ -186,15 +188,15 @@ Covered in detail in Part 4. In summary: job system, GPU compositor, effect grap
 4. **Graphics.** Graphics and versioned templates are now stored clip sources with animation and anchors; the authoring panel, image elements bound to project media, thumbnails and template files are done; next a keyframe editor and SVG import.
 5. **Captions.** Caption track type, styling, burn-in, sidecar import and export.
 
-## Phase D â€” Ecosystem and scale
+## Phase D — Ecosystem and scale
 
-1. **Interchange.** OTIO first â€” the time model is already structurally aligned, so it is the cheapest and it validates the data model against an external standard. Then EDL, XML, AAF.
+1. **Interchange.** OTIO first — the time model is already structurally aligned, so it is the cheapest and it validates the data model against an external standard. Then EDL, XML, AAF.
 2. **Plug-ins.** VST3 then OFX, out of process, against the effect interface from Phase C.
 3. **Project management.** Consolidate, transcode, collect, watch folders, ingest presets, XMP.
 4. (Multicam UI done 2026-10-07 on the persisted engine.) Then merge clips.
 5. **Delivery.** (Export queue, presets and validation done 2026-10-07.) Smart render, render and replace, image sequences, certified wrappers.
 
-## Phase E â€” Intelligence and collaboration
+## Phase E — Intelligence and collaboration
 
 Transcription, text-based editing, semantic search, scene edit detection, speech enhancement, auto reframe, object selection; then shared projects, locking, review and comments.
 
@@ -202,20 +204,20 @@ Deliberately last. These are differentiators only once the editor is trustworthy
 
 ---
 
-# Part 4 â€” Optimisation programme
+# Part 4 — Optimisation programme
 
-Ordered by measured or expected impact per unit of work. Current figures come from `scripts/bench.bat` at 1920Ã—1080.
+Ordered by measured or expected impact per unit of work. Current figures come from `scripts/bench.bat` at 1920×1080.
 
 | # | Optimisation | Expected effect | Effort | Notes |
 |---|---|---|---|---|
 | 1 | **GPU compositor** | 37 ms to 1-3 ms | Large | **Done for the common subset (2026-10-07):** 36.9 ms to 2.7 ms for one 1080p layer with three effects, 153.7 to 4.5 ms for four, verified against the software compositor picture by picture. Colour tools and LUTs are on the card as well (2026-10-07: a 1080p frame with a LUT is 3.7 ms on the card against 61 ms in single-threaded software before and 9.6 ms in parallel software now). Remaining shaders: filters, keys, blend modes, masks. |
 | 2 | **Effect node graph with per-node caching** | Near-total removal of re-render on parameter change | Compiler foundation done / execution remains | Sampled playback plans lower into immutable nodes with media/quality dependencies; validation, hashes, dead-node removal and safe unary fusion are implemented. Execute nodes and retain intermediate surfaces by hash. |
 | 3 | **Job system: parallel render and presentation** | Keeps UI responsive and scales export; bounded parallel decode/read-ahead is already implemented | Scheduler foundation done / migration remains | The bounded priority scheduler handles ordering, deduplication, stale generations, queue pressure and interactive capacity. Migrate existing private workers and add deadlines. |
-| 4 | **Proxy media** | 4K â†’ HD during editing; workload-dependent | Engine and selection policy done / scheduling, UI and validation remain | Generation, association, stale/missing status, monitor switching and originals-only export are implemented. A deterministic offline policy chooses 1080p/720p/540p from complexity, misses and memory pressure. Wire telemetry to background scheduling, add UI and benchmark production 4K/8K codecs. |
+| 4 | **Proxy media** | 4K → HD during editing; workload-dependent | Engine and selection policy done / scheduling, UI and validation remain | Generation, association, stale/missing status, monitor switching and originals-only export are implemented. A deterministic offline policy chooses 1080p/720p/540p from complexity, misses and memory pressure. Wire telemetry to background scheduling, add UI and benchmark production 4K/8K codecs. |
 | 5 | **Hardware decode** (NVDEC/QSV/AMF/D3D11VA) | Large on H.264/HEVC; frees CPU | Medium | **D3D11VA done for H.264-class streams (2026-10-07):** 2.0 ms against 5.3 ms for read + compose of a 1080p picture. Hardware read-ahead, HEVC/AV1 and other vendors remain. |
 | 6 | **Render cache UI and node-level reuse** | Existing range cache makes unchanged rendered ranges a memory/disk read; node reuse would avoid recomputing unaffected effects | Shared quotas done / graph and UI remain | Render and flow entries now share cost-aware, pressure-sensitive RAM/disk quotas, with VRAM represented for future backends. Enrol decoded frames and UI atlases, expose status, then extend caching inside the future effect graph. |
 | 7 | **Incremental snapshot updates** | O(edit) instead of O(project) per keystroke | Small | Apply the changeset to the snapshot. |
-| 8 | **SIMD the software compositor** | 2â€“4Ã— on the CPU path | Medium | Still matters: export and the reference renderer stay on CPU. |
+| 8 | **SIMD the software compositor** | 2–4× on the CPU path | Medium | Still matters: export and the reference renderer stay on CPU. |
 | 9 | **Tile-based rendering with dirty regions** | Large when little changes between frames | Medium | Layers already track dirty rectangles; this extends it across frames. |
 | 10 | **Zero-copy decode to GPU** | Removes a full-frame copy per frame per layer | Medium | **Done for D3D11VA pictures**: they are composed in place, with no upload. |
 | 11 | **Frame cache in GPU memory** | Removes upload cost on scrub | Small | After 1. |
@@ -242,15 +244,15 @@ The optimisation pass already applied, all verified behaviour-preserving by the 
 - Capability-based D3D12/Metal/Vulkan device selection with explicit CPU fallback
 - Bounded cross-workload priority scheduler with interactive capacity and generation cancellation
 
-Net: 1 track 1080p went 67.7 â†’ 37.3 ms; a single-effect frame 46.9 â†’ 18.4 ms.
+Net: 1 track 1080p went 67.7 → 37.3 ms; a single-effect frame 46.9 → 18.4 ms.
 
 ## Optimisation principles for this codebase
 
-**Measure before and after, in Release.** `scripts/bench.bat` exists for this. Debug numbers are meaningless here â€” MSVC's iterator debugging dominates the inner loops.
+**Measure before and after, in Release.** `scripts/bench.bat` exists for this. Debug numbers are meaningless here — MSVC's iterator debugging dominates the inner loops.
 
 **Protect every optimisation with a golden frame.** The whole pass above is trustworthy only because no golden moved. An optimisation without a pixel-level test is a refactor with unknown consequences.
 
-**Do not optimise the audio path.** It is four orders of magnitude inside its budget. The audio work that matters is architectural â€” the node graph and latency compensation â€” not arithmetic.
+**Do not optimise the audio path.** It is four orders of magnitude inside its budget. The audio work that matters is architectural — the node graph and latency compensation — not arithmetic.
 
 **Prefer removing work to doing work faster.** The largest win so far was not making the sampler faster; it was noticing that the common case needs no sampler. The effect graph is the same shape of win at a larger scale.
 
@@ -264,7 +266,7 @@ A few constraints that matter more than the phase order:
 2. **The effect interface goes in before third-party plug-ins**, and the built-ins should be its first clients.
 3. **Audio latency compensation goes in with the audio graph**, not after plug-ins need it.
 4. **The job system comes before the GPU backend.** A fast renderer behind a serial decoder is still a serial pipeline.
-5. **Add the missing `ui` domain to `parity/` before estimating Phase A.** Nineteen P0 capabilities depend on infrastructure that is not currently tracked or costed.
+5. **Add the missing `ui` domain to `parity/` before estimating Phase A.** The remaining P0 interaction work depends on infrastructure that is not tracked or costed in `parity/`.
 6. **Keep `scripts/cross-check-parity.js` in CI.** The report drifted from the code once; the gate is what stops it happening again.
 
 

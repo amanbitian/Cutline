@@ -365,10 +365,31 @@
    "id": "mask_tracking",
    "name": "Mask tracking",
    "priority": "P2",
-   "status": "planned",
+   "status": "implemented",
    "acceptance": [
     "Stores reviewable tracking data with source and algorithm provenance."
-   ]
+   ],
+   "tests": {
+    "unit": [
+     "AMaskFollowsATrackByTheDistanceItMovedSinceTheMaskWasDrawnAndSkipsWhatWasLost",
+     "TrackingResultsWriteAsReadableJsonAndReadBackExactly"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "ui/MaskEditor.cpp",
+     "render/Tracking.cpp",
+     "app/SessionMasks.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
   },
   {
    "id": "stabilization",

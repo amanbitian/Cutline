@@ -8,6 +8,7 @@
 
 #include "core/time/RationalTime.h"
 #include "media/VideoFrame.h"
+#include "render/D3D11Compositor.h"
 
 #include <atomic>
 #include <condition_variable>
@@ -106,12 +107,24 @@ enum class PresentationMode {
   Playback,
 };
 
+struct PresentedFrame final {
+  media::VideoFrame pixels;
+  render::gpu::PresentationFrame texture;
+  PresentedFrame() = default;
+  PresentedFrame(media::VideoFrame frame) : pixels(std::move(frame)) {}
+  PresentedFrame(render::gpu::PresentationFrame frame) : texture(std::move(frame)) {}
+  [[nodiscard]] bool valid() const noexcept { return texture.valid() || pixels.valid(); }
+  [[nodiscard]] bool on_gpu() const noexcept { return texture.valid(); }
+  [[nodiscard]] int width() const noexcept { return on_gpu() ? texture.width : pixels.width(); }
+  [[nodiscard]] int height() const noexcept { return on_gpu() ? texture.height : pixels.height(); }
+};
+
 class FramePresenter final {
  public:
   // Renders the picture for `at` at `size`. Called from the presenter's thread only.
-  using Render = std::function<media::VideoFrame(const time::RationalTime& at, SizePx size)>;
+  using Render = std::function<PresentedFrame(const time::RationalTime& at, SizePx size)>;
   // Receives a finished picture. Called from the presenter's thread; a UI hands it to its own thread.
-  using Deliver = std::function<void(media::VideoFrame frame, const time::RationalTime& at, std::uint64_t serial)>;
+  using Deliver = std::function<void(PresentedFrame frame, const time::RationalTime& at, std::uint64_t serial)>;
 
   FramePresenter(Render render, Deliver deliver);
   ~FramePresenter();

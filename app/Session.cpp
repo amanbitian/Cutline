@@ -58,18 +58,18 @@ void WriteText(const QString& path, const std::string& text) {
   out << text;
 }
 
-QImage ToImage(const media::VideoFrame& frame) {
-  media::VideoFrame converted;
-  const auto* rgba = &frame;
+QImage ToImage(media::VideoFrame frame) {
   if (frame.format() != media::PixelFormat::Rgba8) {
-    converted = media::ConvertFrame(frame, media::PixelFormat::Rgba8);
-    rgba = &converted;
+    frame = media::ConvertFrame(frame, media::PixelFormat::Rgba8);
   }
-  QImage image(rgba->width(), rgba->height(), QImage::Format_RGBA8888);
-  for (int y = 0; y < rgba->height(); ++y) {
-    std::memcpy(image.scanLine(y), rgba->row_u8(y), static_cast<std::size_t>(rgba->width()) * 4);
-  }
-  return image;
+  // QImage can retain external immutable storage. Give it the VideoFrame
+  // itself as the cleanup owner so presenting a 4K frame does not copy another
+  // 33 MB merely to cross the Qt boundary. If Qt ever requests writable bits,
+  // QImage detaches as usual.
+  auto* owner = new media::VideoFrame(std::move(frame));
+  const auto* bytes = reinterpret_cast<const uchar*>(static_cast<const media::VideoFrame&>(*owner).data());
+  return QImage(bytes, owner->width(), owner->height(), owner->stride(), QImage::Format_RGBA8888,
+                [](void* value) { delete static_cast<media::VideoFrame*>(value); }, owner);
 }
 
 // Qt's key to the name the shortcut table uses; empty when it is not a key a shortcut can have.
@@ -294,7 +294,11 @@ bool Session::Open(std::unique_ptr<project::ProjectStore> store) {
   selection_.Clear();
   mark_in_.reset();
   mark_out_.reset();
-  frame_ = QImage();
+  {
+    const std::lock_guard<std::mutex> lock(frame_mutex_);
+    frame_ = QImage();
+    gpu_frame_ = {};
+  }
   const auto scope_mode = scope_mode_;
   scope_mode_.clear();
   setScopeMode(scope_mode);
@@ -443,7 +447,11 @@ void Session::closeProject() {
   store_.reset();
   graph_ = {};
   caption_track_.clear();
-  frame_ = QImage();
+  {
+    const std::lock_guard<std::mutex> lock(frame_mutex_);
+    frame_ = QImage();
+    gpu_frame_ = {};
+  }
   scope_result_.reset();
   media_.clear();
   inspector_.clear();
@@ -468,6 +476,8 @@ void Session::StartEngine() {
   config.prefer_proxies = prefs_.GetBool("media.use_proxies");
   config.use_gpu = prefs_.GetBool("playback.use_gpu");
   config.hardware_decode = prefs_.GetBool("playback.hardware_decode");
+  config.gpu_external_device = presentation_device_;
+  config.gpu_external_context = presentation_context_;
   auto* store = store_.get();
   const auto lookup = [store](const std::string& sql, const std::string& id) {
     const std::lock_guard<std::mutex> lock(store->mutex());
@@ -483,19 +493,57 @@ void Session::StartEngine() {
 
   auto* engine = engine_.get();
   presenter_ = std::make_unique<ui::FramePresenter>(
-      [engine](const RationalTime& at, ui::SizePx size) {
+      [this, engine](const RationalTime& at, ui::SizePx size) -> ui::PresentedFrame {
         engine->SetOutputSize(size.width, size.height);
+        // Scopes need CPU pixels, but not at the monitor's full frame rate. One
+        // sampled readback every meter refresh keeps them live while the other
+        // frames remain native textures end to end.
+        const bool sample_scopes = scope_sample_due_.exchange(false, std::memory_order_relaxed);
+        if (presentation_device_ != nullptr && !sample_scopes) {
+          auto presented = engine->RenderForPresentation(at);
+          if (presented.on_gpu()) return ui::PresentedFrame(std::move(presented.texture));
+          return ui::PresentedFrame(std::move(presented.pixels));
+        }
         return engine->RenderFrame(at);
       },
-      [this](media::VideoFrame frame, const RationalTime&, std::uint64_t serial) {
-        const auto info = QString("%1 x %2").arg(frame.width()).arg(frame.height());
-        auto image = ToImage(frame);
-        {
-          const std::lock_guard<std::mutex> lock(scopes_mutex_);
-          if (scopes_ != nullptr) (void)scopes_->Submit(std::move(frame));
+      [this](ui::PresentedFrame presented, const RationalTime&, std::uint64_t serial) {
+        const auto info = QString("%1 x %2").arg(presented.width()).arg(presented.height());
+        QImage image;
+        if (!presented.on_gpu()) {
+          {
+            const std::lock_guard<std::mutex> lock(scopes_mutex_);
+            if (scopes_ != nullptr) (void)scopes_->Submit(presented.pixels.Share());
+          }
+          image = ToImage(std::move(presented.pixels));
         }
-        QMetaObject::invokeMethod(this, [this, image, serial, info] { OnFrame(image, serial, info); }, Qt::QueuedConnection);
+        auto gpu_frame = std::move(presented.texture);
+        QMetaObject::invokeMethod(
+            this,
+            [this, image, gpu_frame = std::move(gpu_frame), serial, info]() mutable {
+              OnFrame(image, std::move(gpu_frame), serial, info);
+            },
+            Qt::QueuedConnection);
       });
+}
+
+void Session::SetPresentationDevice(void* device, void* context) {
+  if (device == nullptr || (presentation_device_ == device && presentation_context_ == context)) return;
+  if (store_ == nullptr || graph_.root() == nullptr) {
+    presentation_device_ = device;
+    presentation_context_ = context;
+    return;
+  }
+  const bool was_playing = transport_.playing();
+  if (was_playing) StopPlayback();
+  // Join the presenter before changing the device pointers captured by its
+  // worker callback. The replacement engine is then built on the new device.
+  presenter_.reset();
+  engine_.reset();
+  presentation_device_ = device;
+  presentation_context_ = context;
+  StartEngine();
+  RequestFrame();
+  if (was_playing) StartPlayback();
 }
 
 QString Session::gpuInfo() const {
@@ -583,6 +631,7 @@ void Session::setScopeMode(const QString& requested) {
     scopes_ = std::make_unique<render::AsyncScopes>(options);
   }
   scope_mode_ = mode;
+  scope_sample_due_.store(true, std::memory_order_relaxed);
   scope_result_.reset();
   scope_generation_ = 0;
   emit scopeChanged();
@@ -601,9 +650,13 @@ void Session::RefreshScopes() {
   emit scopeChanged();
 }
 
-void Session::OnFrame(QImage image, std::uint64_t serial, const QString& info) {
+void Session::OnFrame(QImage image, render::gpu::PresentationFrame gpu_frame, std::uint64_t serial, const QString& info) {
   latest_serial_ = serial;
-  frame_ = std::move(image);
+  {
+    const std::lock_guard<std::mutex> lock(frame_mutex_);
+    frame_ = std::move(image);
+    gpu_frame_ = std::move(gpu_frame);
+  }
   const auto stats = presenter_ != nullptr ? presenter_->statistics() : ui::PresenterStatistics{};
   render_info_ = QString("%1  %2 ms").arg(info).arg(stats.last_render_ms, 0, 'f', 1);
   emit frameReady();
@@ -1122,6 +1175,7 @@ void Session::OnTick() {
   if (!automation_passes_.empty() && !transport_.playing()) FlushAutomation(transport_.position());
   if (++audio_meter_ticks_ >= 6) {
     audio_meter_ticks_ = 0;
+    scope_sample_due_.store(true, std::memory_order_relaxed);
     emit audioMixerChanged();
     RefreshScopes();
   }
@@ -1833,7 +1887,11 @@ void Session::DoCommand(const std::string& id) {
 void Session::setRenderFrameForTest(const QString& path) {
   QImage image(path);
   if (!image.isNull()) {
-    frame_ = image.convertToFormat(QImage::Format_RGBA8888);
+    {
+      const std::lock_guard<std::mutex> lock(frame_mutex_);
+      frame_ = image.convertToFormat(QImage::Format_RGBA8888);
+      gpu_frame_ = {};
+    }
     emit frameReady();
   }
 }

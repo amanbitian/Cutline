@@ -1,14 +1,222 @@
 {
-  "domain": "captions",
-  "feature_defaults": {"implementation":{"components":[],"notes":"No dedicated production runtime exists."},"tests":{"unit":[],"integration":[],"fixture":[]},"platforms":{"windows":"target","macos":"future","linux":"future"},"hardware":{"cpu_fallback":"required","gpu_optional":true,"pro_io":"not_required"},"known_gaps":["No validated native runtime yet."],"licensing_notes":"No license review recorded."},
-  "features": [
-    {"id":"caption_track","name":"Caption track","priority":"P1","status":"prototype","implementation":{"components":["app.js"],"notes":"Browser prototype state only."},"acceptance":["Stores timed caption cues as durable sequence entities." ]},
-    {"id":"caption_editing","name":"Caption editing","priority":"P1","status":"planned","acceptance":["Edits text and timing through commands with range validation." ]},
-    {"id":"caption_styles","name":"Caption styles","priority":"P1","status":"planned","acceptance":["Applies reusable styles in preview and supported exports." ]},
-    {"id":"caption_import","name":"Caption import","priority":"P1","status":"planned","acceptance":["Imports supported timed text while retaining parse diagnostics." ]},
-    {"id":"caption_export","name":"Caption export","priority":"P1","status":"planned","acceptance":["Exports selected caption standards with timing verification." ]},
-    {"id":"auto_caption","name":"Automatic captions","priority":"P2","status":"planned","acceptance":["Stores model/provider provenance and requires human review." ]},
-    {"id":"caption_translation","name":"Caption translation","priority":"P2","status":"planned","acceptance":["Produces reviewable translated cues without overwriting originals." ]},
-    {"id":"caption_accessibility_qc","name":"Caption accessibility QC","priority":"P2","status":"planned","acceptance":["Reports timing, length, and overlap violations deterministically." ]}
-  ]
+ "domain": "captions",
+ "feature_defaults": {
+  "implementation": {
+   "components": [],
+   "notes": "No dedicated production runtime exists."
+  },
+  "tests": {
+   "unit": [],
+   "integration": [],
+   "fixture": []
+  },
+  "platforms": {
+   "windows": "target",
+   "macos": "future",
+   "linux": "future"
+  },
+  "hardware": {
+   "cpu_fallback": "required",
+   "gpu_optional": true,
+   "pro_io": "not_required"
+  },
+  "known_gaps": [
+   "No validated native runtime yet."
+  ],
+  "licensing_notes": "No license review recorded."
+ },
+ "features": [
+  {
+   "id": "caption_track",
+   "name": "Caption track",
+   "priority": "P1",
+   "status": "implemented",
+   "implementation": {
+    "components": [
+     "captions/Captions.cpp",
+     "render/CaptionRender.cpp",
+     "core/project/ProjectStore.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   },
+   "acceptance": [
+    "Stores timed caption cues as durable sequence entities."
+   ],
+   "tests": {
+    "unit": [
+     "CaptionTracksAndCuesAreProjectDataWithUndoAndImportIsOneEdit",
+     "CaptionsBurnedInForAnExportAreTheSameAsTheMonitorsAndTheCacheKeepsThemApart"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   }
+  },
+  {
+   "id": "caption_editing",
+   "name": "Caption editing",
+   "priority": "P1",
+   "status": "implemented",
+   "acceptance": [
+    "Edits text and timing through commands with range validation."
+   ],
+   "tests": {
+    "unit": [
+     "CaptionTracksAndCuesAreProjectDataWithUndoAndImportIsOneEdit"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "app/SessionCaptions.cpp",
+     "app/qml/panels/CaptionsPanel.qml",
+     "core/project/ProjectStore.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "caption_styles",
+   "name": "Caption styles",
+   "priority": "P1",
+   "status": "implemented",
+   "acceptance": [
+    "Applies reusable styles in preview and supported exports."
+   ],
+   "tests": {
+    "unit": [
+     "ACaptionsStyleDecidesItsColourBackgroundPositionWidthAndOutline",
+     "CaptionsBurnedInForAnExportAreTheSameAsTheMonitorsAndTheCacheKeepsThemApart"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "render/CaptionRender.cpp",
+     "captions/Captions.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "caption_import",
+   "name": "Caption import",
+   "priority": "P1",
+   "status": "implemented",
+   "acceptance": [
+    "Imports supported timed text while retaining parse diagnostics."
+   ],
+   "tests": {
+    "unit": [
+     "SubRipIsReadWithItsTimesExactToTheMillisecond",
+     "WebVttHasItsHeaderIdentifiersNotesAndSettingsAndEscapesWhatItMust",
+     "ACueThatCannotBeReadIsSkippedWithItsLineNumberAndTheRestStillComeThrough"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "captions/Captions.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "caption_export",
+   "name": "Caption export",
+   "priority": "P1",
+   "status": "implemented",
+   "acceptance": [
+    "Exports selected caption standards with timing verification."
+   ],
+   "tests": {
+    "unit": [
+     "CaptionsWrittenAndReadAgainAreTheSameCuesToTheLastMillisecond",
+     "WebVttHasItsHeaderIdentifiersNotesAndSettingsAndEscapesWhatItMust"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "captions/Captions.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "auto_caption",
+   "name": "Automatic captions",
+   "priority": "P2",
+   "status": "partial",
+   "acceptance": [
+    "Stores model/provider provenance and requires human review."
+   ],
+   "tests": {
+    "unit": [
+     "CaptionsAreMadeFromTheWordsOnTheTimelineAtTheirTimelineTimesInOneStep",
+     "CaptionsBreakAtPausesSentencesAndFullLinesAndLinesAreBalanced"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "speech/Transcript.cpp",
+     "app/SessionTranscript.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "caption_translation",
+   "name": "Caption translation",
+   "priority": "P2",
+   "status": "planned",
+   "acceptance": [
+    "Produces reviewable translated cues without overwriting originals."
+   ]
+  },
+  {
+   "id": "caption_accessibility_qc",
+   "name": "Caption accessibility QC",
+   "priority": "P2",
+   "status": "planned",
+   "acceptance": [
+    "Reports timing, length, and overlap violations deterministically."
+   ]
+  }
+ ]
 }

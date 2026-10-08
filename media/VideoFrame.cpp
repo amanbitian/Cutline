@@ -64,11 +64,27 @@ VideoFrame VideoFrame::Allocate(PixelFormat format, int width, int height) {
   frame.height_ = height;
   frame.stride_ =
       static_cast<std::ptrdiff_t>(AlignUp(static_cast<std::size_t>(width) * BytesPerPixel(format), kRowAlignment));
-  frame.pixels_.assign(static_cast<std::size_t>(frame.stride_) * static_cast<std::size_t>(height), std::byte{});
+  frame.pixels_ = std::make_shared<std::vector<std::byte>>(
+      static_cast<std::size_t>(frame.stride_) * static_cast<std::size_t>(height), std::byte{});
   return frame;
 }
 
 VideoFrame VideoFrame::Clone() const {
+  VideoFrame copy;
+  copy.format_ = format_;
+  copy.width_ = width_;
+  copy.height_ = height_;
+  copy.stride_ = stride_;
+  if (pixels_) copy.pixels_ = std::make_shared<std::vector<std::byte>>(*pixels_);
+  copy.presentation_time = presentation_time;
+  copy.duration = duration;
+  copy.color = color;
+  copy.pixel_aspect = pixel_aspect;
+  copy.keyframe = keyframe;
+  return copy;
+}
+
+VideoFrame VideoFrame::Share() const {
   VideoFrame copy;
   copy.format_ = format_;
   copy.width_ = width_;
@@ -83,14 +99,24 @@ VideoFrame VideoFrame::Clone() const {
   return copy;
 }
 
+void VideoFrame::EnsureUnique() {
+  if (pixels_ && pixels_.use_count() != 1) pixels_ = std::make_shared<std::vector<std::byte>>(*pixels_);
+}
+
+std::byte* VideoFrame::data() {
+  EnsureUnique();
+  return pixels_ ? pixels_->data() : nullptr;
+}
+
 std::byte* VideoFrame::row(int y) {
   if (y < 0 || y >= height_) throw std::out_of_range("Frame row index is out of range");
-  return pixels_.data() + static_cast<std::size_t>(stride_) * static_cast<std::size_t>(y);
+  EnsureUnique();
+  return pixels_->data() + static_cast<std::size_t>(stride_) * static_cast<std::size_t>(y);
 }
 
 const std::byte* VideoFrame::row(int y) const {
   if (y < 0 || y >= height_) throw std::out_of_range("Frame row index is out of range");
-  return pixels_.data() + static_cast<std::size_t>(stride_) * static_cast<std::size_t>(y);
+  return pixels_->data() + static_cast<std::size_t>(stride_) * static_cast<std::size_t>(y);
 }
 
 float* VideoFrame::row_f32(int y) {
@@ -115,7 +141,7 @@ const std::uint8_t* VideoFrame::row_u8(int y) const {
 
 VideoFrame ConvertFrame(const VideoFrame& source, PixelFormat target) {
   if (!source.valid()) throw std::invalid_argument("Cannot convert an empty frame");
-  if (source.format() == target) return source.Clone();
+  if (source.format() == target) return source.Share();
 
   auto result = VideoFrame::Allocate(target, source.width(), source.height());
   result.presentation_time = source.presentation_time;

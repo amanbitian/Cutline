@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-07T13:34:36.074Z",
+  "generated_at": "2026-10-08T18:07:33.516Z",
   "status_definitions": [
     "planned",
     "prototype",
@@ -15,11 +15,11 @@
       "manifest": "parity/accessibility.yaml",
       "total": 7,
       "counts": {
-        "planned": 7,
+        "planned": 6,
         "prototype": 0,
         "partial": 0,
         "in_progress": 0,
-        "implemented": 0,
+        "implemented": 1,
         "validated": 0,
         "deferred": 0
       }
@@ -43,9 +43,9 @@
       "manifest": "parity/audio.yaml",
       "total": 10,
       "counts": {
-        "planned": 2,
+        "planned": 1,
         "prototype": 0,
-        "partial": 1,
+        "partial": 2,
         "in_progress": 0,
         "implemented": 7,
         "validated": 0,
@@ -57,9 +57,9 @@
       "manifest": "parity/camera-formats.yaml",
       "total": 8,
       "counts": {
-        "planned": 8,
+        "planned": 7,
         "prototype": 0,
-        "partial": 0,
+        "partial": 1,
         "in_progress": 0,
         "implemented": 0,
         "validated": 0,
@@ -71,11 +71,11 @@
       "manifest": "parity/captions.yaml",
       "total": 8,
       "counts": {
-        "planned": 7,
-        "prototype": 1,
-        "partial": 0,
+        "planned": 2,
+        "prototype": 0,
+        "partial": 1,
         "in_progress": 0,
-        "implemented": 0,
+        "implemented": 5,
         "validated": 0,
         "deferred": 0
       }
@@ -113,11 +113,11 @@
       "manifest": "parity/color.yaml",
       "total": 11,
       "counts": {
-        "planned": 7,
+        "planned": 1,
         "prototype": 0,
-        "partial": 3,
+        "partial": 8,
         "in_progress": 0,
-        "implemented": 1,
+        "implemented": 2,
         "validated": 0,
         "deferred": 0
       }
@@ -127,11 +127,11 @@
       "manifest": "parity/editorial.yaml",
       "total": 17,
       "counts": {
-        "planned": 13,
+        "planned": 12,
         "prototype": 0,
         "partial": 1,
         "in_progress": 0,
-        "implemented": 3,
+        "implemented": 4,
         "validated": 0,
         "deferred": 0
       }
@@ -141,11 +141,11 @@
       "manifest": "parity/effects.yaml",
       "total": 16,
       "counts": {
-        "planned": 2,
+        "planned": 1,
         "prototype": 0,
         "partial": 1,
         "in_progress": 0,
-        "implemented": 13,
+        "implemented": 14,
         "validated": 0,
         "deferred": 0
       }
@@ -155,11 +155,11 @@
       "manifest": "parity/export.yaml",
       "total": 8,
       "counts": {
-        "planned": 3,
+        "planned": 2,
         "prototype": 0,
         "partial": 0,
         "in_progress": 0,
-        "implemented": 5,
+        "implemented": 6,
         "validated": 0,
         "deferred": 0
       }
@@ -169,11 +169,11 @@
       "manifest": "parity/graphics.yaml",
       "total": 8,
       "counts": {
-        "planned": 4,
+        "planned": 2,
         "prototype": 0,
-        "partial": 0,
+        "partial": 1,
         "in_progress": 0,
-        "implemented": 4,
+        "implemented": 5,
         "validated": 0,
         "deferred": 0
       }
@@ -183,9 +183,9 @@
       "manifest": "parity/hardware.yaml",
       "total": 12,
       "counts": {
-        "planned": 3,
+        "planned": 2,
         "prototype": 0,
-        "partial": 4,
+        "partial": 5,
         "in_progress": 0,
         "implemented": 1,
         "validated": 0,
@@ -197,11 +197,11 @@
       "manifest": "parity/interchange.yaml",
       "total": 10,
       "counts": {
-        "planned": 10,
+        "planned": 5,
         "prototype": 0,
-        "partial": 0,
+        "partial": 1,
         "in_progress": 0,
-        "implemented": 0,
+        "implemented": 4,
         "validated": 0,
         "deferred": 0
       }
@@ -225,11 +225,11 @@
       "manifest": "parity/monitors.yaml",
       "total": 7,
       "counts": {
-        "planned": 6,
+        "planned": 2,
         "prototype": 0,
-        "partial": 0,
+        "partial": 2,
         "in_progress": 0,
-        "implemented": 1,
+        "implemented": 3,
         "validated": 0,
         "deferred": 0
       }
@@ -239,11 +239,11 @@
       "manifest": "parity/performance.yaml",
       "total": 9,
       "counts": {
-        "planned": 5,
+        "planned": 3,
         "prototype": 0,
-        "partial": 3,
+        "partial": 4,
         "in_progress": 0,
-        "implemented": 1,
+        "implemented": 2,
         "validated": 0,
         "deferred": 0
       }
@@ -295,9 +295,9 @@
       "manifest": "parity/transitions.yaml",
       "total": 7,
       "counts": {
-        "planned": 3,
+        "planned": 1,
         "prototype": 0,
-        "partial": 0,
+        "partial": 2,
         "in_progress": 0,
         "implemented": 4,
         "validated": 0,
@@ -309,11 +309,11 @@
       "manifest": "parity/trimming.yaml",
       "total": 13,
       "counts": {
-        "planned": 6,
-        "prototype": 2,
+        "planned": 1,
+        "prototype": 0,
         "partial": 1,
         "in_progress": 0,
-        "implemented": 4,
+        "implemented": 11,
         "validated": 0,
         "deferred": 0
       }
@@ -520,13 +520,25 @@
       "reference_version": "26.5",
       "reference_channel": "stable",
       "implementation": {
-        "components": [],
-        "notes": "No accessibility implementation has been validated."
+        "components": [
+          "ui/Shortcuts.cpp",
+          "app/qml/ShortcutsDialog.qml"
+        ],
+        "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
       },
       "tests": {
-        "unit": [],
-        "integration": [],
-        "fixture": []
+        "unit": [
+          "BindingAChordTakesItFromItsOwnerAndOnlyTheDifferencesAreSaved",
+          "ShortcutsParseInAnyCaseAndOrderAndPrintCanonically",
+          "TheBuiltInCommandsAreUniqueHaveNoSharedDefaultAndCanBeSearched"
+        ],
+        "integration": [
+          "cutline native test suite (ctest)"
+        ],
+        "fixture": [
+          "tests/golden",
+          "build/*/fixtures (generated)"
+        ]
       },
       "platforms": {
         "windows": "target",
@@ -545,7 +557,7 @@
       "id": "shortcut_customization",
       "name": "Shortcut customization",
       "priority": "P2",
-      "status": "planned",
+      "status": "implemented",
       "acceptance": [
         "Allows conflict-checked remapping of supported shortcuts."
       ]
@@ -1279,13 +1291,22 @@
       "reference_version": "26.5",
       "reference_channel": "stable",
       "implementation": {
-        "components": [],
-        "notes": "No dedicated production runtime exists."
+        "components": [
+          "timeline/Multicam.cpp"
+        ],
+        "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
       },
       "tests": {
-        "unit": [],
-        "integration": [],
-        "fixture": []
+        "unit": [
+          "MulticamAudioSyncUsesLocalCrossCorrelationAndReportsConfidence"
+        ],
+        "integration": [
+          "cutline native test suite (ctest)"
+        ],
+        "fixture": [
+          "tests/golden",
+          "build/*/fixtures (generated)"
+        ]
       },
       "platforms": {
         "windows": "target",
@@ -1304,7 +1325,7 @@
       "id": "audio_sync_alignment",
       "name": "Audio synchronization",
       "priority": "P1",
-      "status": "planned",
+      "status": "partial",
       "acceptance": [
         "Produces reviewable alignment results with confidence/provenance."
       ]
@@ -1545,13 +1566,22 @@
       "reference_version": "26.5",
       "reference_channel": "stable",
       "implementation": {
-        "components": [],
-        "notes": "No dedicated production runtime exists."
+        "components": [
+          "exporter/ExportPresets.cpp"
+        ],
+        "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
       },
       "tests": {
-        "unit": [],
-        "integration": [],
-        "fixture": []
+        "unit": [
+          "APictureWithMoreThanEightBitsKeepsThemThroughAProResExport"
+        ],
+        "integration": [
+          "cutline native test suite (ctest)"
+        ],
+        "fixture": [
+          "tests/golden",
+          "build/*/fixtures (generated)"
+        ]
       },
       "platforms": {
         "windows": "target",
@@ -1570,7 +1600,7 @@
       "id": "prores_support",
       "name": "ProRes support",
       "priority": "P1",
-      "status": "planned",
+      "status": "partial",
       "acceptance": [
         "Probes, decodes, and exports only supported/legal ProRes profiles."
       ]
@@ -1689,13 +1719,24 @@
       "reference_version": "26.5",
       "reference_channel": "stable",
       "implementation": {
-        "components": [],
-        "notes": "No dedicated production runtime exists."
+        "components": [
+          "speech/Transcript.cpp",
+          "app/SessionTranscript.cpp"
+        ],
+        "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
       },
       "tests": {
-        "unit": [],
-        "integration": [],
-        "fixture": []
+        "unit": [
+          "CaptionsAreMadeFromTheWordsOnTheTimelineAtTheirTimelineTimesInOneStep",
+          "CaptionsBreakAtPausesSentencesAndFullLinesAndLinesAreBalanced"
+        ],
+        "integration": [
+          "cutline native test suite (ctest)"
+        ],
+        "fixture": [
+          "tests/golden",
+          "build/*/fixtures (generated)"
+        ]
       },
       "platforms": {
         "windows": "target",
@@ -1714,7 +1755,7 @@
       "id": "auto_caption",
       "name": "Automatic captions",
       "priority": "P2",
-      "status": "planned",
+      "status": "partial",
       "acceptance": [
         "Stores model/provider provenance and requires human review."
       ]
@@ -1761,13 +1802,24 @@
       "reference_version": "26.5",
       "reference_channel": "stable",
       "implementation": {
-        "components": [],
-        "notes": "No dedicated production runtime exists."
+        "components": [
+          "app/SessionCaptions.cpp",
+          "app/qml/panels/CaptionsPanel.qml",
+          "core/project/ProjectStore.cpp"
+        ],
+        "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
       },
       "tests": {
-        "unit": [],
-        "integration": [],
-        "fixture": []
+        "unit": [
+          "CaptionTracksAndCuesAreProjectDataWithUndoAndImportIsOneEdit"
+        ],
+        "integration": [
+          "cutline native test suite (ctest)"
+        ],
+        "fixture": [
+          "tests/golden",
+          "build/*/fixtures (generated)"
+        ]
       },
       "platforms": {
         "windows": "target",
@@ -1786,7 +1838,7 @@
       "id": "caption_editing",
       "name": "Caption editing",
       "priority": "P1",
-      "status": "planned",
+      "status": "implemented",
       "acceptance": [
         "Edits text and timing through commands with range validation."
       ]
@@ -1797,13 +1849,23 @@
       "reference_version": "26.5",
       "reference_channel": "stable",
       "implementation": {
-        "components": [],
-        "notes": "No dedicated production runtime exists."
+        "components": [
+          "captions/Captions.cpp"
+        ],
+        "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
       },
       "tests": {
-        "unit": [],
-        "integration": [],
-        "fixture": []
+        "unit": [
+          "CaptionsWrittenAndReadAgainAreTheSameCuesToTheLastMillisecond",
+          "WebVttHasItsHeaderIdentifiersNotesAndSettingsAndEscapesWhatItMust"
+        ],
+        "integration": [
+          "cutline native test suite (ctest)"
+        ],
+        "fixture": [
+          "tests/golden",
+          "build/*/fixtures (generated)"
+        ]
       },
       "platforms": {
         "windows": "target",
@@ -1822,7 +1884,7 @@
       "id": "caption_export",
       "name": "Caption export",
       "priority": "P1",
-      "status": "planned",
+      "status": "implemented",
       "acceptance": [
         "Exports selected caption standards with timing verification."
       ]
@@ -1833,13 +1895,24 @@
       "reference_version": "26.5",
       "reference_channel": "stable",
       "implementation": {
-        "components": [],
-        "notes": "No dedicated production runtime exists."
+        "components": [
+          "captions/Captions.cpp"
+        ],
+        "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
       },
       "tests": {
-        "unit": [],
-        "integration": [],
-        "fixture": []
+        "unit": [
+          "SubRipIsReadWithItsTimesExactToTheMillisecond",
+          "WebVttHasItsHeaderIdentifiersNotesAndSettingsAndEscapesWhatItMust",
+          "ACueThatCannotBeReadIsSkippedWithItsLineNumberAndTheRestStillComeThrough"
+        ],
+        "integration": [
+          "cutline native test suite (ctest)"
+        ],
+        "fixture": [
+          "tests/golden",
+          "build/*/fixtures (generated)"
+        ]
       },
       "platforms": {
         "windows": "target",
@@ -1858,7 +1931,7 @@
       "id": "caption_import",
       "name": "Caption import",
       "priority": "P1",
-      "status": "planned",
+      "status": "implemented",
       "acceptance": [
         "Imports supported timed text while retaining parse diagnostics."
       ]
@@ -1869,13 +1942,24 @@
       "reference_version": "26.5",
       "reference_channel": "stable",
       "implementation": {
-        "components": [],
-        "notes": "No dedicated production runtime exists."
+        "components": [
+          "render/CaptionRender.cpp",
+          "captions/Captions.cpp"
+        ],
+        "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
       },
       "tests": {
-        "unit": [],
-        "integration": [],
-        "fixture": []
+        "unit": [
+          "ACaptionsStyleDecidesItsColourBackgroundPositionWidthAndOutline",
+          "CaptionsBurnedInForAnExportAreTheSameAsTheMonitorsAndTheCacheKeepsThemApart"
+        ],
+        "integration": [
+          "cutline native test suite (ctest)"
+        ],
+        "fixture": [
+          "tests/golden",
+          "build/*/fixtures (generated)"
+        ]
       },
       "platforms": {
         "windows": "target",
@@ -1894,7 +1978,7 @@
       "id": "caption_styles",
       "name": "Caption styles",
       "priority": "P1",
-      "status": "planned",
+      "status": "implemented",
       "acceptance": [
         "Applies reusable styles in preview and supported exports."
       ]
@@ -1906,14 +1990,24 @@
       "reference_channel": "stable",
       "implementation": {
         "components": [
-          "app.js"
+          "captions/Captions.cpp",
+          "render/CaptionRender.cpp",
+          "core/project/ProjectStore.cpp"
         ],
-        "notes": "Browser prototype state only."
+        "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
       },
       "tests": {
-        "unit": [],
-        "integration": [],
-        "fixture": []
+        "unit": [
+          "CaptionTracksAndCuesAreProjectDataWithUndoAndImportIsOneEdit",
+          "CaptionsBurnedInForAnExportAreTheSameAsTheMonitorsAndTheCacheKeepsThemApart"
+        ],
+        "integration": [
+          "cutline native test suite (ctest)"
+        ],
+        "fixture": [
+          "tests/golden",
+          "build/*/fixtures (generated)"
+        ]
       },
       "platforms": {
         "windows": "target",
@@ -1932,7 +2026,7 @@
       "id": "caption_track",
       "name": "Caption track",
       "priority": "P1",
-      "status": "prototype",
+      "status": "implemented",
       "acceptance": [
         "Stores timed caption cues as durable sequence entities."
       ]
@@ -2710,13 +2804,27 @@
       "reference_version": "26.5",
       "reference_channel": "stable",
       "implementation": {
-        "components": [],
-        "notes": "No dedicated production runtime exists."
+        "components": [
+          "render/Scopes.cpp",
+          "app/ScopeItem.cpp"
+        ],
+        "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
       },
       "tests": {
-        "unit": [],
-        "integration": [],
-        "fixture": []
+        "unit": [
+          "ALumaWaveformPutsEachColumnAtItsOwnLevel",
+          "AParadeSeparatesTheChannelsAndAnRgbWaveformOverlaysThem",
+          "AVectorscopePlacesColoursAtTheirHueAndSaturation",
+          "HistogramBinsHoldTheFractionOfThePictureAtEachLevel",
+          "AsyncScopesDownsampleAndPublishWithoutBlockingPlayback"
+        ],
+        "integration": [
+          "cutline native test suite (ctest)"
+        ],
+        "fixture": [
+          "tests/golden",
+          "build/*/fixtures (generated)"
+        ]
       },
       "platforms": {
         "windows": "target",
@@ -2735,7 +2843,7 @@
       "id": "color_scopes",
       "name": "Color scopes",
       "priority": "P1",
-      "status": "planned",
+      "status": "implemented",
       "acceptance": [
         "Computes waveform, vectorscope, histogram, and parade from actual frames."
       ]
@@ -2746,13 +2854,23 @@
       "reference_version": "26.5",
       "reference_channel": "stable",
       "implementation": {
-        "components": [],
-        "notes": "No dedicated production runtime exists."
+        "components": [
+          "render/ColorEffects.cpp"
+        ],
+        "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
       },
       "tests": {
-        "unit": [],
-        "integration": [],
-        "fixture": []
+        "unit": [
+          "TonalWheelsTintOnlyTheirPartOfTheTonalRange",
+          "EveryColourToolOnTheCardGivesTheSamePictureAsTheSoftwareCompositor"
+        ],
+        "integration": [
+          "cutline native test suite (ctest)"
+        ],
+        "fixture": [
+          "tests/golden",
+          "build/*/fixtures (generated)"
+        ]
       },
       "platforms": {
         "windows": "target",
@@ -2771,7 +2889,7 @@
       "id": "color_wheels",
       "name": "Color wheels",
       "priority": "P1",
-      "status": "planned",
+      "status": "partial",
       "acceptance": [
         "Applies lift/gamma/gain style controls with documented math."
       ]
@@ -2782,13 +2900,23 @@
       "reference_version": "26.5",
       "reference_channel": "stable",
       "implementation": {
-        "components": [],
-        "notes": "No dedicated production runtime exists."
+        "components": [
+          "render/ColorManagement.cpp"
+        ],
+        "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
       },
       "tests": {
-        "unit": [],
-        "integration": [],
-        "fixture": []
+        "unit": [
+          "HlgAndPqAgreeOnTheLightTheyCarryAndRoundTrip",
+          "HdrLightIsFittedIntoSdrByASoftKneeAndNothingBelowTheKneeMoves"
+        ],
+        "integration": [
+          "cutline native test suite (ctest)"
+        ],
+        "fixture": [
+          "tests/golden",
+          "build/*/fixtures (generated)"
+        ]
       },
       "platforms": {
         "windows": "target",
@@ -2807,7 +2935,7 @@
       "id": "hdr_hlg",
       "name": "HDR HLG",
       "priority": "P2",
-      "status": "planned",
+      "status": "partial",
       "acceptance": [
         "Maintains HLG transfer metadata and validates preview/export transform."
       ]
@@ -2818,13 +2946,23 @@
       "reference_version": "26.5",
       "reference_channel": "stable",
       "implementation": {
-        "components": [],
-        "notes": "No dedicated production runtime exists."
+        "components": [
+          "render/ColorManagement.cpp"
+        ],
+        "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
       },
       "tests": {
-        "unit": [],
-        "integration": [],
-        "fixture": []
+        "unit": [
+          "HlgAndPqAgreeOnTheLightTheyCarryAndRoundTrip",
+          "HdrLightIsFittedIntoSdrByASoftKneeAndNothingBelowTheKneeMoves"
+        ],
+        "integration": [
+          "cutline native test suite (ctest)"
+        ],
+        "fixture": [
+          "tests/golden",
+          "build/*/fixtures (generated)"
+        ]
       },
       "platforms": {
         "windows": "target",
@@ -2843,7 +2981,7 @@
       "id": "hdr_pq",
       "name": "HDR PQ",
       "priority": "P2",
-      "status": "planned",
+      "status": "partial",
       "acceptance": [
         "Maintains PQ transfer metadata and validates preview/export transform."
       ]
@@ -2854,13 +2992,22 @@
       "reference_version": "26.5",
       "reference_channel": "stable",
       "implementation": {
-        "components": [],
-        "notes": "No dedicated production runtime exists."
+        "components": [
+          "ui/LookPack.cpp"
+        ],
+        "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
       },
       "tests": {
-        "unit": [],
-        "integration": [],
-        "fixture": []
+        "unit": [
+          "TheLookPackIsWrittenOnceReadsAsCubesAndEveryLookIsASaneMonotoneGrade"
+        ],
+        "integration": [
+          "cutline native test suite (ctest)"
+        ],
+        "fixture": [
+          "tests/golden",
+          "build/*/fixtures (generated)"
+        ]
       },
       "platforms": {
         "windows": "target",
@@ -2879,7 +3026,7 @@
       "id": "look_presets",
       "name": "Look presets",
       "priority": "P1",
-      "status": "planned",
+      "status": "partial",
       "acceptance": [
         "Stores non-destructive versioned grade presets."
       ]
@@ -2890,13 +3037,23 @@
       "reference_version": "26.5",
       "reference_channel": "stable",
       "implementation": {
-        "components": [],
-        "notes": "No dedicated production runtime exists."
+        "components": [
+          "render/ColorEffects.cpp"
+        ],
+        "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
       },
       "tests": {
-        "unit": [],
-        "integration": [],
-        "fixture": []
+        "unit": [
+          "CurvesReshapeTheTonesAndTheLumaCurveKeepsHue",
+          "HueCurvesMoveOnlyTheHuesTheyAreSetFor"
+        ],
+        "integration": [
+          "cutline native test suite (ctest)"
+        ],
+        "fixture": [
+          "tests/golden",
+          "build/*/fixtures (generated)"
+        ]
       },
       "platforms": {
         "windows": "target",
@@ -2915,7 +3072,7 @@
       "id": "lumetri_style_curves",
       "name": "Curves",
       "priority": "P1",
-      "status": "planned",
+      "status": "partial",
       "acceptance": [
         "Evaluates editable channel and luma curves in the grade graph."
       ]
@@ -3293,13 +3450,22 @@
       "reference_version": "26.5",
       "reference_channel": "stable",
       "implementation": {
-        "components": [],
-        "notes": "No dedicated production runtime exists."
+        "components": [
+          "ui/Transport.cpp"
+        ],
+        "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
       },
       "tests": {
-        "unit": [],
-        "integration": [],
-        "fixture": []
+        "unit": [
+          "TheTransportPlaysShuttlesStepsAndStopsOrLoopsAtTheEnds"
+        ],
+        "integration": [
+          "cutline native test suite (ctest)"
+        ],
+        "fixture": [
+          "tests/golden",
+          "build/*/fixtures (generated)"
+        ]
       },
       "platforms": {
         "windows": "target",
@@ -3318,7 +3484,7 @@
       "id": "sequence_start_end",
       "name": "Sequence start/end navigation",
       "priority": "P0",
-      "status": "planned",
+      "status": "implemented",
       "acceptance": [
         "Moves playhead to deterministic sequence boundaries."
       ]
@@ -3976,13 +4142,25 @@
       "reference_version": "26.5",
       "reference_channel": "stable",
       "implementation": {
-        "components": [],
-        "notes": "No dedicated production runtime exists."
+        "components": [
+          "ui/MaskEditor.cpp",
+          "render/Tracking.cpp",
+          "app/SessionMasks.cpp"
+        ],
+        "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
       },
       "tests": {
-        "unit": [],
-        "integration": [],
-        "fixture": []
+        "unit": [
+          "AMaskFollowsATrackByTheDistanceItMovedSinceTheMaskWasDrawnAndSkipsWhatWasLost",
+          "TrackingResultsWriteAsReadableJsonAndReadBackExactly"
+        ],
+        "integration": [
+          "cutline native test suite (ctest)"
+        ],
+        "fixture": [
+          "tests/golden",
+          "build/*/fixtures (generated)"
+        ]
       },
       "platforms": {
         "windows": "target",
@@ -4001,7 +4179,7 @@
       "id": "mask_tracking",
       "name": "Mask tracking",
       "priority": "P2",
-      "status": "planned",
+      "status": "implemented",
       "acceptance": [
         "Stores reviewable tracking data with source and algorithm provenance."
       ]
@@ -4586,13 +4764,26 @@
       "reference_version": "26.5",
       "reference_channel": "stable",
       "implementation": {
-        "components": [],
-        "notes": "No dedicated production runtime exists."
+        "components": [
+          "exporter/ExportWorker.cpp",
+          "exporter/ExportPresets.cpp",
+          "exporter/ExportQueue.cpp"
+        ],
+        "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
       },
       "tests": {
-        "unit": [],
-        "integration": [],
-        "fixture": []
+        "unit": [
+          "ExportedVideoDecodesBackToWhatTheMonitorRendered",
+          "ExportWritesTheExpectedFrameCount",
+          "TheCheckOfAFinishedExportNamesWhatIsWrongWithATruncatedWrongOrMissingFile"
+        ],
+        "integration": [
+          "cutline native test suite (ctest)"
+        ],
+        "fixture": [
+          "tests/golden",
+          "build/*/fixtures (generated)"
+        ]
       },
       "platforms": {
         "windows": "target",
@@ -4611,7 +4802,7 @@
       "id": "media_export",
       "name": "Media export",
       "priority": "P1",
-      "status": "planned",
+      "status": "implemented",
       "acceptance": [
         "Transcodes selected source or timeline output with diagnostics."
       ]
@@ -4794,13 +4985,23 @@
       "reference_version": "26.5",
       "reference_channel": "stable",
       "implementation": {
-        "components": [],
-        "notes": "No dedicated production runtime exists."
+        "components": [
+          "render/TextRaster.cpp"
+        ],
+        "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
       },
       "tests": {
-        "unit": [],
-        "integration": [],
-        "fixture": []
+        "unit": [
+          "TemplateControlsTakeColoursAndRangesAndFontListsFallBackToWhatIsInstalled",
+          "CuesShowingTogetherStackAndAMissingFontIsReported"
+        ],
+        "integration": [
+          "cutline native test suite (ctest)"
+        ],
+        "fixture": [
+          "tests/golden",
+          "build/*/fixtures (generated)"
+        ]
       },
       "platforms": {
         "windows": "target",
@@ -4819,7 +5020,7 @@
       "id": "font_management",
       "name": "Font management",
       "priority": "P1",
-      "status": "planned",
+      "status": "partial",
       "acceptance": [
         "Records required fonts and reports substitution in project and export."
       ]
@@ -4877,13 +5078,24 @@
       "reference_version": "26.5",
       "reference_channel": "stable",
       "implementation": {
-        "components": [],
-        "notes": "No dedicated production runtime exists."
+        "components": [
+          "ui/GraphicsDesigner.cpp",
+          "effects/GraphicsDocument.cpp"
+        ],
+        "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
       },
       "tests": {
-        "unit": [],
-        "integration": [],
-        "fixture": []
+        "unit": [
+          "EveryBuiltInTemplateIsValidDrawsWithItsDefaultsAndMakesControlsForWhatAPersonChanges",
+          "ATemplateIsInstalledOnceMadeIntoTitlesAndItsValuesChangedInOneStep"
+        ],
+        "integration": [
+          "cutline native test suite (ctest)"
+        ],
+        "fixture": [
+          "tests/golden",
+          "build/*/fixtures (generated)"
+        ]
       },
       "platforms": {
         "windows": "target",
@@ -4902,7 +5114,7 @@
       "id": "lower_thirds",
       "name": "Lower-third templates",
       "priority": "P1",
-      "status": "planned",
+      "status": "implemented",
       "acceptance": [
         "Creates reusable lower-third templates with editable fields."
       ]
@@ -5125,13 +5337,23 @@
       "reference_version": "26.5",
       "reference_channel": "stable",
       "implementation": {
-        "components": [],
-        "notes": "No hardware abstraction runtime exists."
+        "components": [
+          "audio/WasapiSink.cpp",
+          "app/Session.cpp"
+        ],
+        "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
       },
       "tests": {
-        "unit": [],
-        "integration": [],
-        "fixture": []
+        "unit": [
+          "ARealDeviceSinkFlushesFinishesAndReportsFailure"
+        ],
+        "integration": [
+          "cutline native test suite (ctest)"
+        ],
+        "fixture": [
+          "tests/golden",
+          "build/*/fixtures (generated)"
+        ]
       },
       "platforms": {
         "windows": "target",
@@ -5150,7 +5372,7 @@
       "id": "audio_device_recovery",
       "name": "Audio device recovery",
       "priority": "P1",
-      "status": "planned",
+      "status": "partial",
       "acceptance": [
         "Recovers or stops safely after audio-device format/disconnect changes."
       ]
@@ -5658,13 +5880,23 @@
       "reference_version": "26.5",
       "reference_channel": "stable",
       "implementation": {
-        "components": [],
-        "notes": "No interchange runtime exists."
+        "components": [
+          "interchange/Edl.cpp"
+        ],
+        "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
       },
       "tests": {
-        "unit": [],
-        "integration": [],
-        "fixture": []
+        "unit": [
+          "AnEdlRoundTripsEverythingItCanHold",
+          "WhatAnEdlCannotHoldIsReportedOnTheWayOut"
+        ],
+        "integration": [
+          "cutline native test suite (ctest)"
+        ],
+        "fixture": [
+          "tests/golden",
+          "build/*/fixtures (generated)"
+        ]
       },
       "platforms": {
         "windows": "target",
@@ -5683,7 +5915,7 @@
       "id": "edl_export",
       "name": "EDL export",
       "priority": "P2",
-      "status": "planned",
+      "status": "implemented",
       "acceptance": [
         "Exports conformable EDL with explicit track and effect limitations."
       ]
@@ -5694,13 +5926,23 @@
       "reference_version": "26.5",
       "reference_channel": "stable",
       "implementation": {
-        "components": [],
-        "notes": "No interchange runtime exists."
+        "components": [
+          "interchange/Edl.cpp"
+        ],
+        "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
       },
       "tests": {
-        "unit": [],
-        "integration": [],
-        "fixture": []
+        "unit": [
+          "AnEdlHasTheEventsTheDissolveTheSpeedChangeAndTheLocator",
+          "AnEdlRoundTripsEverythingItCanHold"
+        ],
+        "integration": [
+          "cutline native test suite (ctest)"
+        ],
+        "fixture": [
+          "tests/golden",
+          "build/*/fixtures (generated)"
+        ]
       },
       "platforms": {
         "windows": "target",
@@ -5719,7 +5961,7 @@
       "id": "edl_import",
       "name": "EDL import",
       "priority": "P2",
-      "status": "planned",
+      "status": "implemented",
       "acceptance": [
         "Imports EDL events with reel/timecode interpretation reporting."
       ]
@@ -5838,13 +6080,24 @@
       "reference_version": "26.5",
       "reference_channel": "stable",
       "implementation": {
-        "components": [],
-        "notes": "No interchange runtime exists."
+        "components": [
+          "core/project/Consolidate.cpp"
+        ],
+        "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
       },
       "tests": {
-        "unit": [],
-        "integration": [],
-        "fixture": []
+        "unit": [
+          "CollectingAProjectCopiesExactlyWhatItUsesAndTheCopyOpensFromTheFolderAlone",
+          "WhatCannotBeCollectedIsNamedAndTheFolderIsNotCalledComplete",
+          "ACollectedFolderThatIsMovedIsMadeToOpenAgainFromItsManifest"
+        ],
+        "integration": [
+          "cutline native test suite (ctest)"
+        ],
+        "fixture": [
+          "tests/golden",
+          "build/*/fixtures (generated)"
+        ]
       },
       "platforms": {
         "windows": "target",
@@ -5863,7 +6116,7 @@
       "id": "project_archive",
       "name": "Project archive",
       "priority": "P1",
-      "status": "planned",
+      "status": "partial",
       "acceptance": [
         "Packages project metadata, media manifest, and checksums without copying cache by default."
       ]
@@ -5874,13 +6127,23 @@
       "reference_version": "26.5",
       "reference_channel": "stable",
       "implementation": {
-        "components": [],
-        "notes": "No interchange runtime exists."
+        "components": [
+          "interchange/FcpXml.cpp"
+        ],
+        "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
       },
       "tests": {
-        "unit": [],
-        "integration": [],
-        "fixture": []
+        "unit": [
+          "FcpXmlRoundTripsEverythingItCarriesAtWholeFrames",
+          "TimesBetweenFramesAreRoundedAndSaidSoWhenWritingFcpXml"
+        ],
+        "integration": [
+          "cutline native test suite (ctest)"
+        ],
+        "fixture": [
+          "tests/golden",
+          "build/*/fixtures (generated)"
+        ]
       },
       "platforms": {
         "windows": "target",
@@ -5899,7 +6162,7 @@
       "id": "xml_export",
       "name": "XML export",
       "priority": "P2",
-      "status": "planned",
+      "status": "implemented",
       "acceptance": [
         "Exports a documented XML mapping with unsupported-feature diagnostics."
       ]
@@ -5910,13 +6173,24 @@
       "reference_version": "26.5",
       "reference_channel": "stable",
       "implementation": {
-        "components": [],
-        "notes": "No interchange runtime exists."
+        "components": [
+          "interchange/FcpXml.cpp",
+          "core/util/XmlParse.cpp"
+        ],
+        "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
       },
       "tests": {
-        "unit": [],
-        "integration": [],
-        "fixture": []
+        "unit": [
+          "FcpXmlRoundTripsEverythingItCarriesAtWholeFrames",
+          "AnXmlFileThatIsNotAFinalCutSequenceIsRefusedWithAReason"
+        ],
+        "integration": [
+          "cutline native test suite (ctest)"
+        ],
+        "fixture": [
+          "tests/golden",
+          "build/*/fixtures (generated)"
+        ]
       },
       "platforms": {
         "windows": "target",
@@ -5935,7 +6209,7 @@
       "id": "xml_import",
       "name": "XML import",
       "priority": "P2",
-      "status": "planned",
+      "status": "implemented",
       "acceptance": [
         "Imports documented XML subset with a loss report."
       ]
@@ -6563,7 +6837,7 @@
       "id": "fullscreen_playback",
       "name": "Fullscreen playback",
       "priority": "P1",
-      "status": "planned",
+      "status": "partial",
       "acceptance": [
         "Presents program output in a dedicated fullscreen surface."
       ]
@@ -6574,13 +6848,23 @@
       "reference_version": "26.5",
       "reference_channel": "stable",
       "implementation": {
-        "components": [],
-        "notes": "No dedicated production runtime exists."
+        "components": [
+          "ui/Monitor.cpp",
+          "app/MonitorItem.cpp"
+        ],
+        "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
       },
       "tests": {
-        "unit": [],
-        "integration": [],
-        "fixture": []
+        "unit": [
+          "TheMonitorPicksARenderSizeFitsThePictureAndDrawsSafeMargins"
+        ],
+        "integration": [
+          "cutline native test suite (ctest)"
+        ],
+        "fixture": [
+          "tests/golden",
+          "build/*/fixtures (generated)"
+        ]
       },
       "platforms": {
         "windows": "target",
@@ -6599,7 +6883,7 @@
       "id": "monitor_overlays",
       "name": "Monitor overlays",
       "priority": "P1",
-      "status": "planned",
+      "status": "partial",
       "acceptance": [
         "Shows timecode, dropped-frame, and playback diagnostics accurately."
       ]
@@ -6610,13 +6894,23 @@
       "reference_version": "26.5",
       "reference_channel": "stable",
       "implementation": {
-        "components": [],
-        "notes": "No dedicated production runtime exists."
+        "components": [
+          "ui/Monitor.cpp",
+          "app/MonitorItem.cpp"
+        ],
+        "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
       },
       "tests": {
-        "unit": [],
-        "integration": [],
-        "fixture": []
+        "unit": [
+          "TheMonitorPicksARenderSizeFitsThePictureAndDrawsSafeMargins"
+        ],
+        "integration": [
+          "cutline native test suite (ctest)"
+        ],
+        "fixture": [
+          "tests/golden",
+          "build/*/fixtures (generated)"
+        ]
       },
       "platforms": {
         "windows": "target",
@@ -6635,7 +6929,7 @@
       "id": "monitor_safe_margins",
       "name": "Safe margins",
       "priority": "P1",
-      "status": "planned",
+      "status": "implemented",
       "acceptance": [
         "Displays title/action safe overlays independent of source pixels."
       ]
@@ -6646,13 +6940,23 @@
       "reference_version": "26.5",
       "reference_channel": "stable",
       "implementation": {
-        "components": [],
-        "notes": "No dedicated production runtime exists."
+        "components": [
+          "ui/Monitor.cpp",
+          "app/MonitorItem.cpp"
+        ],
+        "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
       },
       "tests": {
-        "unit": [],
-        "integration": [],
-        "fixture": []
+        "unit": [
+          "TheMonitorPicksARenderSizeFitsThePictureAndDrawsSafeMargins"
+        ],
+        "integration": [
+          "cutline native test suite (ctest)"
+        ],
+        "fixture": [
+          "tests/golden",
+          "build/*/fixtures (generated)"
+        ]
       },
       "platforms": {
         "windows": "target",
@@ -6671,7 +6975,7 @@
       "id": "monitor_zoom",
       "name": "Monitor zoom",
       "priority": "P1",
-      "status": "planned",
+      "status": "implemented",
       "acceptance": [
         "Changes presentation scale without altering render resolution."
       ]
@@ -6876,15 +7180,23 @@
       "reference_channel": "stable",
       "implementation": {
         "components": [
-          "core/project journal",
-          "core/project snapshots"
+          "core/project/ProjectStore.cpp"
         ],
-        "notes": "Journal/snapshot foundation exists but has not been validated against process interruption."
+        "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
       },
       "tests": {
-        "unit": [],
-        "integration": [],
-        "fixture": []
+        "unit": [
+          "RecoveryFromAnyRevisionBoundaryLandsOnThatRevisionExactly",
+          "ATornOrMissingRecordStopsRecoveryAtTheLastGoodRevisionAndSaysSo",
+          "WithNothingToRebuildFromRecoveryFailsClearlyAndTouchesNothing"
+        ],
+        "integration": [
+          "cutline native test suite (ctest)"
+        ],
+        "fixture": [
+          "tests/golden",
+          "build/*/fixtures (generated)"
+        ]
       },
       "platforms": {
         "windows": "target",
@@ -6950,13 +7262,22 @@
       "reference_version": "26.5",
       "reference_channel": "stable",
       "implementation": {
-        "components": [],
-        "notes": "No end-to-end performance pipeline exists."
+        "components": [
+          "core/resource/QuotaManager.cpp"
+        ],
+        "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
       },
       "tests": {
-        "unit": [],
-        "integration": [],
-        "fixture": []
+        "unit": [
+          "SharedQuotaEvictsCheapRenderFramesBeforeExpensiveFlowAnalysis"
+        ],
+        "integration": [
+          "cutline native test suite (ctest)"
+        ],
+        "fixture": [
+          "tests/golden",
+          "build/*/fixtures (generated)"
+        ]
       },
       "platforms": {
         "windows": "target",
@@ -6975,7 +7296,7 @@
       "id": "memory_pressure_handling",
       "name": "Memory pressure handling",
       "priority": "P1",
-      "status": "planned",
+      "status": "partial",
       "acceptance": [
         "Evicts reclaimable caches and degrades gracefully under declared thresholds."
       ]
@@ -7066,13 +7387,24 @@
       "reference_version": "26.5",
       "reference_channel": "stable",
       "implementation": {
-        "components": [],
-        "notes": "No end-to-end performance pipeline exists."
+        "components": [
+          "render/RenderCache.cpp",
+          "playback/PlaybackEngine.cpp"
+        ],
+        "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
       },
       "tests": {
-        "unit": [],
-        "integration": [],
-        "fixture": []
+        "unit": [
+          "ARenderedFrameIsServedFromTheCacheTheSecondTimeAndAnEditOnlyRemakesWhatItTouches",
+          "APreviewAndAnExportShareWhatEitherHasAlreadyRenderedThroughTheDiskTier"
+        ],
+        "integration": [
+          "cutline native test suite (ctest)"
+        ],
+        "fixture": [
+          "tests/golden",
+          "build/*/fixtures (generated)"
+        ]
       },
       "platforms": {
         "windows": "target",
@@ -7091,7 +7423,7 @@
       "id": "render_cache",
       "name": "Render cache",
       "priority": "P1",
-      "status": "planned",
+      "status": "implemented",
       "acceptance": [
         "Caches render results with complete dependency invalidation."
       ]
@@ -8360,13 +8692,22 @@
       "reference_version": "26.5",
       "reference_channel": "stable",
       "implementation": {
-        "components": [],
-        "notes": "No dedicated production runtime exists."
+        "components": [
+          "render/Transitions.cpp"
+        ],
+        "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
       },
       "tests": {
-        "unit": [],
-        "integration": [],
-        "fixture": []
+        "unit": [
+          "PushesSlidesAndDipsMoveAndDarkenTheWayTheirNamesSayAndStaySharp"
+        ],
+        "integration": [
+          "cutline native test suite (ctest)"
+        ],
+        "fixture": [
+          "tests/golden",
+          "build/*/fixtures (generated)"
+        ]
       },
       "platforms": {
         "windows": "target",
@@ -8385,7 +8726,7 @@
       "id": "dip_to_color",
       "name": "Dip to color",
       "priority": "P1",
-      "status": "planned",
+      "status": "partial",
       "acceptance": [
         "Composites outgoing/incoming frames through a configurable color."
       ]
@@ -8442,13 +8783,22 @@
       "reference_version": "26.5",
       "reference_channel": "stable",
       "implementation": {
-        "components": [],
-        "notes": "No dedicated production runtime exists."
+        "components": [
+          "ui/Transitions.cpp"
+        ],
+        "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
       },
       "tests": {
-        "unit": [],
-        "integration": [],
-        "fixture": []
+        "unit": [
+          "ATransitionIsAddedAtTheCutKeptWithinTheHandlesAndRefusedWhereThereIsNoRoomOrAnotherIsThere"
+        ],
+        "integration": [
+          "cutline native test suite (ctest)"
+        ],
+        "fixture": [
+          "tests/golden",
+          "build/*/fixtures (generated)"
+        ]
       },
       "platforms": {
         "windows": "target",
@@ -8467,7 +8817,7 @@
       "id": "transition_handle_diagnostics",
       "name": "Transition handle diagnostics",
       "priority": "P1",
-      "status": "planned",
+      "status": "partial",
       "acceptance": [
         "Explains insufficient media handles before applying a transition."
       ]
@@ -8532,14 +8882,21 @@
       "reference_channel": "stable",
       "implementation": {
         "components": [
-          "app.js"
+          "ui/TimelineView.cpp"
         ],
-        "notes": "Browser prototype selection only; it is not authoritative project state."
+        "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
       },
       "tests": {
-        "unit": [],
-        "integration": [],
-        "fixture": []
+        "unit": [
+          "SelectionLinksClipsRectanglesAndTracksAndSnappingPrefersWhatMattersMost"
+        ],
+        "integration": [
+          "cutline native test suite (ctest)"
+        ],
+        "fixture": [
+          "tests/golden",
+          "build/*/fixtures (generated)"
+        ]
       },
       "platforms": {
         "windows": "target",
@@ -8558,7 +8915,7 @@
       "id": "clip_selection",
       "name": "Clip selection",
       "priority": "P0",
-      "status": "prototype",
+      "status": "implemented",
       "acceptance": [
         "Selection maps to durable clip identities and command targets."
       ]
@@ -8570,13 +8927,13 @@
       "reference_channel": "stable",
       "implementation": {
         "components": [
-          "core/project/ProjectStore.cpp"
+          "ui/EditPlanner.cpp"
         ],
         "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
       },
       "tests": {
         "unit": [
-          "RippleDeleteClosesTheGap"
+          "CuttingDeletingLiftingAndExtractingKeepTheTimelineConsistent"
         ],
         "integration": [
           "cutline native test suite (ctest)"
@@ -8603,7 +8960,7 @@
       "id": "extract",
       "name": "Extract",
       "priority": "P0",
-      "status": "partial",
+      "status": "implemented",
       "acceptance": [
         "Removes a marked range and ripples applicable tracks."
       ]
@@ -8741,13 +9098,23 @@
       "reference_version": "26.5",
       "reference_channel": "stable",
       "implementation": {
-        "components": [],
-        "notes": "No dedicated production runtime exists."
+        "components": [
+          "ui/EditPlanner.cpp"
+        ],
+        "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
       },
       "tests": {
-        "unit": [],
-        "integration": [],
-        "fixture": []
+        "unit": [
+          "TrimmingMovesOneEdgeWithinTheMediaAndNeighboursAndARippleClosesUpEverywhere",
+          "LinkedClipsAreTrimmedTogetherAndRollSlipAndSlideDoWhatTheyAreFor"
+        ],
+        "integration": [
+          "cutline native test suite (ctest)"
+        ],
+        "fixture": [
+          "tests/golden",
+          "build/*/fixtures (generated)"
+        ]
       },
       "platforms": {
         "windows": "target",
@@ -8766,7 +9133,7 @@
       "id": "ripple_trim",
       "name": "Ripple trim",
       "priority": "P0",
-      "status": "planned",
+      "status": "implemented",
       "acceptance": [
         "Adjusts adjacent downstream clips according to track ripple policy."
       ]
@@ -8777,13 +9144,22 @@
       "reference_version": "26.5",
       "reference_channel": "stable",
       "implementation": {
-        "components": [],
-        "notes": "No dedicated production runtime exists."
+        "components": [
+          "ui/EditPlanner.cpp"
+        ],
+        "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
       },
       "tests": {
-        "unit": [],
-        "integration": [],
-        "fixture": []
+        "unit": [
+          "LinkedClipsAreTrimmedTogetherAndRollSlipAndSlideDoWhatTheyAreFor"
+        ],
+        "integration": [
+          "cutline native test suite (ctest)"
+        ],
+        "fixture": [
+          "tests/golden",
+          "build/*/fixtures (generated)"
+        ]
       },
       "platforms": {
         "windows": "target",
@@ -8802,7 +9178,7 @@
       "id": "roll_trim",
       "name": "Roll trim",
       "priority": "P1",
-      "status": "planned",
+      "status": "implemented",
       "acceptance": [
         "Moves a shared edit point while preserving combined duration."
       ]
@@ -8813,13 +9189,22 @@
       "reference_version": "26.5",
       "reference_channel": "stable",
       "implementation": {
-        "components": [],
-        "notes": "No dedicated production runtime exists."
+        "components": [
+          "ui/EditPlanner.cpp"
+        ],
+        "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
       },
       "tests": {
-        "unit": [],
-        "integration": [],
-        "fixture": []
+        "unit": [
+          "LinkedClipsAreTrimmedTogetherAndRollSlipAndSlideDoWhatTheyAreFor"
+        ],
+        "integration": [
+          "cutline native test suite (ctest)"
+        ],
+        "fixture": [
+          "tests/golden",
+          "build/*/fixtures (generated)"
+        ]
       },
       "platforms": {
         "windows": "target",
@@ -8838,7 +9223,7 @@
       "id": "slide_edit",
       "name": "Slide edit",
       "priority": "P1",
-      "status": "planned",
+      "status": "implemented",
       "acceptance": [
         "Moves a clip while counter-trimming eligible adjacent clips."
       ]
@@ -8849,13 +9234,22 @@
       "reference_version": "26.5",
       "reference_channel": "stable",
       "implementation": {
-        "components": [],
-        "notes": "No dedicated production runtime exists."
+        "components": [
+          "ui/EditPlanner.cpp"
+        ],
+        "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
       },
       "tests": {
-        "unit": [],
-        "integration": [],
-        "fixture": []
+        "unit": [
+          "LinkedClipsAreTrimmedTogetherAndRollSlipAndSlideDoWhatTheyAreFor"
+        ],
+        "integration": [
+          "cutline native test suite (ctest)"
+        ],
+        "fixture": [
+          "tests/golden",
+          "build/*/fixtures (generated)"
+        ]
       },
       "platforms": {
         "windows": "target",
@@ -8874,7 +9268,7 @@
       "id": "slip_edit",
       "name": "Slip edit",
       "priority": "P1",
-      "status": "planned",
+      "status": "implemented",
       "acceptance": [
         "Moves source range while keeping clip timeline placement unchanged."
       ]
@@ -8886,14 +9280,21 @@
       "reference_channel": "stable",
       "implementation": {
         "components": [
-          "app.js"
+          "ui/TimelineView.cpp"
         ],
-        "notes": "Browser UI heuristic only."
+        "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
       },
       "tests": {
-        "unit": [],
-        "integration": [],
-        "fixture": []
+        "unit": [
+          "SelectionLinksClipsRectanglesAndTracksAndSnappingPrefersWhatMattersMost"
+        ],
+        "integration": [
+          "cutline native test suite (ctest)"
+        ],
+        "fixture": [
+          "tests/golden",
+          "build/*/fixtures (generated)"
+        ]
       },
       "platforms": {
         "windows": "target",
@@ -8912,7 +9313,7 @@
       "id": "snapping",
       "name": "Snapping",
       "priority": "P0",
-      "status": "prototype",
+      "status": "implemented",
       "acceptance": [
         "Snap candidates are resolved exactly at sequence time."
       ]
@@ -8993,7 +9394,7 @@
       "id": "trim_mode_feedback",
       "name": "Trim mode feedback",
       "priority": "P1",
-      "status": "planned",
+      "status": "partial",
       "acceptance": [
         "UI reports active trim mode and affected edit sides accurately."
       ]

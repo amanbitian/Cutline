@@ -46,9 +46,9 @@ struct ColorSpace final {
   [[nodiscard]] bool operator==(const ColorSpace& other) const;
 };
 
-// An owning picture buffer. Moveable, not copyable: frames are large and an
-// accidental copy in a per-frame path is a performance bug, so copying has to
-// be explicit via Clone().
+// A picture buffer with explicit sharing. Frames remain move-only so accidental
+// object copies stay compile errors. Share() is a cheap immutable snapshot;
+// writable access detaches its pixels on demand. Clone() always deep-copies.
 class VideoFrame final {
  public:
   VideoFrame() = default;
@@ -59,17 +59,18 @@ class VideoFrame final {
 
   [[nodiscard]] static VideoFrame Allocate(PixelFormat format, int width, int height);
   [[nodiscard]] VideoFrame Clone() const;
+  [[nodiscard]] VideoFrame Share() const;
 
-  [[nodiscard]] bool valid() const noexcept { return width_ > 0 && height_ > 0 && !pixels_.empty(); }
+  [[nodiscard]] bool valid() const noexcept { return width_ > 0 && height_ > 0 && pixels_ && !pixels_->empty(); }
   [[nodiscard]] PixelFormat format() const noexcept { return format_; }
   [[nodiscard]] int width() const noexcept { return width_; }
   [[nodiscard]] int height() const noexcept { return height_; }
   // Bytes per row, including any padding.
   [[nodiscard]] std::ptrdiff_t stride() const noexcept { return stride_; }
 
-  [[nodiscard]] std::byte* data() noexcept { return pixels_.data(); }
-  [[nodiscard]] const std::byte* data() const noexcept { return pixels_.data(); }
-  [[nodiscard]] std::size_t size_bytes() const noexcept { return pixels_.size(); }
+  [[nodiscard]] std::byte* data();
+  [[nodiscard]] const std::byte* data() const noexcept { return pixels_ ? pixels_->data() : nullptr; }
+  [[nodiscard]] std::size_t size_bytes() const noexcept { return pixels_ ? pixels_->size() : 0; }
 
   [[nodiscard]] std::byte* row(int y);
   [[nodiscard]] const std::byte* row(int y) const;
@@ -92,7 +93,9 @@ class VideoFrame final {
   int width_{0};
   int height_{0};
   std::ptrdiff_t stride_{0};
-  std::vector<std::byte> pixels_;
+  std::shared_ptr<std::vector<std::byte>> pixels_;
+
+  void EnsureUnique();
 };
 
 // Format conversion. Only the pairs the pipeline actually needs exist; an

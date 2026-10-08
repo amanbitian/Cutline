@@ -30,31 +30,55 @@
    "id": "clip_selection",
    "name": "Clip selection",
    "priority": "P0",
-   "status": "prototype",
+   "status": "implemented",
    "implementation": {
     "components": [
-     "app.js"
+     "ui/TimelineView.cpp"
     ],
-    "notes": "Browser prototype selection only; it is not authoritative project state."
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
    },
    "acceptance": [
     "Selection maps to durable clip identities and command targets."
-   ]
+   ],
+   "tests": {
+    "unit": [
+     "SelectionLinksClipsRectanglesAndTracksAndSnappingPrefersWhatMattersMost"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   }
   },
   {
    "id": "snapping",
    "name": "Snapping",
    "priority": "P0",
-   "status": "prototype",
+   "status": "implemented",
    "implementation": {
     "components": [
-     "app.js"
+     "ui/TimelineView.cpp"
     ],
-    "notes": "Browser UI heuristic only."
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
    },
    "acceptance": [
     "Snap candidates are resolved exactly at sequence time."
-   ]
+   ],
+   "tests": {
+    "unit": [
+     "SelectionLinksClipsRectanglesAndTracksAndSnappingPrefersWhatMattersMost"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   }
   },
   {
    "id": "trim_start",
@@ -114,37 +138,110 @@
    "id": "ripple_trim",
    "name": "Ripple trim",
    "priority": "P0",
-   "status": "planned",
+   "status": "implemented",
    "acceptance": [
     "Adjusts adjacent downstream clips according to track ripple policy."
-   ]
+   ],
+   "tests": {
+    "unit": [
+     "TrimmingMovesOneEdgeWithinTheMediaAndNeighboursAndARippleClosesUpEverywhere",
+     "LinkedClipsAreTrimmedTogetherAndRollSlipAndSlideDoWhatTheyAreFor"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "ui/EditPlanner.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
   },
   {
    "id": "roll_trim",
    "name": "Roll trim",
    "priority": "P1",
-   "status": "planned",
+   "status": "implemented",
    "acceptance": [
     "Moves a shared edit point while preserving combined duration."
-   ]
+   ],
+   "tests": {
+    "unit": [
+     "LinkedClipsAreTrimmedTogetherAndRollSlipAndSlideDoWhatTheyAreFor"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "ui/EditPlanner.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
   },
   {
    "id": "slip_edit",
    "name": "Slip edit",
    "priority": "P1",
-   "status": "planned",
+   "status": "implemented",
    "acceptance": [
     "Moves source range while keeping clip timeline placement unchanged."
-   ]
+   ],
+   "tests": {
+    "unit": [
+     "LinkedClipsAreTrimmedTogetherAndRollSlipAndSlideDoWhatTheyAreFor"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "ui/EditPlanner.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
   },
   {
    "id": "slide_edit",
    "name": "Slide edit",
    "priority": "P1",
-   "status": "planned",
+   "status": "implemented",
    "acceptance": [
     "Moves a clip while counter-trimming eligible adjacent clips."
-   ]
+   ],
+   "tests": {
+    "unit": [
+     "LinkedClipsAreTrimmedTogetherAndRollSlipAndSlideDoWhatTheyAreFor"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "ui/EditPlanner.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
   },
   {
    "id": "rate_stretch",
@@ -214,13 +311,13 @@
    "id": "extract",
    "name": "Extract",
    "priority": "P0",
-   "status": "partial",
+   "status": "implemented",
    "acceptance": [
     "Removes a marked range and ripples applicable tracks."
    ],
    "tests": {
     "unit": [
-     "RippleDeleteClosesTheGap"
+     "CuttingDeletingLiftingAndExtractingKeepTheTimelineConsistent"
     ],
     "integration": [
      "cutline native test suite (ctest)"
@@ -232,7 +329,7 @@
    },
    "implementation": {
     "components": [
-     "core/project/ProjectStore.cpp"
+     "ui/EditPlanner.cpp"
     ],
     "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
    }
@@ -241,7 +338,7 @@
    "id": "trim_mode_feedback",
    "name": "Trim mode feedback",
    "priority": "P1",
-   "status": "planned",
+   "status": "partial",
    "acceptance": [
     "UI reports active trim mode and affected edit sides accurately."
    ]

@@ -1,16 +1,217 @@
 {
-  "domain": "interchange",
-  "feature_defaults": {"implementation":{"components":[],"notes":"No interchange runtime exists."},"tests":{"unit":[],"integration":[],"fixture":[]},"platforms":{"windows":"target","macos":"future","linux":"future"},"hardware":{"cpu_fallback":"required","gpu_optional":true,"pro_io":"not_required"},"known_gaps":["No validated interchange importer/exporter exists."],"licensing_notes":"Format specifications and vendor interop testing must be tracked by version."},
-  "features": [
-    {"id":"xml_import","name":"XML import","priority":"P2","status":"planned","acceptance":["Imports documented XML subset with a loss report." ]},
-    {"id":"xml_export","name":"XML export","priority":"P2","status":"planned","acceptance":["Exports a documented XML mapping with unsupported-feature diagnostics." ]},
-    {"id":"edl_import","name":"EDL import","priority":"P2","status":"planned","acceptance":["Imports EDL events with reel/timecode interpretation reporting." ]},
-    {"id":"edl_export","name":"EDL export","priority":"P2","status":"planned","acceptance":["Exports conformable EDL with explicit track and effect limitations." ]},
-    {"id":"aaf_import","name":"AAF import","priority":"P2","status":"planned","acceptance":["Imports a tested AAF subset with a loss report." ]},
-    {"id":"aaf_export","name":"AAF export","priority":"P2","status":"planned","acceptance":["Exports a tested AAF subset with a loss report." ]},
-    {"id":"fcpxml_import","name":"FCPXML import","priority":"P2","status":"planned","acceptance":["Imports a documented FCPXML mapping with diagnostics." ]},
-    {"id":"fcpxml_export","name":"FCPXML export","priority":"P2","status":"planned","acceptance":["Exports a documented FCPXML mapping with diagnostics." ]},
-    {"id":"omf_audio_export","name":"OMF audio export","priority":"P2","status":"planned","acceptance":["Exports compatible audio media and edit decisions with a validation report." ]},
-    {"id":"project_archive","name":"Project archive","priority":"P1","status":"planned","acceptance":["Packages project metadata, media manifest, and checksums without copying cache by default." ]}
-  ]
+ "domain": "interchange",
+ "feature_defaults": {
+  "implementation": {
+   "components": [],
+   "notes": "No interchange runtime exists."
+  },
+  "tests": {
+   "unit": [],
+   "integration": [],
+   "fixture": []
+  },
+  "platforms": {
+   "windows": "target",
+   "macos": "future",
+   "linux": "future"
+  },
+  "hardware": {
+   "cpu_fallback": "required",
+   "gpu_optional": true,
+   "pro_io": "not_required"
+  },
+  "known_gaps": [
+   "No validated interchange importer/exporter exists."
+  ],
+  "licensing_notes": "Format specifications and vendor interop testing must be tracked by version."
+ },
+ "features": [
+  {
+   "id": "xml_import",
+   "name": "XML import",
+   "priority": "P2",
+   "status": "implemented",
+   "acceptance": [
+    "Imports documented XML subset with a loss report."
+   ],
+   "tests": {
+    "unit": [
+     "FcpXmlRoundTripsEverythingItCarriesAtWholeFrames",
+     "AnXmlFileThatIsNotAFinalCutSequenceIsRefusedWithAReason"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "interchange/FcpXml.cpp",
+     "core/util/XmlParse.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "xml_export",
+   "name": "XML export",
+   "priority": "P2",
+   "status": "implemented",
+   "acceptance": [
+    "Exports a documented XML mapping with unsupported-feature diagnostics."
+   ],
+   "tests": {
+    "unit": [
+     "FcpXmlRoundTripsEverythingItCarriesAtWholeFrames",
+     "TimesBetweenFramesAreRoundedAndSaidSoWhenWritingFcpXml"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "interchange/FcpXml.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "edl_import",
+   "name": "EDL import",
+   "priority": "P2",
+   "status": "implemented",
+   "acceptance": [
+    "Imports EDL events with reel/timecode interpretation reporting."
+   ],
+   "tests": {
+    "unit": [
+     "AnEdlHasTheEventsTheDissolveTheSpeedChangeAndTheLocator",
+     "AnEdlRoundTripsEverythingItCanHold"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "interchange/Edl.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "edl_export",
+   "name": "EDL export",
+   "priority": "P2",
+   "status": "implemented",
+   "acceptance": [
+    "Exports conformable EDL with explicit track and effect limitations."
+   ],
+   "tests": {
+    "unit": [
+     "AnEdlRoundTripsEverythingItCanHold",
+     "WhatAnEdlCannotHoldIsReportedOnTheWayOut"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "interchange/Edl.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  },
+  {
+   "id": "aaf_import",
+   "name": "AAF import",
+   "priority": "P2",
+   "status": "planned",
+   "acceptance": [
+    "Imports a tested AAF subset with a loss report."
+   ]
+  },
+  {
+   "id": "aaf_export",
+   "name": "AAF export",
+   "priority": "P2",
+   "status": "planned",
+   "acceptance": [
+    "Exports a tested AAF subset with a loss report."
+   ]
+  },
+  {
+   "id": "fcpxml_import",
+   "name": "FCPXML import",
+   "priority": "P2",
+   "status": "planned",
+   "acceptance": [
+    "Imports a documented FCPXML mapping with diagnostics."
+   ]
+  },
+  {
+   "id": "fcpxml_export",
+   "name": "FCPXML export",
+   "priority": "P2",
+   "status": "planned",
+   "acceptance": [
+    "Exports a documented FCPXML mapping with diagnostics."
+   ]
+  },
+  {
+   "id": "omf_audio_export",
+   "name": "OMF audio export",
+   "priority": "P2",
+   "status": "planned",
+   "acceptance": [
+    "Exports compatible audio media and edit decisions with a validation report."
+   ]
+  },
+  {
+   "id": "project_archive",
+   "name": "Project archive",
+   "priority": "P1",
+   "status": "partial",
+   "acceptance": [
+    "Packages project metadata, media manifest, and checksums without copying cache by default."
+   ],
+   "tests": {
+    "unit": [
+     "CollectingAProjectCopiesExactlyWhatItUsesAndTheCopyOpensFromTheFolderAlone",
+     "WhatCannotBeCollectedIsNamedAndTheFolderIsNotCalledComplete",
+     "ACollectedFolderThatIsMovedIsMadeToOpenAgainFromItsManifest"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "core/project/Consolidate.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
+  }
+ ]
 }

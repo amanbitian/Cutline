@@ -414,7 +414,9 @@ void RenderCache::Store(const RenderKey& key, const media::VideoFrame& frame) {
   {
     const std::lock_guard<std::mutex> lock(mutex_);
     ++stats_.stores;
-    InsertMemoryLocked(key, std::make_shared<media::VideoFrame>(frame.Clone()));
+    // Cache entries are immutable. Share the backing storage and let a later
+    // writer detach, avoiding a full-frame copy on every store.
+    InsertMemoryLocked(key, std::make_shared<media::VideoFrame>(frame.Share()));
     if (!config_.disk_directory.empty() && disk_.count(key) == 0) WriteDiskLocked(key, frame);
   }
   if (config_.quota_manager) {

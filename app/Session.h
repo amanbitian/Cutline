@@ -191,7 +191,16 @@ class Session : public QObject {
   [[nodiscard]] const std::vector<time::RationalTime>& markers() const { return markers_; }
   [[nodiscard]] std::optional<time::RationalTime> markInTime() const { return mark_in_; }
   [[nodiscard]] std::optional<time::RationalTime> markOutTime() const { return mark_out_; }
-  [[nodiscard]] QImage currentFrame() const { return frame_; }
+  [[nodiscard]] QImage currentFrame() const {
+    const std::lock_guard<std::mutex> lock(frame_mutex_);
+    return frame_;
+  }
+  [[nodiscard]] render::gpu::PresentationFrame currentGpuFrame() const {
+    const std::lock_guard<std::mutex> lock(frame_mutex_);
+    return gpu_frame_;
+  }
+  // Called by the monitor after Qt Quick's D3D11 scene graph is ready.
+  void SetPresentationDevice(void* device, void* context);
   [[nodiscard]] QSize currentFrameSequenceSize() const;
   // Runs a plan as one undoable step; returns whether it happened, telling the status line why not.
   bool Apply(const ui::EditPlan& plan);
@@ -626,7 +635,7 @@ class Session : public QObject {
   [[nodiscard]] std::optional<std::string> PrimaryClip() const;
   [[nodiscard]] std::set<std::string> SelectedOrUnderPlayhead() const;
   void DoCommand(const std::string& id);
-  void OnFrame(QImage image, std::uint64_t serial, const QString& info);
+  void OnFrame(QImage image, render::gpu::PresentationFrame gpu_frame, std::uint64_t serial, const QString& info);
   void RefreshScopes();
 
   // multicam
@@ -706,9 +715,14 @@ class Session : public QObject {
   std::unique_ptr<playback::PlaybackEngine> engine_;
   std::unique_ptr<audio::AudioSink> sink_;
   std::unique_ptr<ui::FramePresenter> presenter_;
+  mutable std::mutex frame_mutex_;
+  render::gpu::PresentationFrame gpu_frame_;
+  void* presentation_device_{nullptr};
+  void* presentation_context_{nullptr};
   std::shared_ptr<render::FlowCache> flow_cache_;
   std::unique_ptr<render::AsyncScopes> scopes_;
   mutable std::mutex scopes_mutex_;
+  std::atomic<bool> scope_sample_due_{true};
   std::optional<render::AsyncScopeResult> scope_result_;
   QString scope_mode_;
   std::uint64_t scope_generation_{0};
@@ -719,6 +733,9 @@ class Session : public QObject {
   ui::WorkspaceSet workspaces_;
   ui::JobTracker jobs_;
   std::unique_ptr<ui::JobRunner> runner_;
+  // Imports share the project revision and usually the same disk. Serialising
+  // them avoids revision races and competing full-file copy/verification I/O.
+  std::timed_mutex ingest_mutex_;
   ui::LutLibrary luts_;
   std::vector<ui::ClipSpec> clipboard_;
   std::optional<time::RationalTime> mark_in_, mark_out_;

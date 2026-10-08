@@ -5,21 +5,106 @@
 #include <QMouseEvent>
 #include <QPainter>
 #include <QQuickWindow>
+#include <QSGRendererInterface>
+#include <QSGSimpleRectNode>
+#include <QSGSimpleTextureNode>
+#include <QtQuick/qsgtexture_platform.h>
 #include <QWheelEvent>
 
 namespace cutline::app {
 
+namespace {
+
+class LeasedTextureNode final : public QSGSimpleTextureNode {
+ public:
+  std::shared_ptr<void> lease;
+};
+
+}  // namespace
+
+class MonitorVideoItem final : public QQuickItem {
+ public:
+  explicit MonitorVideoItem(MonitorItem* owner) : QQuickItem(owner), owner_(owner) {
+    setFlag(ItemHasContents, true);
+    setZ(-1.0);
+  }
+
+ protected:
+  QSGNode* updatePaintNode(QSGNode* old_node, UpdatePaintNodeData*) override {
+    delete old_node;
+    auto* root = new QSGNode;
+    root->appendChildNode(new QSGSimpleRectNode(boundingRect(), QColor("#0b0c0c")));
+    if (owner_->session_ == nullptr || window() == nullptr) return root;
+
+    const auto target = owner_->PictureRect();
+    const auto background = QString::fromStdString(owner_->session_->prefs().GetText("monitor.background"));
+    if (background == "checker") {
+      QImage checker(24, 24, QImage::Format_RGBA8888_Premultiplied);
+      checker.fill(QColor("#1d1f1f"));
+      QPainter painter(&checker);
+      painter.fillRect(0, 0, 12, 12, QColor("#2a2c2c"));
+      painter.fillRect(12, 12, 12, 12, QColor("#2a2c2c"));
+      auto* checker_texture = window()->createTextureFromImage(checker, QQuickWindow::TextureHasAlphaChannel);
+      checker_texture->setHorizontalWrapMode(QSGTexture::Repeat);
+      checker_texture->setVerticalWrapMode(QSGTexture::Repeat);
+      auto* checker_node = new QSGSimpleTextureNode;
+      checker_node->setOwnsTexture(true);
+      checker_node->setTexture(checker_texture);
+      checker_node->setRect(target);
+      checker_node->setSourceRect(QRectF(0, 0, target.width(), target.height()));
+      root->appendChildNode(checker_node);
+    } else {
+      root->appendChildNode(new QSGSimpleRectNode(target, background == "grey" ? QColor("#777777") : QColor("#000000")));
+    }
+
+    QSGTexture* texture = nullptr;
+    std::shared_ptr<void> lease;
+    const auto gpu = owner_->session_->currentGpuFrame();
+    auto* renderer = window()->rendererInterface();
+    if (gpu.valid() && renderer != nullptr && renderer->graphicsApi() == QSGRendererInterface::Direct3D11 &&
+        renderer->getResource(window(), QSGRendererInterface::DeviceResource) == gpu.device) {
+      texture = QNativeInterface::QSGD3D11Texture::fromNative(
+          gpu.texture, window(), QSize(gpu.width, gpu.height), QQuickWindow::TextureHasAlphaChannel);
+      lease = gpu.lifetime;
+    } else {
+      const auto image = owner_->session_->currentFrame();
+      if (!image.isNull()) texture = window()->createTextureFromImage(image, QQuickWindow::TextureHasAlphaChannel);
+    }
+    if (texture != nullptr) {
+      auto* node = new LeasedTextureNode;
+      node->setOwnsTexture(true);
+      node->setTexture(texture);
+      node->setRect(target);
+      node->setFiltering(QSGTexture::Linear);
+      node->lease = std::move(lease);
+      root->appendChildNode(node);
+    }
+    return root;
+  }
+
+ private:
+  MonitorItem* owner_;
+};
+
 MonitorItem::MonitorItem(QQuickItem* parent) : QQuickPaintedItem(parent) {
   setAcceptedMouseButtons(Qt::LeftButton | Qt::MiddleButton);
   setAntialiasing(true);
-  setOpaquePainting(true);
+  setOpaquePainting(false);
+  setFillColor(Qt::transparent);
+  video_item_ = new MonitorVideoItem(this);
+  connect(this, &QQuickItem::windowChanged, this, &MonitorItem::AttachWindow);
 }
 
 void MonitorItem::setSession(Session* session) {
   if (session_ == session) return;
+  if (session_ != nullptr) disconnect(session_, nullptr, this, nullptr);
   session_ = session;
+  announced_device_ = nullptr;
   if (session_ != nullptr) {
-    connect(session_, &Session::frameReady, this, [this] { update(); });
+    connect(session_, &Session::frameReady, this, [this] {
+      video_item_->update();
+      update();
+    });
     connect(session_, &Session::playheadChanged, this, [this] { update(); });
     connect(session_, &Session::maskChanged, this, [this] { update(); });
     connect(session_, &Session::sequenceChanged, this, [this] { update(); });
@@ -33,7 +118,27 @@ void MonitorItem::setSession(Session* session) {
     });
   }
   UpdateDisplay();
+  video_item_->update();
+  if (window() != nullptr) AttachWindow(window());
   emit sessionChanged();
+}
+
+void MonitorItem::AttachWindow(QQuickWindow* quick_window) {
+  if (quick_window == nullptr || quick_window == attached_window_) return;
+  if (window_sync_connection_) disconnect(window_sync_connection_);
+  attached_window_ = quick_window;
+  announced_device_ = nullptr;
+  window_sync_connection_ = connect(quick_window, &QQuickWindow::beforeSynchronizing, this, [this, quick_window] {
+    auto* renderer = quick_window->rendererInterface();
+    if (renderer == nullptr || renderer->graphicsApi() != QSGRendererInterface::Direct3D11) return;
+    void* device = renderer->getResource(quick_window, QSGRendererInterface::DeviceResource);
+    void* context = renderer->getResource(quick_window, QSGRendererInterface::DeviceContextResource);
+    if (device == nullptr || device == announced_device_) return;
+    announced_device_ = device;
+    QMetaObject::invokeMethod(this, [this, device, context] {
+      if (session_ != nullptr) session_->SetPresentationDevice(device, context);
+    }, Qt::QueuedConnection);
+  }, Qt::DirectConnection);
 }
 
 QString MonitorItem::zoomMode() const {
@@ -56,6 +161,10 @@ void MonitorItem::setZoomMode(const QString& mode) {
 
 void MonitorItem::geometryChange(const QRectF& new_geometry, const QRectF& old_geometry) {
   QQuickPaintedItem::geometryChange(new_geometry, old_geometry);
+  if (video_item_ != nullptr) {
+    video_item_->setWidth(new_geometry.width());
+    video_item_->setHeight(new_geometry.height());
+  }
   UpdateDisplay();
 }
 
@@ -69,33 +178,19 @@ void MonitorItem::UpdateDisplay() {
 }
 
 void MonitorItem::paint(QPainter* painter) {
-  painter->fillRect(boundingRect(), QColor("#0b0c0c"));
+  painter->setCompositionMode(QPainter::CompositionMode_Source);
+  painter->fillRect(boundingRect(), Qt::transparent);
+  painter->setCompositionMode(QPainter::CompositionMode_SourceOver);
   if (session_ == nullptr) return;
   const auto image = session_->currentFrame();
+  const auto gpu = session_->currentGpuFrame();
   const auto sequence_size = session_->currentFrameSequenceSize();
   const auto window_size = ui::SizePx{static_cast<int>(width()), static_cast<int>(height())};
   const auto rect = ui::FrameRect({sequence_size.width(), sequence_size.height()}, 1.0, window_size, view_);
   const QRectF target(rect.x, rect.y, rect.width, rect.height);
-  if (image.isNull()) {
+  if (image.isNull() && !gpu.valid()) {
     painter->setPen(QColor("#5c6462"));
     painter->drawText(boundingRect(), Qt::AlignCenter, session_->projectOpen() ? tr("Nothing at the playhead") : tr("No project open"));
-  } else {
-    // Behind a picture with transparency: a checker, black or grey, per the preference.
-    const auto background = QString::fromStdString(session_->prefs().GetText("monitor.background"));
-    if (background == "checker") {
-      painter->save();
-      painter->setClipRect(target);
-      for (int y = 0; y * 12 < target.height(); ++y) {
-        for (int x = 0; x * 12 < target.width(); ++x) {
-          painter->fillRect(QRectF(target.x() + x * 12, target.y() + y * 12, 12, 12), ((x + y) % 2 == 0) ? QColor("#2a2c2c") : QColor("#1d1f1f"));
-        }
-      }
-      painter->restore();
-    } else {
-      painter->fillRect(target, background == "grey" ? QColor("#777777") : QColor("#000000"));
-    }
-    painter->setRenderHint(QPainter::SmoothPixmapTransform, true);
-    painter->drawImage(target, image);
   }
 
   ui::OverlayOptions overlays;

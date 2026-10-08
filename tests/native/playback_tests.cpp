@@ -416,6 +416,23 @@ CUTLINE_TEST(EditingDropsCachedPicturesButKeepsDecodersOpen) {
   CHECK(engine.statistics().cache_misses > before);
 }
 
+CUTLINE_TEST(AVisualEditKeepsDecodedMediaWhileAMediaChangeInvalidatesIt) {
+  cutline::media::RegisterAllProviders();
+  PlaybackEngine engine(SingleTrackGraph(), CounterLocator(), FloatConfig());
+  (void)engine.RenderFrame(Seconds(1));
+  const auto warm = engine.statistics();
+
+  engine.UpdateSequence(SingleTrackGraph(), false);
+  (void)engine.RenderFrame(Seconds(1));
+  const auto visual_edit = engine.statistics();
+  CHECK_EQ(visual_edit.cache_misses, warm.cache_misses);
+  CHECK(visual_edit.cache_hits > warm.cache_hits);
+
+  engine.UpdateSequence(SingleTrackGraph(), true);
+  (void)engine.RenderFrame(Seconds(1));
+  CHECK(engine.statistics().cache_misses > visual_edit.cache_misses);
+}
+
 CUTLINE_TEST(NestedSequencesAreComposedRecursively) {
   cutline::media::RegisterAllProviders();
   auto inner = MakeSequence("seq-inner");

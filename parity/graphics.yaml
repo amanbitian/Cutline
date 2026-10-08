@@ -133,10 +133,30 @@
    "id": "lower_thirds",
    "name": "Lower-third templates",
    "priority": "P1",
-   "status": "planned",
+   "status": "implemented",
    "acceptance": [
     "Creates reusable lower-third templates with editable fields."
-   ]
+   ],
+   "tests": {
+    "unit": [
+     "EveryBuiltInTemplateIsValidDrawsWithItsDefaultsAndMakesControlsForWhatAPersonChanges",
+     "ATemplateIsInstalledOnceMadeIntoTitlesAndItsValuesChangedInOneStep"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "ui/GraphicsDesigner.cpp",
+     "effects/GraphicsDocument.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
   },
   {
    "id": "responsive_design_time",
@@ -189,10 +209,29 @@
    "id": "font_management",
    "name": "Font management",
    "priority": "P1",
-   "status": "planned",
+   "status": "partial",
    "acceptance": [
     "Records required fonts and reports substitution in project and export."
-   ]
+   ],
+   "tests": {
+    "unit": [
+     "TemplateControlsTakeColoursAndRangesAndFontListsFallBackToWhatIsInstalled",
+     "CuesShowingTogetherStackAndAMissingFontIsReported"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "render/TextRaster.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
   }
  ]
 }

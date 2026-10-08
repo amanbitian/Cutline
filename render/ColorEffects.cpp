@@ -404,7 +404,7 @@ void BuildCurveTable(float a, float b, float c, float* table) {
 
 bool IsGpuColorEffect(const std::string& type) {
   return type == "color_wheels" || type == "curves" || type == "channel_mixer" || type == "tint" || type == "black_and_white" || type == "color_adjust" ||
-         type == "hue_curves" || type == "hsl_secondary";
+         type == "hue_curves" || type == "hsl_secondary" || type == "posterize";
 }
 
 std::optional<GpuColorOp> DescribeColorOp(const SampledEffect& effect) {
@@ -538,6 +538,13 @@ std::optional<GpuColorOp> DescribeColorOp(const SampledEffect& effect) {
     b[1][1] = shadows;
     b[1][2] = highlights;
     op.kind = GpuColorKind::ColorAdjust;
+    return op;
+  }
+  if (type == "posterize") {
+    const auto levels = static_cast<int>(std::lround(std::clamp(Param(effect, "levels", 256.0f), 2.0f, 256.0f)));
+    if (levels >= 256) return std::nullopt;
+    b[0][1] = static_cast<float>(levels - 1);
+    op.kind = GpuColorKind::Posterize;
     return op;
   }
   return std::nullopt;

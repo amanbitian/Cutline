@@ -1,0 +1,89 @@
+GPU adapter=AMD Radeon AI PRO R9700
+EFFECT 1920x1080 opacity gpu=1 cpu_ms=7.0489 gpu_ms=4.7191 errors=0 skipped=0
+EFFECT 1920x1080 motion gpu=1 cpu_ms=7.8993 gpu_ms=3.6451 errors=0 skipped=0
+EFFECT 1920x1080 transform gpu=1 cpu_ms=7.9801 gpu_ms=3.7384 errors=0 skipped=0
+EFFECT 1920x1080 crop gpu=1 cpu_ms=8.6784 gpu_ms=4.3905 errors=0 skipped=0
+EFFECT 1920x1080 grade gpu=1 cpu_ms=6.8176 gpu_ms=4.4491 errors=0 skipped=0
+EFFECT 1920x1080 lumetri gpu=1 cpu_ms=7.0283 gpu_ms=4.3853 errors=0 skipped=0
+EFFECT 1920x1080 solid gpu=1 cpu_ms=6.3879 gpu_ms=1.7402 errors=0 skipped=0
+EFFECT 1920x1080 blur gpu=0 cpu_ms=9.1536 errors=0 skipped=0
+EFFECT 1920x1080 sharpen gpu=0 cpu_ms=8.9303 errors=0 skipped=0
+EFFECT 1920x1080 vignette gpu=0 cpu_ms=7.0835 errors=0 skipped=0
+EFFECT 1920x1080 lens_correction gpu=0 cpu_ms=9.4419 errors=0 skipped=0
+EFFECT 1920x1080 wide_angle gpu=0 cpu_ms=9.335 errors=0 skipped=0
+EFFECT 1920x1080 input_colorspace gpu=0 cpu_ms=6.1274 errors=0 skipped=0
+EFFECT 1920x1080 lut gpu=1 cpu_ms=8.454 gpu_ms=4.0439 errors=0 skipped=0
+EFFECT 1920x1080 stabilizer gpu=1 cpu_ms=8.7257 gpu_ms=4.4615 errors=0 skipped=0
+EFFECT 1920x1080 rolling_shutter gpu=0 cpu_ms=9.504 errors=0 skipped=0
+EFFECT 1920x1080 mesh_warp gpu=0 cpu_ms=9.7606 errors=0 skipped=0
+EFFECT 1920x1080 blend_mode gpu=0 cpu_ms=18.3238 errors=0 skipped=0
+EFFECT 1920x1080 time_remap gpu=1 errors=0 skipped=0
+EFFECT 1920x1080 frame_interpolation gpu=0 errors=0 skipped=0
+EFFECT 1920x1080 graphic gpu=0 errors=0 skipped=0
+EFFECT 1920x1080 motion_graphics_template gpu=0 errors=0 skipped=0
+EFFECT 1920x1080 gaussian_blur gpu=0 cpu_ms=10.5636 errors=0 skipped=0
+EFFECT 1920x1080 directional_blur gpu=0 cpu_ms=30.7022 errors=0 skipped=0
+EFFECT 1920x1080 unsharp_mask gpu=0 cpu_ms=11.0706 errors=0 skipped=0
+EFFECT 1920x1080 glow gpu=0 cpu_ms=12.2151 errors=0 skipped=0
+EFFECT 1920x1080 drop_shadow gpu=0 cpu_ms=12.4536 errors=0 skipped=0
+EFFECT 1920x1080 noise_reduction gpu=0 cpu_ms=85.4396 errors=0 skipped=0
+EFFECT 1920x1080 channel_mixer gpu=1 cpu_ms=7.2003 gpu_ms=3.8872 errors=0 skipped=0
+EFFECT 1920x1080 black_and_white gpu=1 cpu_ms=7.0812 gpu_ms=3.4913 errors=0 skipped=0
+EFFECT 1920x1080 tint gpu=1 cpu_ms=7.038 gpu_ms=3.8958 errors=0 skipped=0
+EFFECT 1920x1080 posterize gpu=0 cpu_ms=7.7889 errors=0 skipped=0
+EFFECT 1920x1080 wave_warp gpu=0 cpu_ms=10.5668 errors=0 skipped=0
+EFFECT 1920x1080 bulge gpu=0 cpu_ms=7.9755 errors=0 skipped=0
+EFFECT 1920x1080 chroma_key gpu=0 cpu_ms=9.4812 errors=0 skipped=0
+EFFECT 1920x1080 luma_key gpu=0 cpu_ms=9.2612 errors=0 skipped=0
+EFFECT 1920x1080 color_wheels gpu=1 cpu_ms=7.6474 gpu_ms=3.7475 errors=0 skipped=0
+EFFECT 1920x1080 curves gpu=1 cpu_ms=7.7169 gpu_ms=3.7964 errors=0 skipped=0
+EFFECT 1920x1080 hue_curves gpu=1 cpu_ms=12.3137 gpu_ms=5.9045 errors=0 skipped=0
+EFFECT 1920x1080 color_adjust gpu=1 cpu_ms=8.1636 gpu_ms=4.4767 errors=0 skipped=0
+EFFECT 1920x1080 hsl_secondary gpu=1 cpu_ms=10.1242 gpu_ms=4.942 errors=0 skipped=0
+GPU_LIMIT two_luts supported=1 reason=
+GPU_LIMIT nine_grades supported=1 reason=
+GPU_LIMIT blur_zero supported=1 reason=
+EFFECT 3840x2160 opacity gpu=1 cpu_ms=32.8578 gpu_ms=19.6478 errors=0 skipped=0
+EFFECT 3840x2160 motion gpu=1 cpu_ms=35.3521 gpu_ms=19.367 errors=0 skipped=0
+EFFECT 3840x2160 transform gpu=1 cpu_ms=34.9177 gpu_ms=19.629 errors=0 skipped=0
+EFFECT 3840x2160 crop gpu=1 cpu_ms=37.4222 gpu_ms=19.4005 errors=0 skipped=0
+EFFECT 3840x2160 grade gpu=1 cpu_ms=32.8577 gpu_ms=19.3771 errors=0 skipped=0
+EFFECT 3840x2160 lumetri gpu=1 cpu_ms=32.5879 gpu_ms=19.3367 errors=0 skipped=0
+EFFECT 3840x2160 solid gpu=1 cpu_ms=27.748 gpu_ms=6.6444 errors=0 skipped=0
+EFFECT 3840x2160 blur gpu=0 cpu_ms=51.5452 errors=0 skipped=0
+EFFECT 3840x2160 sharpen gpu=0 cpu_ms=47.3919 errors=0 skipped=0
+EFFECT 3840x2160 vignette gpu=0 cpu_ms=32.5478 errors=0 skipped=0
+EFFECT 3840x2160 lens_correction gpu=0 cpu_ms=46.7621 errors=0 skipped=0
+EFFECT 3840x2160 wide_angle gpu=0 cpu_ms=47.0743 errors=0 skipped=0
+EFFECT 3840x2160 input_colorspace gpu=0 cpu_ms=30.4407 errors=0 skipped=0
+EFFECT 3840x2160 lut gpu=1 cpu_ms=37.486 gpu_ms=19.3557 errors=0 skipped=0
+EFFECT 3840x2160 stabilizer gpu=1 cpu_ms=37.8148 gpu_ms=19.3496 errors=0 skipped=0
+EFFECT 3840x2160 rolling_shutter gpu=0 cpu_ms=46.8424 errors=0 skipped=0
+EFFECT 3840x2160 mesh_warp gpu=0 cpu_ms=47.3885 errors=0 skipped=0
+EFFECT 3840x2160 blend_mode gpu=0 cpu_ms=79.9682 errors=0 skipped=0
+EFFECT 3840x2160 time_remap gpu=1 errors=0 skipped=0
+EFFECT 3840x2160 frame_interpolation gpu=0 errors=0 skipped=0
+EFFECT 3840x2160 graphic gpu=0 errors=0 skipped=0
+EFFECT 3840x2160 motion_graphics_template gpu=0 errors=0 skipped=0
+EFFECT 3840x2160 gaussian_blur gpu=0 cpu_ms=50.6419 errors=0 skipped=0
+EFFECT 3840x2160 directional_blur gpu=0 cpu_ms=124.342 errors=0 skipped=0
+EFFECT 3840x2160 unsharp_mask gpu=0 cpu_ms=58.3522 errors=0 skipped=0
+EFFECT 3840x2160 glow gpu=0 cpu_ms=66.9303 errors=0 skipped=0
+EFFECT 3840x2160 drop_shadow gpu=0 cpu_ms=67.1907 errors=0 skipped=0
+EFFECT 3840x2160 noise_reduction gpu=0 cpu_ms=322.18 errors=0 skipped=0
+EFFECT 3840x2160 channel_mixer gpu=1 cpu_ms=33.4558 gpu_ms=19.6603 errors=0 skipped=0
+EFFECT 3840x2160 black_and_white gpu=1 cpu_ms=33.0425 gpu_ms=19.8366 errors=0 skipped=0
+EFFECT 3840x2160 tint gpu=1 cpu_ms=33.2231 gpu_ms=19.7981 errors=0 skipped=0
+EFFECT 3840x2160 posterize gpu=0 cpu_ms=34.1839 errors=0 skipped=0
+EFFECT 3840x2160 wave_warp gpu=0 cpu_ms=48.9971 errors=0 skipped=0
+EFFECT 3840x2160 bulge gpu=0 cpu_ms=40.3544 errors=0 skipped=0
+EFFECT 3840x2160 chroma_key gpu=0 cpu_ms=45.4105 errors=0 skipped=0
+EFFECT 3840x2160 luma_key gpu=0 cpu_ms=45.6152 errors=0 skipped=0
+EFFECT 3840x2160 color_wheels gpu=1 cpu_ms=35.0369 gpu_ms=19.5794 errors=0 skipped=0
+EFFECT 3840x2160 curves gpu=1 cpu_ms=33.7288 gpu_ms=19.3923 errors=0 skipped=0
+EFFECT 3840x2160 hue_curves gpu=1 cpu_ms=52.1103 gpu_ms=19.9737 errors=0 skipped=0
+EFFECT 3840x2160 color_adjust gpu=1 cpu_ms=36.1936 gpu_ms=19.556 errors=0 skipped=0
+EFFECT 3840x2160 hsl_secondary gpu=1 cpu_ms=43.5126 gpu_ms=19.5301 errors=0 skipped=0
+GPU_LIMIT two_luts supported=1 reason=
+GPU_LIMIT nine_grades supported=1 reason=
+GPU_LIMIT blur_zero supported=1 reason=

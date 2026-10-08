@@ -40,20 +40,32 @@ void LutLibrary::Rescan() {
   entries_.clear();
   std::set<std::filesystem::path> seen;
   for (const auto& folder : folders_) {
-    std::error_code error;
-    if (!std::filesystem::is_directory(folder, error)) continue;
-    for (std::filesystem::recursive_directory_iterator it(folder, std::filesystem::directory_options::skip_permission_denied, error), end; it != end; it.increment(error)) {
-      if (error) break;
-      if (!it->is_regular_file(error) || Lower(it->path().extension().string()) != ".cube") continue;
-      const auto canonical = std::filesystem::weakly_canonical(it->path(), error);
+    std::error_code folder_error;
+    if (!std::filesystem::is_directory(folder, folder_error)) continue;
+    for (std::filesystem::recursive_directory_iterator it(
+             folder, std::filesystem::directory_options::skip_permission_denied, folder_error),
+         end;
+         it != end;) {
+      const auto path = it->path();
+      std::error_code increment_error;
+      it.increment(increment_error);
+      std::error_code entry_error;
+      if (!std::filesystem::is_regular_file(path, entry_error) || Lower(path.extension().string()) != ".cube") continue;
+      auto canonical = std::filesystem::weakly_canonical(path, entry_error);
+      if (entry_error) {
+        entry_error.clear();
+        canonical = std::filesystem::absolute(path, entry_error);
+      }
+      if (entry_error) canonical = path.lexically_normal();
       if (!seen.insert(canonical).second) continue;
       LutEntry entry;
-      entry.path = it->path();
-      entry.name = it->path().stem().string();
+      entry.path = path;
+      entry.name = path.stem().string();
       entry.folder = folder.string();
-      entry.bytes = it->file_size(error);
+      entry.bytes = std::filesystem::file_size(path, entry_error);
+      if (entry_error) entry.bytes = 0;
       try {
-        const auto lut = render::CubeLut::Load(it->path());
+        const auto lut = render::CubeLut::Load(path);
         entry.size = lut.size();
         entry.curves = lut.kind() == render::CubeLut::Kind::Curves1D;
       } catch (const std::exception& e) {

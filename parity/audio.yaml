@@ -245,10 +245,28 @@
    "id": "audio_sync_alignment",
    "name": "Audio synchronization",
    "priority": "P1",
-   "status": "planned",
+   "status": "partial",
    "acceptance": [
     "Produces reviewable alignment results with confidence/provenance."
-   ]
+   ],
+   "tests": {
+    "unit": [
+     "MulticamAudioSyncUsesLocalCrossCorrelationAndReportsConfidence"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "timeline/Multicam.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
   },
   {
    "id": "loudness_metering",

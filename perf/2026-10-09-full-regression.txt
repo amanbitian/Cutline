@@ -1,0 +1,38 @@
+Cutline optimization audit regression record
+Date: 2026-10-09
+
+Environment:
+  CUTLINE_STRICT=1
+  CUTLINE_TRACE=1
+  CUTLINE_FIXTURE_DIR supplied by CTest
+  CUTLINE_GOLDEN_DIR supplied by CTest
+  Qt application tests use their configured offscreen platform
+
+Complete fixture-backed run after CPU-effect, selective-invalidation, export-pipeline and LUT fixes:
+  13/13 CTest targets passed
+  0 failed targets
+  wall time: 368.23 seconds
+
+Individual registry totals:
+  native: 757 cases in 12 suites
+  application: 32 cases
+  passed: 788
+  skipped: 1 (ExportIsRefusedWhenNothingCanWrite; this build has working encoders)
+
+Focused rebuild/retest after variable-size export support:
+  cutline_export_tests passed
+  35/36 registry cases passed, 1 inapplicable skip
+  CTest wall time: 12.26 seconds
+
+Focused rebuild/retest after ingest serialization:
+  cutline_app_tests passed
+  32/32 registry cases passed
+  CTest wall time: 170.12 seconds
+
+Repository checks:
+  scripts/check-docs.js passed: 757 tests in 12 suites; 14 documents checked
+  scripts/cross-check-parity.js passed: 94/94 implemented claims name existing tests
+  git diff --check passed (only existing CRLF conversion warnings)
+
+Note: scripts/cross-check-parity.js --execute uses the separate, stale build/native tree and
+reported failures there. The rebuilt build/app CTest tree above is the authoritative run.

@@ -95,10 +95,28 @@
    "id": "dip_to_color",
    "name": "Dip to color",
    "priority": "P1",
-   "status": "planned",
+   "status": "partial",
    "acceptance": [
     "Composites outgoing/incoming frames through a configurable color."
-   ]
+   ],
+   "tests": {
+    "unit": [
+     "PushesSlidesAndDipsMoveAndDarkenTheWayTheirNamesSayAndStaySharp"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "render/Transitions.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
   },
   {
    "id": "audio_crossfade",
@@ -163,10 +181,28 @@
    "id": "transition_handle_diagnostics",
    "name": "Transition handle diagnostics",
    "priority": "P1",
-   "status": "planned",
+   "status": "partial",
    "acceptance": [
     "Explains insufficient media handles before applying a transition."
-   ]
+   ],
+   "tests": {
+    "unit": [
+     "ATransitionIsAddedAtTheCutKeptWithinTheHandlesAndRefusedWhereThereIsNoRoomOrAnotherIsThere"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "ui/Transitions.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
   },
   {
    "id": "custom_transition_shaders",

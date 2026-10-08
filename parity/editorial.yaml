@@ -231,10 +231,28 @@
    "id": "sequence_start_end",
    "name": "Sequence start/end navigation",
    "priority": "P0",
-   "status": "planned",
+   "status": "implemented",
    "acceptance": [
     "Moves playhead to deterministic sequence boundaries."
-   ]
+   ],
+   "tests": {
+    "unit": [
+     "TheTransportPlaysShuttlesStepsAndStopsOrLoopsAtTheEnds"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "ui/Transport.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
   },
   {
    "id": "master_clip_properties",

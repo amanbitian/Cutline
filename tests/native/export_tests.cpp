@@ -250,6 +250,30 @@ CUTLINE_TEST(ExportWritesTheExpectedFrameCount) {
   std::filesystem::remove(path);
 }
 
+CUTLINE_TEST(ExportCanResizeTheSequenceAtDeliveryQuality) {
+  cutline::media::RegisterAllProviders();
+  SKIP_UNLESS(cutline::media::HasFileEncoding(), "built without FFmpeg");
+  const auto path = Scratch("resized.mkv");
+  std::filesystem::remove(path);
+
+  PlaybackEngine engine(BuildGraph(1), CounterLocator(), Config());
+  auto request = LosslessRequest(path);
+  request.video.width = 96;
+  request.video.height = 54;
+  request.include_audio = false;
+  request.out = RationalTime(1, 25);
+  const auto result = cutline::exporter::Export(engine, request);
+  CHECK_EQ(result.video_frames, std::int64_t{1});
+
+  auto decoded = cutline::media::SourceRegistry::Instance().Open(path.string());
+  const auto frame = decoded->ReadVideo(Seconds(0));
+  CHECK(frame.has_value());
+  CHECK_EQ(frame->width(), 96);
+  CHECK_EQ(frame->height(), 54);
+  decoded.reset();
+  std::filesystem::remove(path);
+}
+
 CUTLINE_TEST(ExportedVideoDecodesBackToWhatTheMonitorRendered) {
   // The round trip. Every exported frame is compared against the frame the
   // monitor produces for the same timecode. A lossless RGB codec means the only
@@ -775,8 +799,8 @@ CUTLINE_TEST(AnExistingDeliverySurvivesAWriterFailure) {
   {
     auto writer = cutline::media::WriterRegistry::Instance().Open(settings);
     writer->WriteVideo(VideoFrame::Allocate(PixelFormat::Rgba8, 64, 36));
-    // A frame of the wrong size aborts the export part-way through.
-    CHECK_THROWS(writer->WriteVideo(VideoFrame::Allocate(PixelFormat::Rgba8, 32, 18)));
+    // An invalid frame aborts the export part-way through.
+    CHECK_THROWS(writer->WriteVideo(VideoFrame{}));
   }  // the writer is abandoned without Finish
   const auto bytes = ReadAll(path);
   CHECK_EQ(std::string(bytes.begin(), bytes.end()), std::string("keep"));
@@ -828,31 +852,6 @@ CUTLINE_TEST(TheDestinationAppearsOnlyWhenTheExportIsComplete) {
   CHECK(std::filesystem::exists(path));
   CHECK(Leftovers(path).empty());
   std::filesystem::remove(path);
-}
-
-CUTLINE_TEST(ExportAtAnotherSizeIsRefusedBeforeAnythingIsWritten) {
-  // Other sizes are not supported yet. That has to be a clear refusal up front,
-  // not an exception from deep inside the writer on the first frame after a
-  // file has already been created.
-  cutline::media::RegisterAllProviders();
-  SKIP_UNLESS(cutline::media::HasFileEncoding(), "built without FFmpeg");
-  const auto path = Scratch("resize.mkv");
-  std::filesystem::remove(path);
-
-  PlaybackEngine engine(BuildGraph(), CounterLocator(), Config());
-  auto request = LosslessRequest(path);
-  request.video.width = 96;
-  request.video.height = 54;
-  bool refused = false;
-  try {
-    const auto result = cutline::exporter::Export(engine, request);
-    (void)result;
-  } catch (const std::exception& error) {
-    refused = std::string(error.what()).find("size") != std::string::npos;
-  }
-  CHECK(refused);
-  CHECK(!std::filesystem::exists(path));
-  CHECK(Leftovers(path).empty());
 }
 
 // ------------------------------------------------------- presets, queue, checks ----
@@ -1107,7 +1106,12 @@ CUTLINE_TEST(APictureWithMoreThanEightBitsKeepsThemThroughAProResExport) {
   // And the engine an export is made on renders in 16 bits when the preset says so.
   PlaybackEngine monitor(BuildGraph(), CounterLocator(), Config());
   CHECK(monitor.output_format() == PixelFormat::Rgba8);
-  CHECK(monitor.ExportClone(PixelFormat::Rgba16)->output_format() == PixelFormat::Rgba16);
+  monitor.SetOutputSize(64, 36);
+  auto delivery = monitor.ExportClone(PixelFormat::Rgba16);
+  CHECK(delivery->output_format() == PixelFormat::Rgba16);
+  const auto delivered = delivery->RenderFrame(Seconds(0));
+  CHECK_EQ(delivered.width(), 192);
+  CHECK_EQ(delivered.height(), 108);
 }
 
 CUTLINE_TEST(EveryPresetThatWorksOnThisMachineProducesAFileThatPassesTheCheck) {

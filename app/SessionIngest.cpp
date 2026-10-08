@@ -15,7 +15,9 @@
 #include <QUrl>
 
 #include <algorithm>
+#include <chrono>
 #include <filesystem>
+#include <mutex>
 
 namespace cutline::app {
 
@@ -93,6 +95,11 @@ void Session::ingestFiles(const QStringList& urls, bool copy, bool verify, const
     }
     const auto title = std::string(item.copy ? "Copying and importing " : "Importing ") + item.source.filename().string();
     runner_->Run("ingest", title, [this, item, verify, choice](ui::JobContext& context) {
+      std::unique_lock<std::timed_mutex> serial(ingest_mutex_, std::defer_lock);
+      while (!serial.try_lock_for(std::chrono::milliseconds(100))) {
+        if (context.cancelled()) return;
+      }
+      if (context.cancelled()) return;
       std::string path = item.source.string();
       if (item.copy) {
         media::CopyOptions copy_options;

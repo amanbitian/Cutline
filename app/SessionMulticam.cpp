@@ -228,7 +228,8 @@ void Session::StartMulticamMonitor() {
         // Keep every tile at least a few pixels wide however many angles there are.
         return mc_monitor_->Render(*group, at, config);
       },
-      [this](media::VideoFrame frame, const RationalTime&, std::uint64_t) {
+      [this](ui::PresentedFrame presented, const RationalTime&, std::uint64_t) {
+        auto frame = std::move(presented.pixels);
         if (!frame.valid()) return;
         auto image = GridImage(frame);
         QMetaObject::invokeMethod(this, [this, image] {

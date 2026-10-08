@@ -1,0 +1,35 @@
+Cutline final GPU presentation/cache pass - 2026-10-09
+
+Machine
+- GPU: AMD Radeon AI PRO R9700, 32476 MiB dedicated memory
+- Platform/API: Windows, Direct3D 11, Qt Quick native texture import
+- Build used by the focused benchmark: current Debug audit build
+
+Focused 1920x1080 benchmark
+- Workload: three textured RGBA8 layers, motion and grade, five measured frames after warm-up
+- CPU compositor: 82.4 ms/frame
+- GPU compositor with CPU read-back: 11.1 ms/frame
+- GPU compositor with direct presentation texture: 1.3 ms/frame
+- Direct/read-back speed-up for this render call: approximately 8.5x
+- Direct presentation read-back time: 0 ms
+
+Correctness and lifetime checks
+- Spatial CPU/GPU parity: box blur, Gaussian blur, directional blur, sharpen, vignette,
+  lens correction, rolling shutter, wave warp, bulge and posterize
+- Ordered mixed chain: motion -> grade -> blur -> grade
+- Presentation texture remains alive while leased by the consumer
+- A leased texture is not reused; a released texture is recycled
+- Compositor accepts and uses a UI-owned D3D11 device/context
+- PlaybackEngine returns a native presentation texture on the shared device
+
+Final verification
+- cutline_gpu_tests: 18/18 passed
+- CTest: 13/13 targets passed in 391.45 seconds
+- Individual cases: 791 passed, one inapplicable export-refusal case skipped
+
+Limits
+- Results are from one AMD adapter and a synthetic focused render call, not playback p95/p99.
+- Direct Qt presentation currently requires Windows/D3D11.
+- Nested-sequence plans, unsupported active effects, software Qt rendering and periodic scope
+  samples use the CPU-frame fallback.
+- Mesh warp, unsharp mask, glow, drop shadow, noise reduction and key cleanup remain CPU effects.

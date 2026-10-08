@@ -78,7 +78,6 @@ const ASSESSMENT = {
   trim_end: ['implemented', ['TrimIsClampedToTheMediaDuration'], ["core/project/ProjectStore.cpp"]],
   ripple_delete: ['implemented', ['RippleDeleteClosesTheGap', 'UndoReversesARippleDeleteIncludingTheShift'], ["core/project/ProjectStore.cpp"]],
   lift: ['implemented', ['UndoAndRedoRestoreExactState'], ["core/project/ProjectStore.cpp"]],
-  extract: ['partial', ['RippleDeleteClosesTheGap'], ["core/project/ProjectStore.cpp"]],
 
   // --- render and effects ---------------------------------------------------
   program_playback: ['implemented', ['TheEngineRendersTheCorrectSourceFrame', 'PlaybackAdvancesOnTheAudioClock'], ["playback/PlaybackEngine.cpp","render/Compositor.cpp"]],
@@ -90,8 +89,6 @@ const ASSESSMENT = {
   // --- performance ----------------------------------------------------------
   // Underruns are counted and exposed, but no budget is measured or enforced.
   audio_callback_budget: ['partial', []],
-  // Changesets are persisted for replay; nothing reads them back.
-  crash_recovery: ['partial', []],
   // --- second pass: capabilities the manifests still called planned or
   // prototype although the render and timeline work implemented them ----------
   track_lock_mute_solo: ["implemented", ["MutedVideoTracksAreExcluded", "SoloSuppressesOtherTracksOfTheSameMedium", "LockedTracksRefuseEdits", "ALockedTrackRefusesEveryEditToItsContents", "ALockedTrackStillAllowsWhatTheLockIsNotFor", "MovingAClipOntoALockedTrackIsRefusedEvenFromAnUnlockedOne"], ["timeline/TimelineCompiler.cpp", "core/project/ProjectStore.cpp"]],
@@ -146,6 +143,79 @@ const ASSESSMENT = {
   export_presets: ['implemented', ['EveryPresetNamesRealEncodersAndResolvesToSettingsThatMatchItsPromises', 'ABitrateScalesWithThePictureAndIsClampedAndAProfileCodecIsLeftToItsProfile', 'HardwareEncodersAreUsedWhenTheyWorkSkippedWithAReasonWhenTheyDoNotAndSoftwareStaysAvailable', 'APresetRefusesASequenceItCannotDeliverAndCorrectsTheFileExtension', 'EveryPresetThatWorksOnThisMachineProducesAFileThatPassesTheCheck', 'TheHardwareAndFinishingPresetsThatNeedAnHdPictureExportAtOneAndPassTheCheck'], ["exporter/ExportPresets.cpp"]],
   export_queue: ['implemented', ['QueuedExportsRunOneAtATimeInOrderAndKeepTheirProgressAndOutcome', 'AFailedExportIsRecordedWithItsReasonAndCanBeRetriedAndACancelledOneStopsPromptly', 'WaitingJobsCanBeCancelledRemovedReorderedAndPausedWithoutDisturbingTheRunningOne', 'TheQueueSurvivesARestartAJobThatWasRunningIsInterruptedAndADamagedRecordIsKeptAside'], ["exporter/ExportQueue.cpp"]],
   export_validation: ['implemented', ['TheCheckOfAFinishedExportNamesWhatIsWrongWithATruncatedWrongOrMissingFile', 'EveryPresetThatWorksOnThisMachineProducesAFileThatPassesTheCheck'], ["exporter/ExportValidation.cpp"]],
+
+  // --- 2026-10-08 code audit: capabilities the manifests still called planned or prototype although the code does
+  // them. Each entry was checked by reading the code that does it, not the older documents. "Engine only" entries have
+  // no interface in the application (see TODO.md, "Interfaces still missing for finished engines"). ------------------
+  shortcut_customization: ['implemented', ['BindingAChordTakesItFromItsOwnerAndOnlyTheDifferencesAreSaved', 'ShortcutsParseInAnyCaseAndOrderAndPrintCanonically', 'TheBuiltInCommandsAreUniqueHaveNoSharedDefaultAndCanBeSearched'], ['ui/Shortcuts.cpp', 'app/qml/ShortcutsDialog.qml']],
+
+  caption_track: ['implemented', ['CaptionTracksAndCuesAreProjectDataWithUndoAndImportIsOneEdit', 'CaptionsBurnedInForAnExportAreTheSameAsTheMonitorsAndTheCacheKeepsThemApart'], ['captions/Captions.cpp', 'render/CaptionRender.cpp', 'core/project/ProjectStore.cpp']],
+  caption_editing: ['implemented', ['CaptionTracksAndCuesAreProjectDataWithUndoAndImportIsOneEdit'], ['app/SessionCaptions.cpp', 'app/qml/panels/CaptionsPanel.qml', 'core/project/ProjectStore.cpp']],
+  caption_styles: ['implemented', ['ACaptionsStyleDecidesItsColourBackgroundPositionWidthAndOutline', 'CaptionsBurnedInForAnExportAreTheSameAsTheMonitorsAndTheCacheKeepsThemApart'], ['render/CaptionRender.cpp', 'captions/Captions.cpp']],
+  caption_import: ['implemented', ['SubRipIsReadWithItsTimesExactToTheMillisecond', 'WebVttHasItsHeaderIdentifiersNotesAndSettingsAndEscapesWhatItMust', 'ACueThatCannotBeReadIsSkippedWithItsLineNumberAndTheRestStillComeThrough'], ['captions/Captions.cpp']],
+  caption_export: ['implemented', ['CaptionsWrittenAndReadAgainAreTheSameCuesToTheLastMillisecond', 'WebVttHasItsHeaderIdentifiersNotesAndSettingsAndEscapesWhatItMust'], ['captions/Captions.cpp']],
+  // Needs a whisper.cpp binary and a model that are not bundled.
+  auto_caption: ['partial', ['CaptionsAreMadeFromTheWordsOnTheTimelineAtTheirTimelineTimesInOneStep', 'CaptionsBreakAtPausesSentencesAndFullLinesAndLinesAreBalanced'], ['speech/Transcript.cpp', 'app/SessionTranscript.cpp']],
+
+  color_scopes: ['implemented', ['ALumaWaveformPutsEachColumnAtItsOwnLevel', 'AParadeSeparatesTheChannelsAndAnRgbWaveformOverlaysThem', 'AVectorscopePlacesColoursAtTheirHueAndSaturation', 'HistogramBinsHoldTheFractionOfThePictureAtEachLevel', 'AsyncScopesDownsampleAndPublishWithoutBlockingPlayback'], ['render/Scopes.cpp', 'app/ScopeItem.cpp']],
+  // Engine, card and typed controls; no wheel or curve-graph widgets.
+  color_wheels: ['partial', ['TonalWheelsTintOnlyTheirPartOfTheTonalRange', 'EveryColourToolOnTheCardGivesTheSamePictureAsTheSoftwareCompositor'], ['render/ColorEffects.cpp']],
+  lumetri_style_curves: ['partial', ['CurvesReshapeTheTonesAndTheLumaCurveKeepsHue', 'HueCurvesMoveOnlyTheHuesTheyAreSetFor'], ['render/ColorEffects.cpp']],
+  hdr_pq: ['partial', ['HlgAndPqAgreeOnTheLightTheyCarryAndRoundTrip', 'HdrLightIsFittedIntoSdrByASoftKneeAndNothingBelowTheKneeMoves'], ['render/ColorManagement.cpp']],
+  hdr_hlg: ['partial', ['HlgAndPqAgreeOnTheLightTheyCarryAndRoundTrip', 'HdrLightIsFittedIntoSdrByASoftKneeAndNothingBelowTheKneeMoves'], ['render/ColorManagement.cpp']],
+  // Looks are ordinary LUT effects, not stored grade presets.
+  look_presets: ['partial', ['TheLookPackIsWrittenOnceReadsAsCubesAndEveryLookIsASaneMonotoneGrade'], ['ui/LookPack.cpp']],
+
+  sequence_start_end: ['implemented', ['TheTransportPlaysShuttlesStepsAndStopsOrLoopsAtTheEnds'], ['ui/Transport.cpp']],
+
+  mask_tracking: ['implemented', ['AMaskFollowsATrackByTheDistanceItMovedSinceTheMaskWasDrawnAndSkipsWhatWasLost', 'TrackingResultsWriteAsReadableJsonAndReadBackExactly'], ['ui/MaskEditor.cpp', 'render/Tracking.cpp', 'app/SessionMasks.cpp']],
+
+  media_export: ['implemented', ['ExportedVideoDecodesBackToWhatTheMonitorRendered', 'ExportWritesTheExpectedFrameCount', 'TheCheckOfAFinishedExportNamesWhatIsWrongWithATruncatedWrongOrMissingFile'], ['exporter/ExportWorker.cpp', 'exporter/ExportPresets.cpp', 'exporter/ExportQueue.cpp']],
+
+  lower_thirds: ['implemented', ['EveryBuiltInTemplateIsValidDrawsWithItsDefaultsAndMakesControlsForWhatAPersonChanges', 'ATemplateIsInstalledOnceMadeIntoTitlesAndItsValuesChangedInOneStep'], ['ui/GraphicsDesigner.cpp', 'effects/GraphicsDocument.cpp']],
+  // A missing family is reported and replaced from the element's font list; fonts are not recorded in or bundled with the project.
+  font_management: ['partial', ['TemplateControlsTakeColoursAndRangesAndFontListsFallBackToWhatIsInstalled', 'CuesShowingTogetherStackAndAMissingFontIsReported'], ['render/TextRaster.cpp']],
+
+  audio_device_recovery: ['partial', ['ARealDeviceSinkFlushesFinishesAndReportsFailure'], ['audio/WasapiSink.cpp', 'app/Session.cpp']],
+
+  // Engine only: the application has no menu or dialog for any of these.
+  xml_import: ['implemented', ['FcpXmlRoundTripsEverythingItCarriesAtWholeFrames', 'AnXmlFileThatIsNotAFinalCutSequenceIsRefusedWithAReason'], ['interchange/FcpXml.cpp', 'core/util/XmlParse.cpp']],
+  xml_export: ['implemented', ['FcpXmlRoundTripsEverythingItCarriesAtWholeFrames', 'TimesBetweenFramesAreRoundedAndSaidSoWhenWritingFcpXml'], ['interchange/FcpXml.cpp']],
+  edl_import: ['implemented', ['AnEdlHasTheEventsTheDissolveTheSpeedChangeAndTheLocator', 'AnEdlRoundTripsEverythingItCanHold'], ['interchange/Edl.cpp']],
+  edl_export: ['implemented', ['AnEdlRoundTripsEverythingItCanHold', 'WhatAnEdlCannotHoldIsReportedOnTheWayOut'], ['interchange/Edl.cpp']],
+  project_archive: ['partial', ['CollectingAProjectCopiesExactlyWhatItUsesAndTheCopyOpensFromTheFolderAlone', 'WhatCannotBeCollectedIsNamedAndTheFolderIsNotCalledComplete', 'ACollectedFolderThatIsMovedIsMadeToOpenAgainFromItsManifest'], ['core/project/Consolidate.cpp']],
+
+  monitor_safe_margins: ['implemented', ['TheMonitorPicksARenderSizeFitsThePictureAndDrawsSafeMargins'], ['ui/Monitor.cpp', 'app/MonitorItem.cpp']],
+  // Safe margins, centre and thirds exist; timecode and dropped-frame readouts do not.
+  monitor_overlays: ['partial', ['TheMonitorPicksARenderSizeFitsThePictureAndDrawsSafeMargins'], ['ui/Monitor.cpp', 'app/MonitorItem.cpp']],
+  monitor_zoom: ['implemented', ['TheMonitorPicksARenderSizeFitsThePictureAndDrawsSafeMargins'], ['ui/Monitor.cpp', 'app/MonitorItem.cpp']],
+  // Covered by an application test (`Main.qml` fullscreen window), not by a native one.
+  fullscreen_playback: ['partial', []],
+
+  render_cache: ['implemented', ['ARenderedFrameIsServedFromTheCacheTheSecondTimeAndAnEditOnlyRemakesWhatItTouches', 'APreviewAndAnExportShareWhatEitherHasAlreadyRenderedThroughTheDiskTier'], ['render/RenderCache.cpp', 'playback/PlaybackEngine.cpp']],
+  // No operating-system pressure adapter yet; pressure levels are set by the caller.
+  memory_pressure_handling: ['partial', ['SharedQuotaEvictsCheapRenderFramesBeforeExpensiveFlowAnalysis'], ['core/resource/QuotaManager.cpp']],
+  // The engine recovers; the application never offers it (Session::openProject uses OpenPackage only).
+  crash_recovery: ['partial', ['RecoveryFromAnyRevisionBoundaryLandsOnThatRevisionExactly', 'ATornOrMissingRecordStopsRecoveryAtTheLastGoodRevisionAndSaysSo', 'WithNothingToRebuildFromRecoveryFailsClearlyAndTouchesNothing'], ['core/project/ProjectStore.cpp']],
+
+  // Dips to black and white only, not to a chosen colour.
+  dip_to_color: ['partial', ['PushesSlidesAndDipsMoveAndDarkenTheWayTheirNamesSayAndStaySharp'], ['render/Transitions.cpp']],
+  transition_handle_diagnostics: ['partial', ['ATransitionIsAddedAtTheCutKeptWithinTheHandlesAndRefusedWhereThereIsNoRoomOrAnotherIsThere'], ['ui/Transitions.cpp']],
+
+  ripple_trim: ['implemented', ['TrimmingMovesOneEdgeWithinTheMediaAndNeighboursAndARippleClosesUpEverywhere', 'LinkedClipsAreTrimmedTogetherAndRollSlipAndSlideDoWhatTheyAreFor'], ['ui/EditPlanner.cpp']],
+  roll_trim: ['implemented', ['LinkedClipsAreTrimmedTogetherAndRollSlipAndSlideDoWhatTheyAreFor'], ['ui/EditPlanner.cpp']],
+  slip_edit: ['implemented', ['LinkedClipsAreTrimmedTogetherAndRollSlipAndSlideDoWhatTheyAreFor'], ['ui/EditPlanner.cpp']],
+  slide_edit: ['implemented', ['LinkedClipsAreTrimmedTogetherAndRollSlipAndSlideDoWhatTheyAreFor'], ['ui/EditPlanner.cpp']],
+  extract: ['implemented', ['CuttingDeletingLiftingAndExtractingKeepTheTimelineConsistent'], ['ui/EditPlanner.cpp']],
+  clip_selection: ['implemented', ['SelectionLinksClipsRectanglesAndTracksAndSnappingPrefersWhatMattersMost'], ['ui/TimelineView.cpp']],
+  snapping: ['implemented', ['SelectionLinksClipsRectanglesAndTracksAndSnappingPrefersWhatMattersMost'], ['ui/TimelineView.cpp']],
+  // The timeline shows ghost clips, the snap line and red for a refused edit; no trim monitor.
+  trim_mode_feedback: ['partial', []],
+
+  // Probed and decoded through FFmpeg, exported in five profiles; no capability registry and no licence reporting.
+  prores_support: ['partial', ['APictureWithMoreThanEightBitsKeepsThemThroughAProResExport'], ['exporter/ExportPresets.cpp']],
+  // Only for multicam sync (first 90 s of each clip's sound), not a general sync-clips-by-waveform command.
+  audio_sync_alignment: ['partial', ['MulticamAudioSyncUsesLocalCrossCorrelationAndReportsConfidence'], ['timeline/Multicam.cpp']],
 };
 
 function collectTestNames() {

@@ -113,6 +113,46 @@ float4 SampleSource(float x, float y) {
   return lerp(lerp(p00, p10, tx), lerp(p01, p11, tx), ty);
 }
 
+float4 FetchCanvas(int2 p) {
+  if (p.x < 0 || p.y < 0 || p.x >= sizes.x || p.y >= sizes.y) return float4(0, 0, 0, 0);
+  return canvasIn.Load(int3(p, 0));
+}
+
+// Bilinear sampling of a premultiplied intermediate, with pixel centres at
+// half-integers. This mirrors Filters.cpp::SampleLayer.
+float4 SampleCanvas(float x, float y) {
+  float fx = x - 0.5, fy = y - 0.5;
+  int2 lo = int2(floor(fx), floor(fy));
+  float2 t = float2(fx, fy) - (float2)lo;
+  return lerp(lerp(FetchCanvas(lo), FetchCanvas(lo + int2(1, 0)), t.x),
+              lerp(FetchCanvas(lo + int2(0, 1)), FetchCanvas(lo + int2(1, 1)), t.x), t.y);
+}
+
+// MeshWarp.cpp's sampler uses integer pixel coordinates and rejects the whole
+// sample once its requested centre crosses the image boundary.
+float4 SampleCanvasPixel(float x, float y) {
+  if (x < 0.0 || y < 0.0 || x > sizes.x - 1.0 || y > sizes.y - 1.0) return float4(0, 0, 0, 0);
+  int2 lo = int2(floor(x), floor(y));
+  int2 hi = min(lo + 1, int2(sizes.xy) - 1);
+  float2 t = float2(x, y) - (float2)lo;
+  return lerp(lerp(FetchCanvas(lo), FetchCanvas(int2(hi.x, lo.y)), t.x),
+              lerp(FetchCanvas(int2(lo.x, hi.y)), FetchCanvas(hi), t.x), t.y);
+}
+
+// The older compositor sampler used by lens correction clamps its four taps
+// while the requested coordinate remains within the outer half pixel.
+float4 SampleCanvasClamped(float x, float y) {
+  if (x < -0.5 || y < -0.5 || x > sizes.x - 0.5 || y > sizes.y - 0.5) return float4(0, 0, 0, 0);
+  int2 lo = int2(floor(x), floor(y));
+  float2 t = float2(x, y) - (float2)lo;
+  int2 hi = int2(sizes.xy) - 1;
+  int2 a = clamp(lo, int2(0, 0), hi);
+  int2 b = clamp(lo + int2(1, 0), int2(0, 0), hi);
+  int2 c = clamp(lo + int2(0, 1), int2(0, 0), hi);
+  int2 d = clamp(lo + int2(1, 1), int2(0, 0), hi);
+  return lerp(lerp(FetchCanvas(a), FetchCanvas(b), t.x), lerp(FetchCanvas(c), FetchCanvas(d), t.x), t.y);
+}
+
 static const float3 kLuma = float3(0.2126, 0.7152, 0.0722);
 
 float4 LutLoad(int slot, int4 location) {
@@ -347,6 +387,8 @@ float4 ApplyOps(float4 p) {
         c = HueCurves(c, 6 * i);
       } else if (kind == 11) {
         c = HslSecondary(c, 6 * i);
+      } else if (kind == 12) {
+        c = round(saturate(c) * o0.y) / o0.y;
       }
       c = clamp(c, 0.0, 1.0);
       p.rgb = c * p.a;
@@ -397,6 +439,84 @@ float4 ApplyOps(float4 p) {
 [numthreads(16, 16, 1)] void CSOpsOnCanvas(uint3 id : SV_DispatchThreadID) {
   if ((int)id.x >= sizes.x || (int)id.y >= sizes.y) return;
   dst[id.xy] = ApplyOps(canvasIn.Load(int3(id.xy, 0)));
+}
+
+// Spatial effects operate on an output-sized premultiplied intermediate. Kind
+// is modes.w: 1/2 box blur axes, 3 sharpen, 4 vignette, 5 lens correction,
+// 6 directional blur, 7 wave warp, 8 bulge, 9 rolling shutter.
+[numthreads(16, 16, 1)] void CSSpatial(uint3 id : SV_DispatchThreadID) {
+  if ((int)id.x >= sizes.x || (int)id.y >= sizes.y) return;
+  int kind = modes.w;
+  int2 p = int2(id.xy);
+  float4 result = FetchCanvas(p);
+  if (kind == 1 || kind == 2) {
+    int radius = (int)weight.x;
+    float4 sum = 0.0;
+    [loop] for (int tap = -radius; tap <= radius; ++tap) {
+      sum += FetchCanvas(p + (kind == 1 ? int2(tap, 0) : int2(0, tap)));
+    }
+    result = sum / (float)(radius * 2 + 1);
+  } else if (kind == 3) {
+    float amount = weight.x;
+    float4 c = FetchCanvas(p);
+    int2 hi = int2(sizes.xy) - 1;
+    float3 neighbourhood = (FetchCanvas(clamp(p + int2(-1, 0), int2(0, 0), hi)).rgb +
+                            FetchCanvas(clamp(p + int2(1, 0), int2(0, 0), hi)).rgb +
+                            FetchCanvas(clamp(p + int2(0, -1), int2(0, 0), hi)).rgb +
+                            FetchCanvas(clamp(p + int2(0, 1), int2(0, 0), hi)).rgb) * 0.25;
+    result = float4(clamp(c.rgb + amount * (c.rgb - neighbourhood), 0.0, c.a), c.a);
+  } else if (kind == 4) {
+    float2 n = ((float2(id.xy) + 0.5) / float2(sizes.xy) - solid.xy) * 2.0;
+    float radius = length(n) / sqrt(2.0);
+    float scale = 1.0 - weight.x * smoothstep(weight.y, weight.y + weight.z, radius);
+    result.rgb *= scale;
+  } else if (kind == 5) {
+    float2 n = ((float2(id.xy) + 0.5) / float2(sizes.xy) - solid.xy) * 2.0;
+    float r2 = dot(n, n);
+    float radial = 1.0 + weight.x * r2 + weight.y * r2 * r2;
+    float2 uv = solid.xy + n * radial / (2.0 * weight.z);
+    result = SampleCanvasClamped(uv.x * sizes.x - 0.5, uv.y * sizes.y - 0.5);
+  } else if (kind == 6) {
+    float length_px = weight.x;
+    int taps = (int)weight.y;
+    float2 direction = solid.xy;
+    float4 sum = 0.0;
+    [loop] for (int tap = 0; tap < taps; ++tap) {
+      float offset = ((float)tap / (float)(taps - 1) - 0.5) * length_px;
+      sum += SampleCanvas((float)id.x + 0.5 + direction.x * offset,
+                          (float)id.y + 0.5 + direction.y * offset);
+    }
+    result = sum / (float)taps;
+  } else if (kind == 7) {
+    float cx = (float)id.x + 0.5, cy = (float)id.y + 0.5;
+    float phase = weight.z;
+    float tau = 6.283185307179586;
+    float sx = weight.w > 0.5 ? cx : cx + weight.x * sin(tau * cy / weight.y + phase);
+    float sy = weight.w > 0.5 ? cy + weight.x * sin(tau * cx / weight.y + phase) : cy;
+    result = SampleCanvas(sx, sy);
+  } else if (kind == 8) {
+    float2 centre = solid.xy * float2(sizes.xy);
+    float radius = weight.y * (float)min(sizes.x, sizes.y) * 0.5;
+    float2 delta = float2(id.xy) + 0.5 - centre;
+    float distance = length(delta);
+    if (distance < radius) {
+      float falloff = 1.0 - distance / radius;
+      float source_scale = 1.0 - weight.x * falloff * falloff;
+      result = SampleCanvas(centre.x + delta.x * source_scale, centre.y + delta.y * source_scale);
+    }
+  } else if (kind == 9) {
+    float scan = sizes.y > 1 ? (float)id.y / (float)(sizes.y - 1) : 0.0;
+    if (weight.w > 0.5) scan = 1.0 - scan;
+    scan = clamp(scan + clamp(weight.z, -1.0, 1.0) * scan * (1.0 - scan), 0.0, 1.0);
+    float angle = solid.x * scan;
+    float cosine = cos(angle), sine = sin(angle);
+    float2 centre = (float2(sizes.xy) - 1.0) * 0.5;
+    float2 local = float2(id.xy) - centre;
+    float sx = cosine * local.x - sine * local.y + centre.x + weight.x * scan;
+    float sy = sine * local.x + cosine * local.y + centre.y + weight.y * scan;
+    result = SampleCanvasPixel(sx, sy);
+  }
+  dst[id.xy] = result;
 }
 
 // A dissolve: the two sides mixed by the progress, then over the canvas.
@@ -528,14 +648,21 @@ struct D3D11Compositor::Impl final {
   ComPtr<ID3D11Device> device;
   ComPtr<ID3D11DeviceContext> context;
   ComPtr<ID3D11Buffer> constants;
-  ComPtr<ID3D11ComputeShader> draw_over, draw_layer, ops_on_canvas, mix_over, out32, out8;
+  ComPtr<ID3D11ComputeShader> draw_over, draw_layer, ops_on_canvas, spatial, mix_over, out32, out8;
   ComPtr<ID3D11ComputeShader> draw_over_yuv, draw_layer_yuv;
 
   int width{0}, height{0};
   Target canvas[2];
-  Target layer_a, layer_b;
+  Target layer_a, layer_b, effect_scratch;
   Target out_f32, out_u8;
   ComPtr<ID3D11Texture2D> staging_f32, staging_u8;
+  struct PresentationTexture final {
+    ComPtr<ID3D11Texture2D> texture;
+    std::weak_ptr<void> lease;
+    int width{0};
+    int height{0};
+  };
+  std::vector<PresentationTexture> presentation_pool;
   std::vector<PooledTexture> pool;
   std::uint64_t frame_counter{0};
   std::size_t texture_bytes{0};
@@ -598,7 +725,8 @@ struct D3D11Compositor::Impl final {
     }
     struct Entry { ComPtr<ID3D11ComputeShader>* slot; const char* name; bool yuv; };
     for (const auto& entry : {Entry{&draw_over, "CSDrawOver", false}, Entry{&draw_layer, "CSDrawLayer", false},
-                              Entry{&ops_on_canvas, "CSOpsOnCanvas", false}, Entry{&mix_over, "CSMixOver", false},
+                              Entry{&ops_on_canvas, "CSOpsOnCanvas", false}, Entry{&spatial, "CSSpatial", false},
+                              Entry{&mix_over, "CSMixOver", false},
                               Entry{&out32, "CSOut32", false}, Entry{&out8, "CSOut8", false},
                               Entry{&draw_over_yuv, "CSDrawOver", true}, Entry{&draw_layer_yuv, "CSDrawLayer", true}}) {
       *entry.slot = Compile(entry.name, entry.yuv, why);
@@ -630,7 +758,8 @@ struct D3D11Compositor::Impl final {
     return true;
   }
 
-  [[nodiscard]] bool EnsureTargets(int w, int h, bool f32, bool transitions, std::string* why) {
+  [[nodiscard]] bool EnsureTargets(int w, int h, bool f32, bool transitions, bool spatial_effects, bool readback,
+                                   std::string* why) {
     if (w != width || h != height) ReleaseTargets();
     // Half float keeps a layer at 8 bytes a pixel (a 1080p canvas is 16 MB) with a precision far finer than an 8 or 10
     // bit picture can show; the canvases alternate, because reading and writing one typed texture in one pass is not
@@ -650,6 +779,11 @@ struct D3D11Compositor::Impl final {
          !MakeTarget(layer_b, w, h, DXGI_FORMAT_R16G16B16A16_FLOAT, true))) {
       return failed();
     }
+    if (spatial_effects) {
+      if (!layer_a.texture && !MakeTarget(layer_a, w, h, DXGI_FORMAT_R16G16B16A16_FLOAT, true)) return failed();
+      if (!layer_b.texture && transitions && !MakeTarget(layer_b, w, h, DXGI_FORMAT_R16G16B16A16_FLOAT, true)) return failed();
+      if (!effect_scratch.texture && !MakeTarget(effect_scratch, w, h, DXGI_FORMAT_R16G16B16A16_FLOAT, true)) return failed();
+    }
     auto make_staging = [&](DXGI_FORMAT format, ComPtr<ID3D11Texture2D>& target) {
       D3D11_TEXTURE2D_DESC staging{};
       staging.Width = static_cast<UINT>(w);
@@ -663,30 +797,72 @@ struct D3D11Compositor::Impl final {
       return SUCCEEDED(device->CreateTexture2D(&staging, nullptr, &target));
     };
     if (f32) {
-      if (!out_f32.texture &&
-          (!MakeTarget(out_f32, w, h, DXGI_FORMAT_R32G32B32A32_FLOAT, false) ||
-           !make_staging(DXGI_FORMAT_R32G32B32A32_FLOAT, staging_f32))) {
-        return failed();
-      }
-    } else if (!out_u8.texture &&
-               (!MakeTarget(out_u8, w, h, DXGI_FORMAT_R8G8B8A8_UNORM, false) ||
-                !make_staging(DXGI_FORMAT_R8G8B8A8_UNORM, staging_u8))) {
-      return failed();
+      if (!out_f32.texture && !MakeTarget(out_f32, w, h, DXGI_FORMAT_R32G32B32A32_FLOAT, false)) return failed();
+      if (readback && !staging_f32 && !make_staging(DXGI_FORMAT_R32G32B32A32_FLOAT, staging_f32)) return failed();
+    } else {
+      if (!out_u8.texture && !MakeTarget(out_u8, w, h, DXGI_FORMAT_R8G8B8A8_UNORM, false)) return failed();
+      if (readback && !staging_u8 && !make_staging(DXGI_FORMAT_R8G8B8A8_UNORM, staging_u8)) return failed();
     }
     width = w;
     height = h;
     const auto pixels = static_cast<std::size_t>(w) * static_cast<std::size_t>(h);
-    texture_bytes = pixels * (16 + (layer_a.texture ? 16 : 0) + (out_f32.texture ? 32 : 0) +
+    texture_bytes = pixels * (16 + (layer_a.texture ? 8 : 0) + (layer_b.texture ? 8 : 0) +
+                              (effect_scratch.texture ? 8 : 0) + (out_f32.texture ? 32 : 0) +
                               (out_u8.texture ? 8 : 0));
     return true;
   }
 
   void ReleaseTargets() {
-    canvas[0] = canvas[1] = layer_a = layer_b = out_f32 = out_u8 = {};
+    canvas[0] = canvas[1] = layer_a = layer_b = effect_scratch = out_f32 = out_u8 = {};
     staging_f32.Reset();
     staging_u8.Reset();
     width = height = 0;
     texture_bytes = 0;
+  }
+
+  [[nodiscard]] PresentationFrame Present(int w, int h, const time::RationalTime& at) {
+    PresentationTexture* selected = nullptr;
+    for (auto& entry : presentation_pool) {
+      if (entry.width == w && entry.height == h && entry.lease.expired()) {
+        selected = &entry;
+        break;
+      }
+    }
+    if (selected == nullptr) {
+      D3D11_TEXTURE2D_DESC desc{};
+      desc.Width = static_cast<UINT>(w);
+      desc.Height = static_cast<UINT>(h);
+      desc.MipLevels = 1;
+      desc.ArraySize = 1;
+      desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+      desc.SampleDesc.Count = 1;
+      desc.Usage = D3D11_USAGE_DEFAULT;
+      desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+      PresentationTexture fresh;
+      if (FAILED(device->CreateTexture2D(&desc, nullptr, &fresh.texture))) {
+        throw std::runtime_error("could not allocate a presentation texture");
+      }
+      fresh.width = w;
+      fresh.height = h;
+      presentation_pool.push_back(std::move(fresh));
+      selected = &presentation_pool.back();
+    }
+    context->CopyResource(selected->texture.Get(), out_u8.texture.Get());
+    // The lease owns a COM reference independently of the pool. This also
+    // prevents this slot from being overwritten until Qt drops the frame.
+    selected->texture->AddRef();
+    std::shared_ptr<void> lease(selected->texture.Get(), [](void* value) {
+      static_cast<ID3D11Texture2D*>(value)->Release();
+    });
+    selected->lease = lease;
+    PresentationFrame frame;
+    frame.device = device.Get();
+    frame.texture = selected->texture.Get();
+    frame.width = w;
+    frame.height = h;
+    frame.presentation_time = at;
+    frame.lifetime = std::move(lease);
+    return frame;
   }
 
   // A pooled texture for one picture in memory; textures are reused from frame to frame and the pool is trimmed when
@@ -1023,6 +1199,45 @@ bool IsNoOpEffect(const SampledEffect& effect) {
   return false;
 }
 
+bool IsGpuSpatialEffect(const std::string& type) {
+  return type == "blur" || type == "gaussian_blur" || type == "directional_blur" || type == "sharpen" ||
+         type == "vignette" || type == "lens_correction" || type == "wide_angle" || type == "wave_warp" ||
+         type == "bulge" || type == "rolling_shutter";
+}
+
+bool HasActiveSpatialEffect(const std::vector<SampledEffect>& effects) {
+  return std::any_of(effects.begin(), effects.end(), [](const SampledEffect& effect) {
+    return IsGpuSpatialEffect(effect.effect_type) && !IsNoOpEffect(effect);
+  });
+}
+
+// The same three box widths used by Filters.cpp for a gaussian approximation.
+std::array<int, 3> GaussianRadii(float sigma) {
+  const auto target = static_cast<double>(sigma) * sigma;
+  const auto ideal = std::sqrt(12.0 * target / 3.0 + 1.0);
+  auto centre = static_cast<int>(std::floor(ideal));
+  if (centre % 2 == 0) --centre;
+  const auto first = std::max(1, centre - 6);
+  const auto last = centre + 6;
+  double best_error = 1e300;
+  std::array<int, 3> best{1, 1, 1};
+  for (int a = first; a <= last; a += 2) {
+    for (int b = a; b <= last; b += 2) {
+      for (int c = b; c <= last; c += 2) {
+        const auto variance = (static_cast<double>(a) * a + static_cast<double>(b) * b +
+                               static_cast<double>(c) * c - 3.0) /
+                              12.0;
+        const auto error = std::abs(variance - target);
+        if (error < best_error) {
+          best_error = error;
+          best = {a, b, c};
+        }
+      }
+    }
+  }
+  return {(best[0] - 1) / 2, (best[1] - 1) / 2, (best[2] - 1) / 2};
+}
+
 bool HasOnlySupportedEffects(const std::vector<SampledEffect>& effects, bool sequence_level, std::string* reason,
                              const std::function<bool(const SampledEffect&, std::string*)>& lut_usable) {
   int ops = 0;
@@ -1034,6 +1249,7 @@ bool HasOnlySupportedEffects(const std::vector<SampledEffect>& effects, bool seq
       return false;
     }
     const auto& type = effect.effect_type;
+    if (IsGpuSpatialEffect(type)) continue;
     if (type == "opacity" || type == "grade" || type == "lumetri" || type == "lut" || IsGpuColorEffect(type)) {
       if (++ops > kMaxOps) {
         if (reason != nullptr) *reason = "more than sixteen colour effects on one clip";
@@ -1124,7 +1340,26 @@ std::unique_ptr<D3D11Compositor> D3D11Compositor::Create(const Options& options,
     descriptors.push_back(std::move(descriptor));
   }
   std::size_t chosen = adapters.size();
-  if (!options.adapter_id.empty()) {
+  if (options.external_device != nullptr) {
+    auto* supplied = static_cast<ID3D11Device*>(options.external_device);
+    ComPtr<IDXGIDevice> dxgi;
+    ComPtr<IDXGIAdapter> adapter;
+    DXGI_ADAPTER_DESC supplied_desc{};
+    if (FAILED(supplied->QueryInterface(IID_PPV_ARGS(&dxgi))) || FAILED(dxgi->GetAdapter(&adapter)) ||
+        FAILED(adapter->GetDesc(&supplied_desc))) {
+      return fail("the presentation system did not provide a usable Direct3D 11 device");
+    }
+    for (std::size_t i = 0; i < adapters.size(); ++i) {
+      DXGI_ADAPTER_DESC1 candidate{};
+      if (SUCCEEDED(adapters[i].adapter->GetDesc1(&candidate)) &&
+          candidate.AdapterLuid.HighPart == supplied_desc.AdapterLuid.HighPart &&
+          candidate.AdapterLuid.LowPart == supplied_desc.AdapterLuid.LowPart) {
+        chosen = i;
+        break;
+      }
+    }
+    if (chosen == adapters.size()) return fail("the Direct3D 11 presentation adapter is not available");
+  } else if (!options.adapter_id.empty()) {
     for (std::size_t i = 0; i < descriptors.size(); ++i) {
       if (descriptors[i].id == options.adapter_id && descriptors[i].available) chosen = i;
     }
@@ -1142,13 +1377,22 @@ std::unique_ptr<D3D11Compositor> D3D11Compositor::Create(const Options& options,
 
   std::unique_ptr<D3D11Compositor> compositor(new D3D11Compositor());
   auto& impl = *compositor->impl_;
-  const D3D_FEATURE_LEVEL levels[] = {D3D_FEATURE_LEVEL_11_1, D3D_FEATURE_LEVEL_11_0};
-  HRESULT hr = D3D11CreateDevice(adapters[chosen].adapter.Get(), D3D_DRIVER_TYPE_UNKNOWN, nullptr, D3D11_CREATE_DEVICE_VIDEO_SUPPORT, levels, 2,
-                                 D3D11_SDK_VERSION, &impl.device, nullptr, &impl.context);
-  if (FAILED(hr)) {
-    hr = D3D11CreateDevice(adapters[chosen].adapter.Get(), D3D_DRIVER_TYPE_UNKNOWN, nullptr, 0, levels, 2, D3D11_SDK_VERSION, &impl.device, nullptr, &impl.context);
-    if (FAILED(hr)) return fail("the adapter " + descriptors[chosen].name + " would not create a Direct3D 11 device (" + HrText(hr) + ")");
-    descriptors[chosen].capabilities &= ~Flag(Capability::ZeroCopyDecode);
+  if (options.external_device != nullptr) {
+    impl.device = static_cast<ID3D11Device*>(options.external_device);
+    if (options.external_context != nullptr) impl.context = static_cast<ID3D11DeviceContext*>(options.external_context);
+    else impl.device->GetImmediateContext(&impl.context);
+  } else {
+    const D3D_FEATURE_LEVEL levels[] = {D3D_FEATURE_LEVEL_11_1, D3D_FEATURE_LEVEL_11_0};
+    HRESULT hr = D3D11CreateDevice(adapters[chosen].adapter.Get(), D3D_DRIVER_TYPE_UNKNOWN, nullptr,
+                                   D3D11_CREATE_DEVICE_VIDEO_SUPPORT, levels, 2, D3D11_SDK_VERSION, &impl.device,
+                                   nullptr, &impl.context);
+    if (FAILED(hr)) {
+      hr = D3D11CreateDevice(adapters[chosen].adapter.Get(), D3D_DRIVER_TYPE_UNKNOWN, nullptr, 0, levels, 2,
+                             D3D11_SDK_VERSION, &impl.device, nullptr, &impl.context);
+      if (FAILED(hr)) return fail("the adapter " + descriptors[chosen].name +
+                                  " would not create a Direct3D 11 device (" + HrText(hr) + ")");
+      descriptors[chosen].capabilities &= ~Flag(Capability::ZeroCopyDecode);
+    }
   }
   // A decoder on its own thread draws into this device's textures: the device's calls must be safe from both threads.
   ComPtr<ID3D10Multithread> multithread;
@@ -1166,12 +1410,14 @@ void D3D11Compositor::ReleaseResources() {
   const std::lock_guard<std::mutex> lock(impl_->mutex);
   impl_->ReleaseTargets();
   impl_->pool.clear();
+  impl_->presentation_pool.clear();
 }
 
 // ------------------------------------------------------------------ composing ----
 
 media::VideoFrame D3D11Compositor::Compose(const timeline::PlaybackPlan& plan, const CompositorConfig& config, const FrameResolver& resolve,
-                                           Statistics& statistics, GpuStatistics* gpu, const DeviceFrameResolver& device_resolve) {
+                                           Statistics& statistics, GpuStatistics* gpu, const DeviceFrameResolver& device_resolve,
+                                           PresentationFrame* presentation) {
   const auto started = Clock::now();
   auto& s = *impl_;
   const std::lock_guard<std::mutex> lock(s.mutex);
@@ -1186,8 +1432,13 @@ media::VideoFrame D3D11Compositor::Compose(const timeline::PlaybackPlan& plan, c
   const int height = config.height > 0 ? config.height : static_cast<int>(plan.height);
   if (width <= 0 || height <= 0) throw std::invalid_argument("Compositor has no output size");
   const bool f32 = config.output_format == media::PixelFormat::RgbaF32;
+  if (presentation != nullptr && f32) throw Unsupported("direct presentation requires RGBA8 output");
+  bool needs_spatial = HasActiveSpatialEffect(plan.sequence_effects);
+  for (const auto& request : plan.video) needs_spatial = needs_spatial || HasActiveSpatialEffect(request.effects);
   std::string why;
-  if (!s.EnsureTargets(width, height, f32, !plan.transitions.empty(), &why)) throw std::runtime_error(why);
+  if (!s.EnsureTargets(width, height, f32, !plan.transitions.empty(), needs_spatial, presentation == nullptr, &why)) {
+    throw std::runtime_error(why);
+  }
   ++s.frame_counter;
 
   auto& context = *s.context.Get();
@@ -1208,9 +1459,11 @@ media::VideoFrame D3D11Compositor::Compose(const timeline::PlaybackPlan& plan, c
     const auto tagged = color::SpaceFromTags(primaries, transfer);
     if (tagged.has_value() && !(*tagged == *working)) throw Unsupported("a picture is in another colour space than the working one");
   };
-  const auto draw_request = [&](const timeline::SourceRequest& request, bool over_canvas, Target* layer_target) -> bool {
+  const std::vector<SampledEffect> no_effects;
+  const auto draw_request = [&](const timeline::SourceRequest& request, bool over_canvas, Target* layer_target,
+                                bool defer_effects = false) -> bool {
     s.SetBaseParams();
-    s.FillOps(request.effects);
+    s.FillOps(defer_effects ? no_effects : request.effects);
     const auto* solid = FindEffect(request.effects, "solid");
     PooledTexture* picture = nullptr;
     ComPtr<ID3D11ShaderResourceView> luma, chroma;
@@ -1318,7 +1571,124 @@ media::VideoFrame D3D11Compositor::Compose(const timeline::PlaybackPlan& plan, c
     return true;
   };
 
+  // Applies a mixed chain of colour and spatial effects in its original order.
+  // The result is copied back to `target`, so callers can keep stable layer
+  // bindings while the implementation ping-pongs through `temporary`.
+  const auto apply_effects = [&](Target& target, Target& temporary, const std::vector<SampledEffect>& effects) {
+    Target* current = &target;
+    Target* other = &temporary;
+    std::vector<SampledEffect> pending_ops;
+    const auto run = [&](ID3D11ComputeShader* shader) {
+      s.Bind(nullptr, nullptr, current->srv.Get(), nullptr, nullptr, other->uav.Get());
+      s.Dispatch(shader);
+      s.Unbind();
+      std::swap(current, other);
+    };
+    const auto flush_ops = [&] {
+      if (pending_ops.empty()) return;
+      s.SetBaseParams();
+      s.FillOps(pending_ops);
+      pending_ops.clear();
+      if (s.params.modes[1] != 0) run(s.ops_on_canvas.Get());
+    };
+    const auto spatial_pass = [&](int kind) {
+      s.params.modes[3] = kind;
+      run(s.spatial.Get());
+    };
+
+    for (const auto& effect : effects) {
+      if (IsNoOpEffect(effect)) continue;
+      if (!IsGpuSpatialEffect(effect.effect_type)) {
+        pending_ops.push_back(effect);
+        continue;
+      }
+      flush_ops();
+      s.SetBaseParams();
+      const auto& type = effect.effect_type;
+      if (type == "blur") {
+        const int radius = std::clamp(static_cast<int>(std::lround(ScalarParameter(effect, "radius", 0.0f))), 0, 128);
+        if (radius > 0) {
+          s.params.weight[0] = static_cast<float>(radius);
+          spatial_pass(1);
+          s.params.weight[0] = static_cast<float>(radius);
+          spatial_pass(2);
+        }
+      } else if (type == "gaussian_blur") {
+        const auto sigma = std::clamp(ScalarParameter(effect, "radius", 0.0f), 0.0f, 128.0f);
+        if (sigma >= 0.3f) {
+          for (const auto radius : GaussianRadii(sigma)) {
+            s.params.weight[0] = static_cast<float>(radius);
+            spatial_pass(1);
+            s.params.weight[0] = static_cast<float>(radius);
+            spatial_pass(2);
+          }
+        }
+      } else if (type == "directional_blur") {
+        const auto length = std::clamp(ScalarParameter(effect, "length", 0.0f), 0.0f, 256.0f);
+        if (length >= 1.0f) {
+          const auto radians = ScalarParameter(effect, "angle", 0.0f) * 0.01745329251994329577f;
+          s.params.weight[0] = length;
+          s.params.weight[1] = static_cast<float>(static_cast<int>(std::lround(length)) + 1);
+          s.params.solid[0] = std::cos(radians);
+          s.params.solid[1] = std::sin(radians);
+          spatial_pass(6);
+        }
+      } else if (type == "sharpen") {
+        s.params.weight[0] = std::clamp(ScalarParameter(effect, "amount", 0.0f), 0.0f, 5.0f);
+        spatial_pass(3);
+      } else if (type == "vignette") {
+        const auto centre = Vec2Parameter(effect, "center", 0.5f, 0.5f);
+        s.params.weight[0] = std::clamp(ScalarParameter(effect, "amount", 0.0f), 0.0f, 1.0f);
+        s.params.weight[1] = std::clamp(ScalarParameter(effect, "midpoint", 0.5f), 0.0f, 1.0f);
+        s.params.weight[2] = std::max(ScalarParameter(effect, "feather", 0.5f), 1e-4f);
+        s.params.solid[0] = centre[0];
+        s.params.solid[1] = centre[1];
+        spatial_pass(4);
+      } else if (type == "lens_correction" || type == "wide_angle") {
+        const auto centre = Vec2Parameter(effect, "center", 0.5f, 0.5f);
+        s.params.weight[0] = std::clamp(ScalarParameter(effect, "distortion", 0.0f), -1.0f, 1.0f);
+        s.params.weight[1] = std::clamp(ScalarParameter(effect, "quadratic", 0.0f), -1.0f, 1.0f);
+        s.params.weight[2] = std::clamp(ScalarParameter(effect, "scale", 100.0f), 1.0f, 400.0f) / 100.0f;
+        s.params.solid[0] = centre[0];
+        s.params.solid[1] = centre[1];
+        spatial_pass(5);
+      } else if (type == "wave_warp") {
+        s.params.weight[0] = std::clamp(ScalarParameter(effect, "amplitude", 0.0f), 0.0f, 200.0f);
+        s.params.weight[1] = std::clamp(ScalarParameter(effect, "wavelength", 100.0f), 4.0f, 4000.0f);
+        s.params.weight[2] = ScalarParameter(effect, "phase", 0.0f) * 0.01745329251994329577f;
+        s.params.weight[3] = ScalarParameter(effect, "vertical", 0.0f) >= 0.5f ? 1.0f : 0.0f;
+        spatial_pass(7);
+      } else if (type == "bulge") {
+        const auto centre = Vec2Parameter(effect, "center", 0.5f, 0.5f);
+        s.params.weight[0] = std::clamp(ScalarParameter(effect, "amount", 0.0f), -1.0f, 1.0f);
+        s.params.weight[1] = std::clamp(ScalarParameter(effect, "radius", 0.5f), 0.01f, 2.0f);
+        s.params.solid[0] = centre[0];
+        s.params.solid[1] = centre[1];
+        spatial_pass(8);
+      } else if (type == "rolling_shutter") {
+        s.params.weight[0] = ScalarParameter(effect, "horizontal", 0.0f);
+        s.params.weight[1] = ScalarParameter(effect, "vertical", 0.0f);
+        s.params.weight[2] = ScalarParameter(effect, "curve", 0.0f);
+        s.params.weight[3] = ScalarParameter(effect, "direction", 0.0f) >= 0.5f ? 1.0f : 0.0f;
+        s.params.solid[0] = ScalarParameter(effect, "rotation", 0.0f) * 0.01745329251994329577f;
+        spatial_pass(9);
+      }
+    }
+    flush_ops();
+    if (current != &target) {
+      s.SetBaseParams();
+      s.Bind(nullptr, nullptr, current->srv.Get(), nullptr, nullptr, target.uav.Get());
+      s.Dispatch(s.ops_on_canvas.Get());
+      s.Unbind();
+    }
+  };
+
   const auto ops_on_canvas = [&](const std::vector<SampledEffect>& effects) {
+    if (HasActiveSpatialEffect(effects)) {
+      const int in = s.current_canvas, other = 1 - s.current_canvas;
+      apply_effects(s.canvas[in], s.canvas[other], effects);
+      return;
+    }
     s.SetBaseParams();
     s.FillOps(effects);
     if (s.params.modes[1] == 0) return;
@@ -1352,8 +1722,18 @@ media::VideoFrame D3D11Compositor::Compose(const timeline::PlaybackPlan& plan, c
       // A missing side stays transparent: a one-sided transition reads as a fade of the other side over what is beneath.
       s.ClearTarget(s.layer_a, 0, 0, 0, 0);
       s.ClearTarget(s.layer_b, 0, 0, 0, 0);
-      if (from != nullptr && from->source_kind != model::SourceKind::Adjustment) (void)draw_request(*from, false, &s.layer_a);
-      if (to != nullptr && to->source_kind != model::SourceKind::Adjustment) (void)draw_request(*to, false, &s.layer_b);
+      if (from != nullptr && from->source_kind != model::SourceKind::Adjustment) {
+        const bool spatial = HasActiveSpatialEffect(from->effects);
+        if (draw_request(*from, false, &s.layer_a, spatial) && spatial) {
+          apply_effects(s.layer_a, s.effect_scratch, from->effects);
+        }
+      }
+      if (to != nullptr && to->source_kind != model::SourceKind::Adjustment) {
+        const bool spatial = HasActiveSpatialEffect(to->effects);
+        if (draw_request(*to, false, &s.layer_b, spatial) && spatial) {
+          apply_effects(s.layer_b, s.effect_scratch, to->effects);
+        }
+      }
       s.SetBaseParams();
       s.params.weight[0] = std::clamp(static_cast<float>(transition->progress), 0.0f, 1.0f);
       const int in = s.current_canvas, out = 1 - s.current_canvas;
@@ -1371,7 +1751,21 @@ media::VideoFrame D3D11Compositor::Compose(const timeline::PlaybackPlan& plan, c
         ++statistics.adjustment_layers;
         continue;
       }
-      (void)draw_request(*request, true, nullptr);
+      if (HasActiveSpatialEffect(request->effects)) {
+        s.ClearTarget(s.layer_a, 0, 0, 0, 0);
+        if (draw_request(*request, false, &s.layer_a, true)) {
+          apply_effects(s.layer_a, s.effect_scratch, request->effects);
+          s.SetBaseParams();
+          s.params.weight[0] = 0.0f;  // CSMixOver with no B contribution is source-over for A.
+          const int in = s.current_canvas, out = 1 - s.current_canvas;
+          s.Bind(nullptr, nullptr, s.canvas[in].srv.Get(), s.layer_a.srv.Get(), nullptr, s.canvas[out].uav.Get());
+          s.Dispatch(s.mix_over.Get());
+          s.Unbind();
+          s.current_canvas = out;
+        }
+      } else {
+        (void)draw_request(*request, true, nullptr);
+      }
       ++statistics.layers_composited;
     }
   }
@@ -1390,27 +1784,37 @@ media::VideoFrame D3D11Compositor::Compose(const timeline::PlaybackPlan& plan, c
     }
     s.Unbind();
   }
-  auto& staging = f32 ? s.staging_f32 : s.staging_u8;
-  context.CopyResource(staging.Get(), f32 ? s.out_f32.texture.Get() : s.out_u8.texture.Get());
+  ComPtr<ID3D11Texture2D> staging = f32 ? s.staging_f32 : s.staging_u8;
+  if (presentation == nullptr) context.CopyResource(staging.Get(), f32 ? s.out_f32.texture.Get() : s.out_u8.texture.Get());
   if (timed) {
     context.End(s.end_stamp.Get());
     context.End(s.disjoint.Get());
   }
 
-  const auto readback_started = Clock::now();
-  D3D11_MAPPED_SUBRESOURCE mapped{};
-  if (FAILED(context.Map(staging.Get(), 0, D3D11_MAP_READ, 0, &mapped))) throw std::runtime_error("could not read the finished picture back from the device");
-  auto output = media::VideoFrame::Allocate(f32 ? media::PixelFormat::RgbaF32 : media::PixelFormat::Rgba8, width, height);
-  const std::size_t row_bytes = static_cast<std::size_t>(width) * (f32 ? 16u : 4u);
-  for (int y = 0; y < height; ++y) std::memcpy(output.row(y), static_cast<const std::uint8_t*>(mapped.pData) + static_cast<std::size_t>(y) * mapped.RowPitch, row_bytes);
-  context.Unmap(staging.Get(), 0);
-  stats.readback_ms = MillisecondsSince(readback_started);
-  output.presentation_time = plan.sequence_time;
-  output.color.range = model::ColorRange::Full;
-  if (managed && working) {
-    const auto tags = color::TagsOf(*working);
-    output.color.primaries = tags.primaries;
-    output.color.transfer = tags.transfer;
+  media::VideoFrame output;
+  if (presentation != nullptr) {
+    *presentation = s.Present(width, height, plan.sequence_time);
+  } else {
+    const auto readback_started = Clock::now();
+    D3D11_MAPPED_SUBRESOURCE mapped{};
+    if (FAILED(context.Map(staging.Get(), 0, D3D11_MAP_READ, 0, &mapped))) {
+      throw std::runtime_error("could not read the finished picture back from the device");
+    }
+    output = media::VideoFrame::Allocate(f32 ? media::PixelFormat::RgbaF32 : media::PixelFormat::Rgba8, width, height);
+    const std::size_t row_bytes = static_cast<std::size_t>(width) * (f32 ? 16u : 4u);
+    for (int y = 0; y < height; ++y) {
+      std::memcpy(output.row(y), static_cast<const std::uint8_t*>(mapped.pData) + static_cast<std::size_t>(y) * mapped.RowPitch,
+                  row_bytes);
+    }
+    context.Unmap(staging.Get(), 0);
+    stats.readback_ms = MillisecondsSince(readback_started);
+    output.presentation_time = plan.sequence_time;
+    output.color.range = model::ColorRange::Full;
+    if (managed && working) {
+      const auto tags = color::TagsOf(*working);
+      output.color.primaries = tags.primaries;
+      output.color.transfer = tags.transfer;
+    }
   }
 
   if (timed) {
@@ -1421,7 +1825,8 @@ media::VideoFrame D3D11Compositor::Compose(const timeline::PlaybackPlan& plan, c
       stats.gpu_ms = static_cast<double>(end - begin) * 1000.0 / static_cast<double>(disjoint.Frequency);
     }
   }
-  stats.texture_bytes = s.texture_bytes;
+  stats.texture_bytes = s.texture_bytes + s.presentation_pool.size() * static_cast<std::size_t>(width) *
+                                              static_cast<std::size_t>(height) * 4u;
   stats.total_ms = MillisecondsSince(started);
   return output;
 }
@@ -1446,7 +1851,8 @@ bool D3D11Compositor::Supports(const timeline::PlaybackPlan&, const CompositorCo
   if (reason != nullptr) *reason = "no Direct3D 11";
   return false;
 }
-media::VideoFrame D3D11Compositor::Compose(const timeline::PlaybackPlan&, const CompositorConfig&, const FrameResolver&, Statistics&, GpuStatistics*, const DeviceFrameResolver&) {
+media::VideoFrame D3D11Compositor::Compose(const timeline::PlaybackPlan&, const CompositorConfig&, const FrameResolver&, Statistics&,
+                                           GpuStatistics*, const DeviceFrameResolver&, PresentationFrame*) {
   throw std::logic_error("no Direct3D 11");
 }
 void D3D11Compositor::ReleaseResources() {}

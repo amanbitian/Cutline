@@ -1,33 +1,33 @@
 # Cutline parity report
 
-Generated: 2026-10-07T13:34:36.074Z
+Generated: 2026-10-08T18:07:33.516Z
 
 No overall marketing percentage is reported; domains are intentionally unweighted.
 
 | Domain | Tracked | Validated | Implemented | Partial | Prototype | In progress | Planned | Deferred |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| accessibility | 7 | 0 | 0 | 0 | 0 | 0 | 7 | 0 |
+| accessibility | 7 | 0 | 1 | 0 | 0 | 0 | 6 | 0 |
 | ai | 9 | 0 | 0 | 2 | 1 | 0 | 0 | 6 |
-| audio | 10 | 0 | 7 | 1 | 0 | 0 | 2 | 0 |
-| camera-formats | 8 | 0 | 0 | 0 | 0 | 0 | 8 | 0 |
-| captions | 8 | 0 | 0 | 0 | 1 | 0 | 7 | 0 |
+| audio | 10 | 0 | 7 | 2 | 0 | 0 | 1 | 0 |
+| camera-formats | 8 | 0 | 0 | 1 | 0 | 0 | 7 | 0 |
+| captions | 8 | 0 | 5 | 1 | 0 | 0 | 2 | 0 |
 | codecs | 8 | 0 | 5 | 2 | 0 | 0 | 1 | 0 |
 | collaboration | 7 | 0 | 0 | 0 | 0 | 0 | 7 | 0 |
-| color | 11 | 0 | 1 | 3 | 0 | 0 | 7 | 0 |
-| editorial | 17 | 0 | 3 | 1 | 0 | 0 | 13 | 0 |
-| effects | 16 | 0 | 13 | 1 | 0 | 0 | 2 | 0 |
-| export | 8 | 0 | 5 | 0 | 0 | 0 | 3 | 0 |
-| graphics | 8 | 0 | 4 | 0 | 0 | 0 | 4 | 0 |
-| hardware | 12 | 0 | 1 | 4 | 0 | 0 | 3 | 4 |
-| interchange | 10 | 0 | 0 | 0 | 0 | 0 | 10 | 0 |
+| color | 11 | 0 | 2 | 8 | 0 | 0 | 1 | 0 |
+| editorial | 17 | 0 | 4 | 1 | 0 | 0 | 12 | 0 |
+| effects | 16 | 0 | 14 | 1 | 0 | 0 | 1 | 0 |
+| export | 8 | 0 | 6 | 0 | 0 | 0 | 2 | 0 |
+| graphics | 8 | 0 | 5 | 1 | 0 | 0 | 2 | 0 |
+| hardware | 12 | 0 | 1 | 5 | 0 | 0 | 2 | 4 |
+| interchange | 10 | 0 | 4 | 1 | 0 | 0 | 5 | 0 |
 | media | 14 | 0 | 7 | 2 | 3 | 0 | 2 | 0 |
-| monitors | 7 | 0 | 1 | 0 | 0 | 0 | 6 | 0 |
-| performance | 9 | 0 | 1 | 3 | 0 | 0 | 5 | 0 |
+| monitors | 7 | 0 | 3 | 2 | 0 | 0 | 2 | 0 |
+| performance | 9 | 0 | 2 | 4 | 0 | 0 | 3 | 0 |
 | plugins | 7 | 0 | 0 | 0 | 0 | 0 | 0 | 7 |
 | review | 6 | 0 | 0 | 0 | 0 | 0 | 6 | 0 |
 | timeline | 13 | 0 | 13 | 0 | 0 | 0 | 0 | 0 |
-| transitions | 7 | 0 | 4 | 0 | 0 | 0 | 3 | 0 |
-| trimming | 13 | 0 | 4 | 1 | 2 | 0 | 6 | 0 |
+| transitions | 7 | 0 | 4 | 2 | 0 | 0 | 1 | 0 |
+| trimming | 13 | 0 | 11 | 1 | 0 | 0 | 1 | 0 |
 | vr | 5 | 0 | 0 | 0 | 0 | 0 | 5 | 0 |
 
 ## Capability inventory
@@ -41,7 +41,7 @@ No overall marketing percentage is reported; domains are intentionally unweighte
 | high_contrast | High contrast | P1 | planned | UI remains usable under supported system contrast settings. |
 | keyboard_navigation | Keyboard navigation | P1 | planned | All primary editorial actions have discoverable keyboard operation. |
 | screen_reader_semantics | Screen reader semantics | P1 | planned | Native UI exposes meaningful names, roles, values, and state. |
-| shortcut_customization | Shortcut customization | P2 | planned | Allows conflict-checked remapping of supported shortcuts. |
+| shortcut_customization | Shortcut customization | P2 | implemented | Allows conflict-checked remapping of supported shortcuts. |
 | ui_scaling | UI scaling | P1 | planned | UI supports documented DPI/text scale ranges without obscuring controls. |
 
 ### ai
@@ -69,7 +69,7 @@ No overall marketing percentage is reported; domains are intentionally unweighte
 | audio_keyframes | Audio keyframes | P1 | implemented | Applies editable gain/pan automation at exact sample positions. |
 | audio_master_clock | Audio master clock | P0 | implemented | Video presentation derives from actual audio-device sample progress. |
 | audio_mixer | Audio mixer | P1 | implemented | Mixes track gain, pan, mute, solo, and routing sample-accurately. |
-| audio_sync_alignment | Audio synchronization | P1 | planned | Produces reviewable alignment results with confidence/provenance. |
+| audio_sync_alignment | Audio synchronization | P1 | partial | Produces reviewable alignment results with confidence/provenance. |
 | loudness_metering | Loudness metering | P1 | implemented | Reports standards-defined peak and loudness measurements. |
 | waveform_generation | Waveform generation | P1 | planned | Builds cached waveform summaries from decoded audio. |
 
@@ -81,7 +81,7 @@ No overall marketing percentage is reported; domains are intentionally unweighte
 | braw_support | Blackmagic RAW support | P2 | planned | Uses the appropriate SDK path and preserves decode controls. |
 | camera_format_capability_registry | Camera format capability registry | P1 | planned | Reports decode, metadata, proxy, and license capability per camera format. |
 | canon_raw_support | Canon RAW support | P2 | planned | Handles approved Canon RAW media with documented limits. |
-| prores_support | ProRes support | P1 | planned | Probes, decodes, and exports only supported/legal ProRes profiles. |
+| prores_support | ProRes support | P1 | partial | Probes, decodes, and exports only supported/legal ProRes profiles. |
 | raw_metadata_controls | RAW metadata controls | P2 | planned | Makes source decode controls explicit and non-destructive. |
 | red_format_support | RED format support | P2 | planned | Handles approved RED media through an authorized decoder path. |
 | sony_xavc_support | Sony XAVC support | P2 | planned | Probes and decodes supported XAVC variants with correct metadata. |
@@ -90,13 +90,13 @@ No overall marketing percentage is reported; domains are intentionally unweighte
 
 | ID | Capability | Priority | Status | Acceptance |
 |---|---|---|---|---|
-| auto_caption | Automatic captions | P2 | planned | Stores model/provider provenance and requires human review. |
+| auto_caption | Automatic captions | P2 | partial | Stores model/provider provenance and requires human review. |
 | caption_accessibility_qc | Caption accessibility QC | P2 | planned | Reports timing, length, and overlap violations deterministically. |
-| caption_editing | Caption editing | P1 | planned | Edits text and timing through commands with range validation. |
-| caption_export | Caption export | P1 | planned | Exports selected caption standards with timing verification. |
-| caption_import | Caption import | P1 | planned | Imports supported timed text while retaining parse diagnostics. |
-| caption_styles | Caption styles | P1 | planned | Applies reusable styles in preview and supported exports. |
-| caption_track | Caption track | P1 | prototype | Stores timed caption cues as durable sequence entities. |
+| caption_editing | Caption editing | P1 | implemented | Edits text and timing through commands with range validation. |
+| caption_export | Caption export | P1 | implemented | Exports selected caption standards with timing verification. |
+| caption_import | Caption import | P1 | implemented | Imports supported timed text while retaining parse diagnostics. |
+| caption_styles | Caption styles | P1 | implemented | Applies reusable styles in preview and supported exports. |
+| caption_track | Caption track | P1 | implemented | Stores timed caption cues as durable sequence entities. |
 | caption_translation | Caption translation | P2 | planned | Produces reviewable translated cues without overwriting originals. |
 
 ### codecs
@@ -131,12 +131,12 @@ No overall marketing percentage is reported; domains are intentionally unweighte
 | basic_color_correction | Basic color correction | P1 | implemented | Applies correction values in a color-managed native render pipeline. |
 | color_managed_pipeline | Color-managed pipeline | P1 | partial | Tracks input, working, display, and export transforms explicitly. |
 | color_match | Color match | P2 | planned | Produces reviewable match parameters rather than destructive pixel changes. |
-| color_scopes | Color scopes | P1 | planned | Computes waveform, vectorscope, histogram, and parade from actual frames. |
-| color_wheels | Color wheels | P1 | planned | Applies lift/gamma/gain style controls with documented math. |
-| hdr_hlg | HDR HLG | P2 | planned | Maintains HLG transfer metadata and validates preview/export transform. |
-| hdr_pq | HDR PQ | P2 | planned | Maintains PQ transfer metadata and validates preview/export transform. |
-| look_presets | Look presets | P1 | planned | Stores non-destructive versioned grade presets. |
-| lumetri_style_curves | Curves | P1 | planned | Evaluates editable channel and luma curves in the grade graph. |
+| color_scopes | Color scopes | P1 | implemented | Computes waveform, vectorscope, histogram, and parade from actual frames. |
+| color_wheels | Color wheels | P1 | partial | Applies lift/gamma/gain style controls with documented math. |
+| hdr_hlg | HDR HLG | P2 | partial | Maintains HLG transfer metadata and validates preview/export transform. |
+| hdr_pq | HDR PQ | P2 | partial | Maintains PQ transfer metadata and validates preview/export transform. |
+| look_presets | Look presets | P1 | partial | Stores non-destructive versioned grade presets. |
+| lumetri_style_curves | Curves | P1 | partial | Evaluates editable channel and luma curves in the grade graph. |
 | lut_management | LUT management | P1 | partial | Imports, validates, applies, and records LUT provenance. |
 | wide_gamut | Wide-gamut workflows | P2 | partial | Preserves declared color primaries through decode, render, and export. |
 
@@ -151,7 +151,7 @@ No overall marketing percentage is reported; domains are intentionally unweighte
 | program_monitor | Program Monitor | P0 | partial | Presents compiled sequence frames without browser-video authority. |
 | replace_edit | Replace edit | P1 | planned | Replaces a target clip while preserving declared timing and links. |
 | reverse_match_frame | Reverse match frame | P1 | planned | Finds each sequence use of the current source frame. |
-| sequence_start_end | Sequence start/end navigation | P0 | planned | Moves playhead to deterministic sequence boundaries. |
+| sequence_start_end | Sequence start/end navigation | P0 | implemented | Moves playhead to deterministic sequence boundaries. |
 | source_clear_marks | Clear source marks | P0 | planned | Clears source in/out without changing media metadata. |
 | source_mark_in | Source mark in | P0 | planned | Sets an exact RationalTime source in point. |
 | source_mark_out | Source mark out | P0 | planned | Sets an exact RationalTime source out point. |
@@ -173,7 +173,7 @@ No overall marketing percentage is reported; domains are intentionally unweighte
 | effect_graph | Effect graph | P1 | partial | Compiles ordered effect nodes into an immutable render request. |
 | effect_presets | Effect presets | P1 | planned | Stores versioned reusable parameter sets. |
 | lens_correction | Lens and wide-angle correction | P1 | implemented | Corrects radial distortion with centre, scale, and quadratic controls. |
-| mask_tracking | Mask tracking | P2 | planned | Stores reviewable tracking data with source and algorithm provenance. |
+| mask_tracking | Mask tracking | P2 | implemented | Stores reviewable tracking data with source and algorithm provenance. |
 | masks | Masks | P2 | implemented | Renders serialized geometric masks with feather and expansion. |
 | motion_keyframes | Motion keyframes | P1 | implemented | Evaluates supported interpolation deterministically at render time. |
 | opacity_effect | Opacity effect | P1 | implemented | Applies alpha consistently in preview and export. |
@@ -191,7 +191,7 @@ No overall marketing percentage is reported; domains are intentionally unweighte
 | export_progress | Export progress | P0 | implemented | Reports phase, frames, time, error, and cancellation state. |
 | export_queue | Export queue | P0 | implemented | Queues persistent, resumable jobs with frozen job settings. |
 | export_validation | Export validation | P1 | implemented | Re-probes outputs and reports format/timing mismatches. |
-| media_export | Media export | P1 | planned | Transcodes selected source or timeline output with diagnostics. |
+| media_export | Media export | P1 | implemented | Transcodes selected source or timeline output with diagnostics. |
 | render_and_replace | Render and Replace | P1 | planned | Creates a reversible rendered-media substitution with provenance. |
 | smart_render | Smart render | P2 | planned | Reuses eligible encoded segments only when codec and GOP constraints permit. |
 | timeline_export | Timeline export | P0 | implemented | Renders an exact selected sequence range to a validated output. |
@@ -201,9 +201,9 @@ No overall marketing percentage is reported; domains are intentionally unweighte
 | ID | Capability | Priority | Status | Acceptance |
 |---|---|---|---|---|
 | essential_graphics_templates | Reusable graphic templates | P2 | implemented | Packages exposed parameters, assets, and version metadata. |
-| font_management | Font management | P1 | planned | Records required fonts and reports substitution in project and export. |
+| font_management | Font management | P1 | partial | Records required fonts and reports substitution in project and export. |
 | graphics_keyframes | Graphics keyframes | P1 | implemented | Animates graphic properties through the shared keyframe model. |
-| lower_thirds | Lower-third templates | P1 | planned | Creates reusable lower-third templates with editable fields. |
+| lower_thirds | Lower-third templates | P1 | implemented | Creates reusable lower-third templates with editable fields. |
 | responsive_design_time | Responsive design time | P2 | planned | Retimes declared graphic regions without breaking protected segments. |
 | shape_graphics | Shape graphics | P1 | implemented | Renders editable vector shapes in the composition pipeline. |
 | svg_import | SVG import | P2 | planned | Imports a documented safe SVG subset with diagnostics. |
@@ -214,7 +214,7 @@ No overall marketing percentage is reported; domains are intentionally unweighte
 | ID | Capability | Priority | Status | Acceptance |
 |---|---|---|---|---|
 | amf_provider | AMF provider | P2 | deferred | Adds AMD decode/encode only through the shared provider contract. |
-| audio_device_recovery | Audio device recovery | P1 | planned | Recovers or stops safely after audio-device format/disconnect changes. |
+| audio_device_recovery | Audio device recovery | P1 | partial | Recovers or stops safely after audio-device format/disconnect changes. |
 | device_loss_recovery | Device loss recovery | P1 | planned | Recovers UI/project state and reports failed work after device reset. |
 | gpu_compositor_d3d11 | GPU compositor (Direct3D 11) | P1 | partial | Renders the common editing subset of a plan on the GPU to within a level of the software compositor and hands every other frame back to it. |
 | hardware_capability_discovery | Hardware capability discovery | P1 | partial | Reports GPU, codec, audio, and pro-I/O capabilities with driver evidence. |
@@ -232,14 +232,14 @@ No overall marketing percentage is reported; domains are intentionally unweighte
 |---|---|---|---|---|
 | aaf_export | AAF export | P2 | planned | Exports a tested AAF subset with a loss report. |
 | aaf_import | AAF import | P2 | planned | Imports a tested AAF subset with a loss report. |
-| edl_export | EDL export | P2 | planned | Exports conformable EDL with explicit track and effect limitations. |
-| edl_import | EDL import | P2 | planned | Imports EDL events with reel/timecode interpretation reporting. |
+| edl_export | EDL export | P2 | implemented | Exports conformable EDL with explicit track and effect limitations. |
+| edl_import | EDL import | P2 | implemented | Imports EDL events with reel/timecode interpretation reporting. |
 | fcpxml_export | FCPXML export | P2 | planned | Exports a documented FCPXML mapping with diagnostics. |
 | fcpxml_import | FCPXML import | P2 | planned | Imports a documented FCPXML mapping with diagnostics. |
 | omf_audio_export | OMF audio export | P2 | planned | Exports compatible audio media and edit decisions with a validation report. |
-| project_archive | Project archive | P1 | planned | Packages project metadata, media manifest, and checksums without copying cache by default. |
-| xml_export | XML export | P2 | planned | Exports a documented XML mapping with unsupported-feature diagnostics. |
-| xml_import | XML import | P2 | planned | Imports documented XML subset with a loss report. |
+| project_archive | Project archive | P1 | partial | Packages project metadata, media manifest, and checksums without copying cache by default. |
+| xml_export | XML export | P2 | implemented | Exports a documented XML mapping with unsupported-feature diagnostics. |
+| xml_import | XML import | P2 | implemented | Imports documented XML subset with a loss report. |
 
 ### media
 
@@ -264,10 +264,10 @@ No overall marketing percentage is reported; domains are intentionally unweighte
 
 | ID | Capability | Priority | Status | Acceptance |
 |---|---|---|---|---|
-| fullscreen_playback | Fullscreen playback | P1 | planned | Presents program output in a dedicated fullscreen surface. |
-| monitor_overlays | Monitor overlays | P1 | planned | Shows timecode, dropped-frame, and playback diagnostics accurately. |
-| monitor_safe_margins | Safe margins | P1 | planned | Displays title/action safe overlays independent of source pixels. |
-| monitor_zoom | Monitor zoom | P1 | planned | Changes presentation scale without altering render resolution. |
+| fullscreen_playback | Fullscreen playback | P1 | partial | Presents program output in a dedicated fullscreen surface. |
+| monitor_overlays | Monitor overlays | P1 | partial | Shows timecode, dropped-frame, and playback diagnostics accurately. |
+| monitor_safe_margins | Safe margins | P1 | implemented | Displays title/action safe overlays independent of source pixels. |
+| monitor_zoom | Monitor zoom | P1 | implemented | Changes presentation scale without altering render resolution. |
 | program_playback | Program playback | P0 | implemented | Presents compiled sequence output at the transport clock. |
 | reference_monitor | Reference monitor | P2 | planned | Displays a selected still/frame for visual comparison. |
 | source_playback | Source playback | P0 | planned | Plays, pauses, seeks, and frame-steps decoded source media. |
@@ -280,10 +280,10 @@ No overall marketing percentage is reported; domains are intentionally unweighte
 | background_job_scheduler | Background job scheduler | P1 | partial | Schedules bounded background jobs with cancellation, retry, and durable state. |
 | crash_recovery | Crash recovery | P0 | partial | Reopens the last valid state after interrupted write with user-readable recovery report. |
 | media_cache | Media cache | P1 | planned | Caches conformed/indexed media with versioned invalidation and eviction. |
-| memory_pressure_handling | Memory pressure handling | P1 | planned | Evicts reclaimable caches and degrades gracefully under declared thresholds. |
+| memory_pressure_handling | Memory pressure handling | P1 | partial | Evicts reclaimable caches and degrades gracefully under declared thresholds. |
 | playback_frame_budget | Playback frame budget | P1 | planned | Measures decode, render, queue, and present latency per playback frame. |
 | proxy_generation | Proxy generation | P1 | implemented | Creates tracked proxy jobs without blocking interactive playback. |
-| render_cache | Render cache | P1 | planned | Caches render results with complete dependency invalidation. |
+| render_cache | Render cache | P1 | implemented | Caches render results with complete dependency invalidation. |
 | telemetry_diagnostics | Diagnostics | P1 | planned | Captures opt-in local diagnostics with redaction and export controls. |
 
 ### plugins
@@ -334,27 +334,27 @@ No overall marketing percentage is reported; domains are intentionally unweighte
 | audio_crossfade | Audio crossfade | P1 | implemented | Applies gain envelopes that avoid discontinuities. |
 | cross_dissolve | Cross dissolve | P1 | implemented | Blends eligible adjacent clip frames across exact transition duration. |
 | custom_transition_shaders | Custom transition shaders | P2 | planned | Loads validated portable shader transitions through a controlled interface. |
-| dip_to_color | Dip to color | P1 | planned | Composites outgoing/incoming frames through a configurable color. |
+| dip_to_color | Dip to color | P1 | partial | Composites outgoing/incoming frames through a configurable color. |
 | transition_alignment | Transition alignment | P1 | implemented | Supports center/start/end alignment with handle validation. |
-| transition_handle_diagnostics | Transition handle diagnostics | P1 | planned | Explains insufficient media handles before applying a transition. |
+| transition_handle_diagnostics | Transition handle diagnostics | P1 | partial | Explains insufficient media handles before applying a transition. |
 | transition_model | Transition model | P1 | implemented | Persists transition type, alignment, duration, and parameters. |
 
 ### trimming
 
 | ID | Capability | Priority | Status | Acceptance |
 |---|---|---|---|---|
-| clip_selection | Clip selection | P0 | prototype | Selection maps to durable clip identities and command targets. |
-| extract | Extract | P0 | partial | Removes a marked range and ripples applicable tracks. |
+| clip_selection | Clip selection | P0 | implemented | Selection maps to durable clip identities and command targets. |
+| extract | Extract | P0 | implemented | Removes a marked range and ripples applicable tracks. |
 | lift | Lift | P0 | implemented | Removes selected material without shifting unselected material. |
 | rate_stretch | Rate stretch | P1 | planned | Changes clip duration with an explicit rational playback-rate transform. |
 | ripple_delete | Ripple delete | P0 | implemented | Deletes selection and closes the intended gaps transactionally. |
-| ripple_trim | Ripple trim | P0 | planned | Adjusts adjacent downstream clips according to track ripple policy. |
-| roll_trim | Roll trim | P1 | planned | Moves a shared edit point while preserving combined duration. |
-| slide_edit | Slide edit | P1 | planned | Moves a clip while counter-trimming eligible adjacent clips. |
-| slip_edit | Slip edit | P1 | planned | Moves source range while keeping clip timeline placement unchanged. |
-| snapping | Snapping | P0 | prototype | Snap candidates are resolved exactly at sequence time. |
+| ripple_trim | Ripple trim | P0 | implemented | Adjusts adjacent downstream clips according to track ripple policy. |
+| roll_trim | Roll trim | P1 | implemented | Moves a shared edit point while preserving combined duration. |
+| slide_edit | Slide edit | P1 | implemented | Moves a clip while counter-trimming eligible adjacent clips. |
+| slip_edit | Slip edit | P1 | implemented | Moves source range while keeping clip timeline placement unchanged. |
+| snapping | Snapping | P0 | implemented | Snap candidates are resolved exactly at sequence time. |
 | trim_end | Trim end | P0 | implemented | Changes an editable clip end while preserving valid source range. |
-| trim_mode_feedback | Trim mode feedback | P1 | planned | UI reports active trim mode and affected edit sides accurately. |
+| trim_mode_feedback | Trim mode feedback | P1 | partial | UI reports active trim mode and affected edit sides accurately. |
 | trim_start | Trim start | P0 | implemented | Changes an editable clip start while preserving valid source range. |
 
 ### vr

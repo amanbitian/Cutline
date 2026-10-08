@@ -210,7 +210,7 @@ void FramePresenter::Run() {
       rendering_serial_ = job.serial;
       busy_ = true;
     }
-    std::optional<media::VideoFrame> frame;
+    std::optional<PresentedFrame> frame;
     std::string error;
     const auto start = std::chrono::steady_clock::now();
     try {

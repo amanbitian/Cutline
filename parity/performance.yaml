@@ -63,10 +63,30 @@
    "id": "render_cache",
    "name": "Render cache",
    "priority": "P1",
-   "status": "planned",
+   "status": "implemented",
    "acceptance": [
     "Caches render results with complete dependency invalidation."
-   ]
+   ],
+   "tests": {
+    "unit": [
+     "ARenderedFrameIsServedFromTheCacheTheSecondTimeAndAnEditOnlyRemakesWhatItTouches",
+     "APreviewAndAnExportShareWhatEitherHasAlreadyRenderedThroughTheDiskTier"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "render/RenderCache.cpp",
+     "playback/PlaybackEngine.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
   },
   {
    "id": "media_cache",
@@ -110,14 +130,27 @@
    "status": "partial",
    "implementation": {
     "components": [
-     "core/project journal",
-     "core/project snapshots"
+     "core/project/ProjectStore.cpp"
     ],
-    "notes": "Journal/snapshot foundation exists but has not been validated against process interruption."
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
    },
    "acceptance": [
     "Reopens the last valid state after interrupted write with user-readable recovery report."
-   ]
+   ],
+   "tests": {
+    "unit": [
+     "RecoveryFromAnyRevisionBoundaryLandsOnThatRevisionExactly",
+     "ATornOrMissingRecordStopsRecoveryAtTheLastGoodRevisionAndSaysSo",
+     "WithNothingToRebuildFromRecoveryFailsClearlyAndTouchesNothing"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   }
   },
   {
    "id": "telemetry_diagnostics",
@@ -132,10 +165,28 @@
    "id": "memory_pressure_handling",
    "name": "Memory pressure handling",
    "priority": "P1",
-   "status": "planned",
+   "status": "partial",
    "acceptance": [
     "Evicts reclaimable caches and degrades gracefully under declared thresholds."
-   ]
+   ],
+   "tests": {
+    "unit": [
+     "SharedQuotaEvictsCheapRenderFramesBeforeExpensiveFlowAnalysis"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "core/resource/QuotaManager.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
   }
  ]
 }

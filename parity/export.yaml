@@ -89,10 +89,32 @@
    "id": "media_export",
    "name": "Media export",
    "priority": "P1",
-   "status": "planned",
+   "status": "implemented",
    "acceptance": [
     "Transcodes selected source or timeline output with diagnostics."
-   ]
+   ],
+   "tests": {
+    "unit": [
+     "ExportedVideoDecodesBackToWhatTheMonitorRendered",
+     "ExportWritesTheExpectedFrameCount",
+     "TheCheckOfAFinishedExportNamesWhatIsWrongWithATruncatedWrongOrMissingFile"
+    ],
+    "integration": [
+     "cutline native test suite (ctest)"
+    ],
+    "fixture": [
+     "tests/golden",
+     "build/*/fixtures (generated)"
+    ]
+   },
+   "implementation": {
+    "components": [
+     "exporter/ExportWorker.cpp",
+     "exporter/ExportPresets.cpp",
+     "exporter/ExportQueue.cpp"
+    ],
+    "notes": "Verified by the named native tests; see IMPLEMENTATION_STATUS.md."
+   }
   },
   {
    "id": "export_presets",

@@ -4,8 +4,8 @@
 //
 // It renders what the software compositor (render/Compositor.h) renders, for the plans it can: layers per track,
 // bottom to top, with the motion transform, crop, opacity and primary grade, solid generators, adjustment clips,
-// dissolves and sequence-level effects, premultiplied source-over in half float. Anything else in a plan (masks,
-// blur and the other filters, blend modes, graphics, captions, colour management, optical-flow interpolation) makes
+// dissolves, spatial kernels and sequence-level effects, premultiplied source-over in half float. Anything else in a
+// plan (masks, unsupported filters, blend modes, graphics, captions, colour management, optical-flow interpolation) makes
 // `Supports` say no and the caller renders that frame with the software compositor, which stays the reference:
 // every number in the shaders is the software compositor's, and tests/native/gpu_tests.cpp compares the two picture
 // by picture.
@@ -36,6 +36,19 @@ struct GpuStatistics final {
   std::size_t texture_bytes{0};  // device memory this compositor holds
 };
 
+// A finished RGBA8 texture that can be sampled directly by a UI using this
+// compositor's D3D11 device. `lifetime` keeps the COM resource alive and keeps
+// the compositor from recycling it while the scene graph still references it.
+struct PresentationFrame final {
+  void* device{nullptr};
+  void* texture{nullptr};
+  int width{0};
+  int height{0};
+  time::RationalTime presentation_time;
+  std::shared_ptr<void> lifetime;
+  [[nodiscard]] bool valid() const noexcept { return device != nullptr && texture != nullptr && width > 0 && height > 0 && lifetime != nullptr; }
+};
+
 // Thrown by Compose when a picture turns out to need something only the software compositor does (a colour conversion
 // between spaces), after Supports said yes because that could not be known until the picture arrived. The caller renders
 // the frame with the software compositor.
@@ -51,6 +64,10 @@ class D3D11Compositor final {
     std::string adapter_id;
     // Allow the software rasteriser (WARP) when no hardware adapter qualifies. For machines without a GPU and for tests.
     bool allow_software{false};
+    // Optional device owned by the presentation system (Qt Quick). Using it
+    // lets the compositor hand its output texture straight to that system.
+    void* external_device{nullptr};
+    void* external_context{nullptr};
   };
 
   // Every adapter the system lists, as the selector sees it.
@@ -73,7 +90,8 @@ class D3D11Compositor final {
   // Renders a plan `Supports` accepted. `resolve` supplies in-memory pictures; `device_resolve`, if given, is asked
   // first and supplies pictures that are already on the device. One caller at a time.
   [[nodiscard]] media::VideoFrame Compose(const timeline::PlaybackPlan& plan, const CompositorConfig& config, const FrameResolver& resolve,
-                                          Statistics& statistics, GpuStatistics* gpu = nullptr, const DeviceFrameResolver& device_resolve = {});
+                                          Statistics& statistics, GpuStatistics* gpu = nullptr, const DeviceFrameResolver& device_resolve = {},
+                                          PresentationFrame* presentation = nullptr);
 
   // Drops pooled textures and targets (a size change, a memory squeeze).
   void ReleaseResources();
