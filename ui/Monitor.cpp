@@ -158,15 +158,16 @@ FramePresenter::~FramePresenter() {
   if (worker_.joinable()) worker_.join();
 }
 
-std::uint64_t FramePresenter::Request(const time::RationalTime& at, SizePx size) {
+std::uint64_t FramePresenter::Request(const time::RationalTime& at, SizePx size, PresentationMode mode) {
   std::uint64_t serial;
   {
     const std::lock_guard<std::mutex> lock(mutex_);
     ++stats_.requested;
     if (pending_.has_value()) ++stats_.coalesced;
-    pending_ = std::pair{at, size};
-    last_ = pending_;
     serial = ++serial_;
+    if (mode == PresentationMode::LatestOnly) ++generation_;
+    pending_ = RequestJob{at, size, serial, generation_, mode};
+    last_ = std::pair{at, size};
   }
   wake_.notify_one();
   return serial;
@@ -179,8 +180,9 @@ std::uint64_t FramePresenter::Invalidate() {
     if (!last_.has_value()) return 0;
     ++stats_.requested;
     if (pending_.has_value()) ++stats_.coalesced;
-    pending_ = last_;
     serial = ++serial_;
+    ++generation_;
+    pending_ = RequestJob{last_->first, last_->second, serial, generation_, PresentationMode::LatestOnly};
   }
   wake_.notify_one();
   return serial;
@@ -198,23 +200,21 @@ PresenterStatistics FramePresenter::statistics() const {
 
 void FramePresenter::Run() {
   for (;;) {
-    std::pair<time::RationalTime, SizePx> job;
-    std::uint64_t serial = 0;
+    RequestJob job;
     {
       std::unique_lock<std::mutex> lock(mutex_);
       wake_.wait(lock, [this] { return stop_ || pending_.has_value(); });
       if (stop_) return;
       job = *pending_;
       pending_.reset();
-      serial = serial_;
-      rendering_serial_ = serial;
+      rendering_serial_ = job.serial;
       busy_ = true;
     }
     std::optional<media::VideoFrame> frame;
     std::string error;
     const auto start = std::chrono::steady_clock::now();
     try {
-      frame = render_(job.first, job.second);
+      frame = render_(job.at, job.size);
     } catch (const std::exception& e) {
       error = e.what();
     } catch (...) {
@@ -231,13 +231,17 @@ void FramePresenter::Run() {
         stats_.last_error = error;
       } else {
         ++stats_.rendered;
-        // A request that came in while this rendered has overtaken it: show the newer one instead.
-        if (serial_ == serial) deliver = true;
+        // Playback is allowed to present a completed frame while its successor waits. A seek or edit advances the
+        // generation and still invalidates every frame rendered for the old state.
+        if (generation_ == job.generation &&
+            (job.mode == PresentationMode::Playback || serial_ == job.serial)) {
+          deliver = true;
+        }
         else ++stats_.stale;
       }
     }
     if (deliver) {
-      deliver_(std::move(*frame), job.first, serial);
+      deliver_(std::move(*frame), job.at, job.serial);
       const std::lock_guard<std::mutex> lock(mutex_);
       ++stats_.delivered;
     }

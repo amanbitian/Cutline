@@ -49,6 +49,7 @@
 #include "timeline/TimelineCompiler.h"
 
 #include <atomic>
+#include <condition_variable>
 #include <cstdint>
 #include <functional>
 #include <list>
@@ -57,6 +58,7 @@
 #include <mutex>
 #include <optional>
 #include <string>
+#include <thread>
 #include <unordered_map>
 
 namespace cutline::playback {
@@ -195,7 +197,9 @@ class PlaybackEngine final {
   // while the locator still gives their media the path they were opened from: a
   // relink closes and reopens them, and media that was offline is tried again.
   // Renders in progress finish on the snapshot they began with.
-  void UpdateSequence(timeline::SequenceGraph graph);
+  // Keep raw pictures and device decoders for edits that cannot change source media.
+  // Relink, proxy changes, undo/redo and external updates use the conservative default.
+  void UpdateSequence(timeline::SequenceGraph graph, bool invalidate_media = true);
 
   // Renders pictures at this size from now on (0 by 0: the sequence's own). A monitor at reduced resolution asks for
   // less work this way; the render cache keeps pictures of each size apart, since the size is part of what a picture is.
@@ -273,8 +277,10 @@ class PlaybackEngine final {
   [[nodiscard]] const media::VideoFrame* InsertCachedFrame(std::string key, media::VideoFrame frame,
                                                             bool read_ahead);
   void ScheduleReadAhead(const Graph& graph, const time::RationalTime& at,
-                         const timeline::CompileOptions& options, bool include_current);
-  void AdvanceReadAheadGeneration();
+                         const timeline::CompileOptions& options, bool include_current,
+                         std::uint64_t generation = 0);
+  [[nodiscard]] std::uint64_t AdvanceReadAheadGeneration();
+  void RunReadAheadPrimer();
   [[nodiscard]] media::VideoFrame ComposeSequence(const timeline::SequenceGraph& graph,
                                                   const timeline::Sequence& sequence, const time::RationalTime& at,
                                                   int depth, const timeline::CompileOptions& options);
@@ -368,6 +374,17 @@ class PlaybackEngine final {
 
   std::unique_ptr<DecodePool> decode_pool_;
   std::atomic<std::uint64_t> read_ahead_generation_{1};
+  struct PrimeRequest final {
+    Graph graph;
+    time::RationalTime at;
+    timeline::CompileOptions options;
+    std::uint64_t generation{0};
+  };
+  std::mutex prime_mutex_;
+  std::condition_variable prime_wake_;
+  std::optional<PrimeRequest> prime_pending_;
+  bool prime_stop_{false};
+  std::thread prime_worker_;
 
   // Transport. Guarded by transport_mutex_; `generation_` counts seeks.
   mutable std::mutex transport_mutex_;

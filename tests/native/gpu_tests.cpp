@@ -27,6 +27,7 @@
 #include <optional>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <string>
 
 namespace model = cutline::model;
@@ -335,6 +336,20 @@ CUTLINE_TEST(DissolvesAdjustmentClipsGeneratorsAndSequenceEffectsMatchTheSoftwar
   Frames frames;
   frames.Add("a", TexturedFrame(128, 72, PixelFormat::Rgba8, 4));
   frames.Add("b", TexturedFrame(128, 72, PixelFormat::Rgba8, 5));
+  // Ordinary 8-bit output does not reserve float output/staging or the two transition layers. The layers are added
+  // only when a transition frame first needs them.
+  {
+    CompositorConfig config;
+    Statistics statistics;
+    gpu::GpuStatistics device_statistics;
+    Device()->ReleaseResources();
+    (void)Device()->Compose(TimelineCompiler{}.Compile(sequence, Seconds(1)), config, frames.Resolver(), statistics,
+                            &device_statistics);
+    CHECK_EQ(device_statistics.texture_bytes, static_cast<std::size_t>(128 * 72 * 24));
+    (void)Device()->Compose(TimelineCompiler{}.Compile(sequence, Seconds(6)), config, frames.Resolver(), statistics,
+                            &device_statistics);
+    CHECK_EQ(device_statistics.texture_bytes, static_cast<std::size_t>(128 * 72 * 40));
+  }
   for (const std::int64_t at : {1, 5, 6, 8}) {
     auto pair = Render(sequence, at, frames);
     CheckParity(pair, ("at " + std::to_string(at) + " s").c_str());
@@ -364,6 +379,7 @@ CUTLINE_TEST(WhatTheGpuCannotRenderIsRefusedWithAReasonSoTheSoftwareCompositorDo
   std::string why;
   CHECK(supports(with_effect("opacity", {{"value", Value::Scalar(0.5)}}), why));
   CHECK(supports(with_effect("motion", {{"scale", Value::Vec2(50.0, 50.0)}}), why));
+  CHECK(supports(with_effect("blur", {{"radius", Value::Scalar(0.0)}}), why));
   CHECK(!supports(with_effect("blur", {{"radius", Value::Scalar(4.0)}}), why) && why.find("blur") != std::string::npos);
   CHECK(!supports(with_effect("blend_mode", {{"mode", Value::Scalar(1.0)}}), why) && why.find("blend") != std::string::npos);
   CHECK(!supports(with_effect("vignette", {{"amount", Value::Scalar(0.5)}}), why));
@@ -721,6 +737,106 @@ CUTLINE_TEST(AnEngineDecodesH264OnTheGpuAndComposesItWithoutUploadingAPicture) {
   CHECK(hardware_difference / 4 < 3.0);  // the same picture; the chroma of an edge may land differently
 }
 
+CUTLINE_TEST(SoftwareReadAheadSkipsMediaAlreadyDecodedOnTheGpu) {
+  SKIP_INAPPLICABLE(HaveHardware(), "no hardware Direct3D 11 adapter");
+  const auto path = Fixture("bars-2997.mp4");
+  SKIP_UNLESS(path.has_value(), "bars-2997.mp4 fixture not generated");
+  cutline::media::RegisterAllProviders();
+  const cutline::playback::MediaLocator locator = [file = *path](const std::string&) { return file; };
+  auto settings = EngineSettings(true);
+  settings.decode_workers = 1;
+  settings.read_ahead_frames = 4;
+  settings.max_pending_decodes = 4;
+  cutline::playback::PlaybackEngine engine(OneClipGraph(320, 180, "m", 4), locator, settings);
+
+  (void)engine.RenderFrame(Seconds(0));
+  const auto stats = engine.statistics();
+  SKIP_UNLESS(stats.hardware_pictures > 0, "this adapter has no hardware decoder for H.264");
+  CHECK_EQ(stats.read_ahead_queued, 0);
+}
+
+namespace {
+
+constexpr const char* kFailingDevicePath = "test:device-decoder-falls-back";
+
+class FailingDeviceSource final : public cutline::media::Source {
+ public:
+  explicit FailingDeviceSource(bool device) : device_(device) {
+    cutline::commands::MediaStream stream;
+    stream.kind = model::StreamKind::Video;
+    stream.width = 16;
+    stream.height = 16;
+    stream.frame_rate = {25, 1};
+    probe_.duration = Seconds(4);
+    probe_.streams.push_back(std::move(stream));
+  }
+
+  [[nodiscard]] const cutline::media::Probe& probe() const override { return probe_; }
+  [[nodiscard]] std::optional<VideoFrame> ReadVideo(const RationalTime& time) override {
+    auto frame = VideoFrame::Allocate(PixelFormat::Rgba8, 16, 16);
+    frame.presentation_time = time;
+    frame.duration = {1, 25};
+    return frame;
+  }
+  [[nodiscard]] std::optional<cutline::media::DeviceFrame> ReadDeviceVideo(const RationalTime&) override {
+    device_ = false;
+    return std::nullopt;
+  }
+  [[nodiscard]] bool device_decode_available() const override { return device_; }
+  [[nodiscard]] std::optional<cutline::media::AudioBuffer> ReadAudio(const RationalTime&, std::int64_t, int,
+                                                                     std::int64_t) override {
+    return std::nullopt;
+  }
+  [[nodiscard]] const cutline::media::TimestampMap* timestamps() const override { return nullptr; }
+
+ private:
+  cutline::media::Probe probe_;
+  bool device_{false};
+};
+
+class FailingDeviceProvider final : public cutline::media::SourceProvider {
+ public:
+  [[nodiscard]] std::string name() const override { return "failing-device-test"; }
+  [[nodiscard]] bool CanOpen(const std::string& path) const override { return path == kFailingDevicePath; }
+  [[nodiscard]] std::unique_ptr<cutline::media::Source> Open(const std::string&) override {
+    return std::make_unique<FailingDeviceSource>(false);
+  }
+  [[nodiscard]] std::unique_ptr<cutline::media::Source> Open(
+      const std::string&, const cutline::media::OpenOptions& options) override {
+    return std::make_unique<FailingDeviceSource>(options.d3d11_device != nullptr);
+  }
+  [[nodiscard]] cutline::media::Probe ProbeFile(const std::string&) override {
+    return FailingDeviceSource(false).probe();
+  }
+};
+
+void RegisterFailingDeviceProvider() {
+  static std::once_flag once;
+  std::call_once(once, [] {
+    cutline::media::SourceRegistry::Instance().Register(std::make_unique<FailingDeviceProvider>());
+  });
+}
+
+}  // namespace
+
+CUTLINE_TEST(AHardwareDecoderFailureRestoresSoftwareReadAhead) {
+  SKIP_INAPPLICABLE(Device() != nullptr, "no Direct3D 11 adapter");
+  RegisterFailingDeviceProvider();
+  auto settings = EngineSettings(true);
+  settings.decode_workers = 1;
+  settings.read_ahead_frames = 3;
+  settings.max_pending_decodes = 3;
+  cutline::playback::PlaybackEngine engine(
+      OneClipGraph(16, 16, "m", 4), [](const std::string&) { return std::string(kFailingDevicePath); }, settings);
+
+  const auto frame = engine.RenderFrame(Seconds(0));
+  CHECK(frame.valid());
+  const auto stats = engine.statistics();
+  CHECK_EQ(stats.hardware_pictures, 0);
+  CHECK(stats.uploaded_pictures > 0);
+  CHECK(stats.read_ahead_queued > 0);
+}
+
 // ------------------------------------------------------------------ colour tools on the card ----
 
 namespace {
@@ -855,6 +971,15 @@ CUTLINE_TEST(EveryColourToolOnTheCardGivesTheSamePictureAsTheSoftwareCompositor)
     CheckParity(pair, "neutral tools");
     CHECK(pair.largest <= 1 && pair.change < 0.01);
   }
+  // A normal grading stack can exceed the old eight-operation constant-buffer limit without leaving the card.
+  {
+    std::vector<Effect> effects;
+    for (int index = 0; index < 9; ++index) {
+      effects.push_back(MakeEffect("grade-" + std::to_string(index), "grade",
+                                   {{"exposure", Value::Scalar(index % 2 == 0 ? 0.03 : -0.02)}}));
+    }
+    CheckParity(RenderTextured(ClipWith(std::move(effects)), {}, PixelFormat::Rgba8), "nine grades");
+  }
 }
 
 CUTLINE_TEST(ALutOnTheCardGivesTheSamePictureAsTheSoftwareCompositorForCubesCurvesDomainsAndIntensity) {
@@ -894,7 +1019,15 @@ CUTLINE_TEST(ALutOnTheCardGivesTheSamePictureAsTheSoftwareCompositorForCubesCurv
     CheckParity(RenderTextured(ClipWith(std::move(effects)), root, PixelFormat::Rgba8), "grade, LUT, opacity");
   }
 
-  // What the card will not take is refused, with a reason, so the software compositor draws it and reports what is wrong.
+  // Several LUTs remain on the card and preserve their authored order.
+  {
+    std::vector<Effect> two;
+    two.push_back(lut_effect("small.cube", 0.7));
+    two.push_back(lut_effect("large.cube", 0.4));
+    CheckParity(RenderTextured(ClipWith(std::move(two)), root, PixelFormat::Rgba8), "two LUTs");
+  }
+
+  // What the card cannot take is refused with a reason, so the software compositor reports the fallback.
   CompositorConfig config;
   config.asset_root = root;
   const auto refuses = [&](std::vector<Effect> effects, const char* word) {
@@ -902,12 +1035,6 @@ CUTLINE_TEST(ALutOnTheCardGivesTheSamePictureAsTheSoftwareCompositorForCubesCurv
     const auto plan = TimelineCompiler{}.Compile(ClipWith(std::move(effects)), Seconds(1));
     return !Device()->Supports(plan, config, &why) && why.find(word) != std::string::npos;
   };
-  {
-    std::vector<Effect> two;
-    two.push_back(lut_effect("small.cube", 1.0));
-    two.push_back(lut_effect("large.cube", 1.0));
-    CHECK(refuses(std::move(two), "more than one LUT"));
-  }
   {
     std::vector<Effect> missing;
     missing.push_back(lut_effect("nothing-here.cube", 1.0));

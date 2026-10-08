@@ -428,3 +428,27 @@ Release benchmark on the same 32-thread CPU and AMD Radeon AI PRO R9700, 40 fram
 The GPU path is unchanged at roughly 3.6-4.2 ms wall time in this run, including upload and read-back. These are averages on one synthetic frame and one machine, not p95 playback deadlines. Multi-layer work still needs the general canvas and does not receive the direct-flatten saving. The result remains memory-bandwidth heavy and production footage has not been profiled.
 
 The render suite includes a regression that reuses one compositor for a full frame, a missing frame and then a transformed inset, proving discarded storage cannot leak stale pixels into a later partial layer. All render cases and unchanged golden images pass.
+
+## 2026-10-08 - Playback scheduling and GPU eligibility
+
+Release audit on the same AMD Radeon AI PRO R9700, using 60 sequential frames from a 3840x2160 H.264 source. [Raw results and limitations](perf/2026-10-08-playback-gpu-audit.txt).
+
+| GPU playback case | Median before | Median after | p95 before | p95 after | Software read-ahead jobs before / after |
+|---|---:|---:|---:|---:|---:|
+| Hardware decode and GPU compose, read-ahead enabled | 16.17 ms | 10.48 ms | 19.97 ms | 10.91 ms | 469 / 0 |
+
+Software read-ahead no longer decodes media that the hardware decoder already sends directly to the GPU. This removes duplicate CPU and storage work; the result is now close to the same run with read-ahead disabled (10.41 ms median). Publishing a new read-ahead position also moved off the caller: the synthetic lock-contention probe fell from 109.13 ms to 0.0118 ms.
+
+The GPU eligibility check now ignores unsupported effects only when their sampled parameters are neutral, while active instances still cause an explicit software fallback. The colour stack limit increased from eight to sixteen operations, and the compositor can bind eight ordered LUTs instead of one. Hardware parity tests cover a nine-grade stack and two LUTs. Effect registry metadata now agrees with the compositor for the audited built-ins.
+
+These results are from one machine and source and include the current monitor read-back. Active blur, sharpen, vignette, lens distortion, warps, keys, masks, graphics, optical-flow interpolation, and other unsupported spatial effects still use the software compositor. The core, playback, and hardware GPU test suites pass.
+
+### Follow-up full-codebase audit
+
+The audit found and fixed three additional hot-path problems. A failed hardware decoder now releases its device source so CPU read-ahead resumes. Scope processing downsamples 8-bit, 16-bit and float inputs directly into its small working image, reducing the measured 4K waveform worker median from 20.06 ms to 3.24 ms (84%); Session also avoids two redundant full-frame clones during QImage/scope delivery. Finally, mask blending, blur, sharpen and lens correction now use the existing bounded row pool. At 4K, blur fell from 129.3 to 53.9 ms, sharpen from 70.7 to 49.5 ms, and lens correction from 125.2 to 49.6 ms.
+
+The D3D11 compositor also allocates targets on demand. A normal 4K 8-bit/no-transition compositor now starts with a calculated 189.8 MiB of fixed targets instead of 569.5 MiB, saving 379.7 MiB. Float output/staging and transition layers are created only when used.
+
+The editor is not fully optimized. Render-cache stores and hits still copy an entire 4K frame and measured about 3.0-3.5 ms each. Every displayed GPU frame still synchronously reads back to CPU memory before Qt copies it again. An active unsupported effect sends the whole frame to software; measured 4K medians include 111.7 ms rolling shutter, 156.5 ms mesh warp, 402.0 ms Gaussian blur, 445.6 ms glow, 425.4 ms drop shadow and 3253.7 ms noise reduction. Every edit reloads the sequence and broadly clears decode/device state, while export explicitly disables GPU composition and runs render/encode work serially. The remaining order of work is shared-texture monitor presentation, GPU spatial effects plus hybrid per-layer execution, selective edit invalidation, zero-copy render-cache ownership, and a pipelined export path.
+
+After these follow-up changes, all 151 render tests pass; playback passes 46/49 and GPU passes 12/15 on the AMD adapter, with all six skips caused by generated media fixtures missing from this checkout. The offscreen app suite passes 31/32: its pre-existing bundled-look discovery case still finds fewer than eight entries, while the frame-delivery, playback and async-scope cases pass. Full raw measurements and limitations remain in [perf/2026-10-08-playback-gpu-audit.txt](perf/2026-10-08-playback-gpu-audit.txt).

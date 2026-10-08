@@ -1529,6 +1529,81 @@ CUTLINE_TEST(ThePresenterRendersTheLatestRequestAndDropsWhatWasOvertaken) {
   // Destroying while busy joins cleanly (as the presenter above does when the test ends).
 }
 
+CUTLINE_TEST(ThePresenterDeliversCompletedPlaybackFramesWhileTheNextFrameWaits) {
+  using namespace cutline::ui;
+  std::mutex mutex;
+  std::vector<std::uint64_t> delivered_serials;
+  std::atomic<bool> hold{true};
+  FramePresenter presenter(
+      [&](const RationalTime& at, SizePx size) {
+        if (at.Compare(RationalTime(0, 1)) == 0) {
+          while (hold.load()) std::this_thread::sleep_for(std::chrono::milliseconds(2));
+        }
+        return cutline::media::VideoFrame::Allocate(cutline::media::PixelFormat::Rgba8, size.width, size.height);
+      },
+      [&](cutline::media::VideoFrame frame, const RationalTime&, std::uint64_t serial) {
+        const std::lock_guard<std::mutex> lock(mutex);
+        if (frame.valid()) delivered_serials.push_back(serial);
+      });
+
+  const auto first = presenter.Request(RationalTime(0, 1), {32, 18}, PresentationMode::Playback);
+  std::this_thread::sleep_for(std::chrono::milliseconds(50));
+  std::uint64_t last = 0;
+  for (int i = 1; i <= 20; ++i) {
+    last = presenter.Request(RationalTime(i, 25), {32, 18}, PresentationMode::Playback);
+  }
+  hold = false;
+  CHECK(presenter.WaitIdle());
+
+  const auto stats = presenter.statistics();
+  CHECK_EQ(stats.requested, std::uint64_t{21});
+  CHECK_EQ(stats.coalesced, std::uint64_t{19});
+  CHECK_EQ(stats.rendered, std::uint64_t{2});
+  CHECK_EQ(stats.stale, std::uint64_t{0});
+  CHECK_EQ(stats.delivered, std::uint64_t{2});
+  {
+    const std::lock_guard<std::mutex> lock(mutex);
+    CHECK_EQ(delivered_serials.size(), std::size_t{2});
+    CHECK_EQ(delivered_serials.front(), first);
+    CHECK_EQ(delivered_serials.back(), last);
+  }
+}
+
+CUTLINE_TEST(ALatestOnlyRequestInvalidatesPlaybackFromTheOldPosition) {
+  using namespace cutline::ui;
+  std::atomic<bool> started{false};
+  std::atomic<bool> hold{true};
+  std::vector<std::uint64_t> delivered;
+  FramePresenter presenter(
+      [&](const RationalTime&, SizePx size) {
+        if (!started.exchange(true)) {
+          while (hold.load()) std::this_thread::sleep_for(std::chrono::milliseconds(2));
+        }
+        return cutline::media::VideoFrame::Allocate(cutline::media::PixelFormat::Rgba8, size.width, size.height);
+      },
+      [&](cutline::media::VideoFrame, const RationalTime&, std::uint64_t serial) { delivered.push_back(serial); });
+
+  (void)presenter.Request(RationalTime(0, 1), {32, 18}, PresentationMode::Playback);
+  const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(1);
+  while (!started.load() && std::chrono::steady_clock::now() < deadline) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(2));
+  }
+  if (!started.load()) {
+    hold = false;
+    CHECK(started.load());
+  }
+  const auto seek = presenter.Request(RationalTime(10, 1), {32, 18}, PresentationMode::LatestOnly);
+  hold = false;
+  CHECK(presenter.WaitIdle());
+
+  const auto stats = presenter.statistics();
+  CHECK_EQ(stats.rendered, std::uint64_t{2});
+  CHECK_EQ(stats.stale, std::uint64_t{1});
+  CHECK_EQ(stats.delivered, std::uint64_t{1});
+  CHECK_EQ(delivered.size(), std::size_t{1});
+  CHECK_EQ(delivered.front(), seek);
+}
+
 // -------------------------------------------------------------------- transport ----
 
 CUTLINE_TEST(TheTransportPlaysShuttlesStepsAndStopsOrLoopsAtTheEnds) {

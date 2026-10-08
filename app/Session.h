@@ -247,6 +247,8 @@ class Session : public QObject {
   Q_INVOKABLE int markerCount() const { return static_cast<int>(markers_.size()); }
   // Without audio the transport is driven by the clock alone: for tests and machines with no sound device.
   void SetAudioEnabled(bool enabled) { audio_enabled_ = enabled; }
+  // Supplies a deterministic sink to playback integration tests.
+  void SetAudioSinkForTest(std::unique_ptr<audio::AudioSink> sink) { sink_ = std::move(sink); }
   // The most frames an analysis looks at (a long clip is analysed from its start); tests keep it small.
   void SetAnalysisFrameLimit(std::size_t frames) { analysis_limit_ = frames; }
   // Starts analysis of the selected clip as a background job: stabilize (a keyframed correction) or optical_flow (motion kept for slow motion).
@@ -608,9 +610,9 @@ class Session : public QObject {
  private:
   [[nodiscard]] static double Seconds(const time::RationalTime& t) { return static_cast<double>(t.numerator()) / static_cast<double>(t.denominator()); }
   bool Open(std::unique_ptr<project::ProjectStore> store);
-  void Reload();
+  void Reload(bool invalidate_media = true);
   void StartEngine();
-  void RequestFrame();
+  void RequestFrame(ui::PresentationMode mode = ui::PresentationMode::LatestOnly);
   void OnTick();
   void StartPlayback();
   void StopPlayback();

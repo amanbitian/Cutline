@@ -1,11 +1,86 @@
 #include "exporter/ExportWorker.h"
 
 #include <algorithm>
+#include <condition_variable>
+#include <deque>
+#include <exception>
 #include <filesystem>
+#include <mutex>
 #include <stdexcept>
+#include <thread>
 
 namespace cutline::exporter {
 namespace {
+
+struct ExportPacket final {
+  std::optional<media::VideoFrame> video;
+  std::optional<media::AudioBuffer> audio;
+};
+
+// One producer overlaps decode/composition with encoding. One queued packet bounds
+// memory independently of programme duration; the writer stays on the calling thread.
+class FramePipeline final {
+ public:
+  FramePipeline(std::int64_t count, std::function<ExportPacket(std::int64_t)> render)
+      : worker_([this, count, render = std::move(render)] {
+          try {
+            for (std::int64_t i = 0; i < count; ++i) {
+              {
+                std::unique_lock<std::mutex> lock(mutex_);
+                wake_.wait(lock, [this] { return stop_ || ready_.empty(); });
+                if (stop_) return;
+              }
+              auto packet = render(i);
+              {
+                const std::lock_guard<std::mutex> lock(mutex_);
+                if (stop_) return;
+                ready_.push_back(std::move(packet));
+              }
+              wake_.notify_all();
+            }
+          } catch (...) {
+            const std::lock_guard<std::mutex> lock(mutex_);
+            error_ = std::current_exception();
+          }
+          {
+            const std::lock_guard<std::mutex> lock(mutex_);
+            done_ = true;
+          }
+          wake_.notify_all();
+        }) {}
+
+  ~FramePipeline() {
+    {
+      const std::lock_guard<std::mutex> lock(mutex_);
+      stop_ = true;
+    }
+    wake_.notify_all();
+    worker_.join();
+  }
+
+  ExportPacket Next() {
+    std::unique_lock<std::mutex> lock(mutex_);
+    wake_.wait(lock, [this] { return !ready_.empty() || done_; });
+    if (ready_.empty()) {
+      if (error_) std::rethrow_exception(error_);
+      throw std::runtime_error("Export renderer ended before the requested range");
+    }
+    auto packet = std::move(ready_.front());
+    ready_.pop_front();
+    lock.unlock();
+    wake_.notify_all();
+    return packet;
+  }
+
+ private:
+  std::mutex mutex_;
+  std::condition_variable wake_;
+  std::deque<ExportPacket> ready_;
+  std::exception_ptr error_;
+  bool stop_{false};
+  bool done_{false};
+  std::thread worker_;
+};
 
 // Sample index at the start of video frame `index`, derived from absolute time.
 //
@@ -46,14 +121,11 @@ ExportRequest ResolveRequest(const playback::PlaybackEngine& engine, ExportReque
 
 ExportResult Export(playback::PlaybackEngine& engine, const ExportRequest& raw_request,
                     const ProgressCallback& progress) {
-  // A caller commonly hands us its monitor engine. If that monitor is using
-  // proxies, render through an independent originals-only engine so export
-  // quality does not depend on a UI preference and playback state is untouched.
+  // Freeze the graph and use originals at sequence size even when the caller's
+  // monitor uses reduced resolution, proxies, or changes during export.
   const bool wants_precision = raw_request.high_precision && raw_request.include_video && engine.output_format() == media::PixelFormat::Rgba8;
-  auto originals = (engine.prefers_proxies() || wants_precision)
-                       ? engine.ExportClone(wants_precision ? media::PixelFormat::Rgba16 : engine.output_format())
-                       : nullptr;
-  auto& render_engine = originals != nullptr ? *originals : engine;
+  auto originals = engine.ExportClone(wants_precision ? media::PixelFormat::Rgba16 : engine.output_format());
+  auto& render_engine = *originals;
   const auto request = ResolveRequest(render_engine, raw_request);
   if (request.output_path.empty()) throw std::invalid_argument("An export needs an output path");
   if (!request.include_video && !request.include_audio) {
@@ -113,21 +185,25 @@ ExportResult Export(playback::PlaybackEngine& engine, const ExportRequest& raw_r
   // can never disagree about the sample they share an edge at.
   const auto in_sample = request.in.Rescale(engine_rate, time::RoundingMode::Nearest);
 
+  FramePipeline pipeline(total_frames, [&](std::int64_t index) {
+    ExportPacket packet;
+    const auto at = request.in.Add(frame_duration.Multiply(index));
+    if (request.include_video) packet.video = render_engine.RenderFrame(at, options);
+    if (request.include_audio) {
+      const auto from = SampleAt(index, rate, engine_rate);
+      const auto until = SampleAt(index + 1, rate, engine_rate);
+      packet.audio = render_engine.RenderAudioAt(in_sample + from, until - from, options);
+    }
+    return packet;
+  });
+
   ExportResult result;
   for (std::int64_t index = 0; index < total_frames; ++index) {
     const auto at = request.in.Add(frame_duration.Multiply(index));
 
-    if (request.include_video) {
-      writer->WriteVideo(render_engine.RenderFrame(at, options));
-    }
-    if (request.include_audio) {
-      // The exact number of engine samples belonging to this frame: the
-      // difference between two absolute sample positions, so the pieces tile the
-      // timeline without gaps or overlaps however awkward the rate ratio.
-      const auto from = SampleAt(index, rate, engine_rate);
-      const auto until = SampleAt(index + 1, rate, engine_rate);
-      writer->WriteAudio(render_engine.RenderAudioAt(in_sample + from, until - from, options));
-    }
+    auto packet = pipeline.Next();
+    if (packet.video) writer->WriteVideo(*packet.video);
+    if (packet.audio) writer->WriteAudio(*packet.audio);
 
     result.video_frames = writer->video_frames_written();
     result.audio_frames = writer->audio_frames_written();

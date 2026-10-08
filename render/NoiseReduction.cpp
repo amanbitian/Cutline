@@ -42,9 +42,9 @@ void ReduceNoise(Layer& layer, Layer& scratch, const NoiseSettings& settings, co
 
   // The picture as straight colour, over the rectangle that has anything in it.
   std::vector<Straight> current(static_cast<std::size_t>(width) * height);
-  for (int y = y0; y <= y1; ++y) {
+  ParallelRows(y0, y1, [&](int y) {
     for (int x = x0; x <= x1; ++x) current[index(x, y)] = Unpremultiply(layer.at(x, y));
-  }
+  });
 
   // ------------------------------------------------------------------ temporal ----
   if (settings.temporal > 1e-6f) {
@@ -56,9 +56,9 @@ void ReduceNoise(Layer& layer, Layer& scratch, const NoiseSettings& settings, co
       if (neighbour == nullptr || neighbour->width() != layer.width() || neighbour->height() != layer.height()) continue;
       Neighbour entry;
       entry.pixels.resize(current.size());
-      for (int y = y0; y <= y1; ++y) {
+      ParallelRows(y0, y1, [&](int y) {
         for (int x = x0; x <= x1; ++x) entry.pixels[index(x, y)] = Unpremultiply(neighbour->at(x, y));
-      }
+      });
       others.push_back(std::move(entry));
     }
     if (!others.empty()) {
@@ -68,7 +68,7 @@ void ReduceNoise(Layer& layer, Layer& scratch, const NoiseSettings& settings, co
       std::vector<float> luma_now(current.size());
       for (std::size_t i = 0; i < current.size(); ++i) luma_now[i] = LumaOf(current[i]);
       std::vector<Straight> result = current;
-      for (int y = y0; y <= y1; ++y) {
+      ParallelRows(y0, y1, [&](int y) {
         for (int x = x0; x <= x1; ++x) {
           const auto here = index(x, y);
           if (current[here].a <= 0.0f) continue;
@@ -99,7 +99,7 @@ void ReduceNoise(Layer& layer, Layer& scratch, const NoiseSettings& settings, co
           result[here].g = sum_g / total;
           result[here].b = sum_b / total;
         }
-      }
+      });
       current = std::move(result);
     }
   }
@@ -120,7 +120,7 @@ void ReduceNoise(Layer& layer, Layer& scratch, const NoiseSettings& settings, co
       constexpr float kSpatial = 1.3f;
       const auto sigma_r = (0.01f + 0.17f * settings.luma) * (1.0f - 0.7f * settings.detail);
       const auto inverse_r = 1.0f / (2.0f * sigma_r * sigma_r);
-      for (int y = y0; y <= y1; ++y) {
+      ParallelRows(y0, y1, [&](int y) {
         for (int x = x0; x <= x1; ++x) {
           const auto here = index(x, y);
           if (current[here].a <= 0.0f) continue;
@@ -141,7 +141,7 @@ void ReduceNoise(Layer& layer, Layer& scratch, const NoiseSettings& settings, co
           }
           luma_out[here] = sum / total;
         }
-      }
+      });
     }
 
     if (settings.chroma > 1e-6f) {
@@ -153,7 +153,7 @@ void ReduceNoise(Layer& layer, Layer& scratch, const NoiseSettings& settings, co
       const auto sigma_chroma = (0.02f + 0.25f * settings.chroma) * (1.0f - 0.5f * settings.detail);
       const auto inverse_luma = 1.0f / (2.0f * sigma_luma * sigma_luma);
       const auto inverse_chroma = 1.0f / (2.0f * sigma_chroma * sigma_chroma);
-      for (int y = y0; y <= y1; ++y) {
+      ParallelRows(y0, y1, [&](int y) {
         for (int x = x0; x <= x1; ++x) {
           const auto here = index(x, y);
           if (current[here].a <= 0.0f) continue;
@@ -178,7 +178,7 @@ void ReduceNoise(Layer& layer, Layer& scratch, const NoiseSettings& settings, co
           cb_out[here] = sum_cb / total;
           cr_out[here] = sum_cr / total;
         }
-      }
+      });
     }
 
     for (std::size_t i = 0; i < current.size(); ++i) {
@@ -195,13 +195,13 @@ void ReduceNoise(Layer& layer, Layer& scratch, const NoiseSettings& settings, co
 
   // Back into the layer, premultiplied, with the alpha it had.
   (void)scratch;
-  for (int y = y0; y <= y1; ++y) {
+  ParallelRows(y0, y1, [&](int y) {
     for (int x = x0; x <= x1; ++x) {
       const auto& p = current[index(x, y)];
       if (p.a <= 0.0f) continue;
       layer.at(x, y) = {std::clamp(p.r, 0.0f, 1.0f) * p.a, std::clamp(p.g, 0.0f, 1.0f) * p.a, std::clamp(p.b, 0.0f, 1.0f) * p.a, p.a};
     }
-  }
+  });
 }
 
 }  // namespace cutline::render

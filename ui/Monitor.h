@@ -3,10 +3,8 @@
 // The program monitor's logic: how large to render, where the picture sits in the window, what is drawn over
 // it, and how requests for pictures are served without ever making the interface wait.
 //
-// Presentation is asynchronous and latest-wins. Dragging the playhead asks for a picture many times a second;
-// rendering one can take longer than the gap between requests. The presenter renders on its own thread, and
-// when a request arrives while one is being rendered it replaces any request still waiting rather than queueing
-// behind it, so the picture that finally appears is for where the playhead is now, not for where it was.
+// Presentation is asynchronous. Scrubbing and edits are latest-wins, while continuous playback may show a completed
+// frame even when the next frame is already waiting. Pending work is always coalesced to one request.
 
 #include "core/time/RationalTime.h"
 #include "media/VideoFrame.h"
@@ -101,6 +99,13 @@ struct PresenterStatistics final {
   std::string last_error;
 };
 
+enum class PresentationMode {
+  // A newer request invalidates a render already in progress. Used for seeks, edits, resizes, and scrubbing.
+  LatestOnly,
+  // A completed frame may be displayed while the following frame waits. Used for continuous playback.
+  Playback,
+};
+
 class FramePresenter final {
  public:
   // Renders the picture for `at` at `size`. Called from the presenter's thread only.
@@ -115,7 +120,8 @@ class FramePresenter final {
 
   // Asks for the picture at a time and size. Never blocks; replaces a request that has not started. Returns the
   // serial the picture will carry.
-  std::uint64_t Request(const time::RationalTime& at, SizePx size);
+  std::uint64_t Request(const time::RationalTime& at, SizePx size,
+                        PresentationMode mode = PresentationMode::LatestOnly);
   // The sequence changed under the last request: render it again.
   std::uint64_t Invalidate();
   // Returns when nothing is being rendered or waiting, or after `timeout_ms`; true when idle.
@@ -127,12 +133,21 @@ class FramePresenter final {
 
   Render render_;
   Deliver deliver_;
+  struct RequestJob final {
+    time::RationalTime at;
+    SizePx size;
+    std::uint64_t serial{0};
+    std::uint64_t generation{0};
+    PresentationMode mode{PresentationMode::LatestOnly};
+  };
   mutable std::mutex mutex_;
   std::condition_variable wake_;
   std::condition_variable idle_;
-  std::optional<std::pair<time::RationalTime, SizePx>> pending_;
+  std::optional<RequestJob> pending_;
   std::optional<std::pair<time::RationalTime, SizePx>> last_;
   std::uint64_t serial_{0};
+  // Seeks and edits advance this so that playback frames from the old position are not delivered.
+  std::uint64_t generation_{0};
   std::uint64_t rendering_serial_{0};
   bool busy_{false};
   bool stop_{false};

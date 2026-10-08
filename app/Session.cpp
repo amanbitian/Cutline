@@ -59,10 +59,15 @@ void WriteText(const QString& path, const std::string& text) {
 }
 
 QImage ToImage(const media::VideoFrame& frame) {
-  const auto rgba = frame.format() == media::PixelFormat::Rgba8 ? frame.Clone() : media::ConvertFrame(frame, media::PixelFormat::Rgba8);
-  QImage image(rgba.width(), rgba.height(), QImage::Format_RGBA8888);
-  for (int y = 0; y < rgba.height(); ++y) {
-    std::memcpy(image.scanLine(y), rgba.row_u8(y), static_cast<std::size_t>(rgba.width()) * 4);
+  media::VideoFrame converted;
+  const auto* rgba = &frame;
+  if (frame.format() != media::PixelFormat::Rgba8) {
+    converted = media::ConvertFrame(frame, media::PixelFormat::Rgba8);
+    rgba = &converted;
+  }
+  QImage image(rgba->width(), rgba->height(), QImage::Format_RGBA8888);
+  for (int y = 0; y < rgba->height(); ++y) {
+    std::memcpy(image.scanLine(y), rgba->row_u8(y), static_cast<std::size_t>(rgba->width()) * 4);
   }
   return image;
 }
@@ -484,11 +489,11 @@ void Session::StartEngine() {
       },
       [this](media::VideoFrame frame, const RationalTime&, std::uint64_t serial) {
         const auto info = QString("%1 x %2").arg(frame.width()).arg(frame.height());
+        auto image = ToImage(frame);
         {
           const std::lock_guard<std::mutex> lock(scopes_mutex_);
-          if (scopes_ != nullptr) (void)scopes_->Submit(frame.Clone());
+          if (scopes_ != nullptr) (void)scopes_->Submit(std::move(frame));
         }
-        auto image = ToImage(frame);
         QMetaObject::invokeMethod(this, [this, image, serial, info] { OnFrame(image, serial, info); }, Qt::QueuedConnection);
       });
 }
@@ -604,7 +609,7 @@ void Session::OnFrame(QImage image, std::uint64_t serial, const QString& info) {
   emit frameReady();
 }
 
-void Session::Reload() {
+void Session::Reload(bool invalidate_media) {
   if (store_ == nullptr) return;
   graph_ = timeline::LoadSequenceGraph(*store_, sequence_id_);
   if (const auto* sequence = graph_.root()) {
@@ -625,7 +630,7 @@ void Session::Reload() {
     statement.Bind(1, sequence_id_);
     while (statement.Step()) markers_.emplace_back(statement.ColumnInt(0), statement.ColumnInt(1));
   }
-  if (engine_ != nullptr) engine_->UpdateSequence(graph_);
+  if (engine_ != nullptr) engine_->UpdateSequence(graph_, invalidate_media);
   RefreshHistory();
   RefreshInspector();
   if (!mc_id_.empty()) RefreshMulticam();
@@ -790,11 +795,29 @@ commands::CommandEnvelope Session::Envelope(CommandType type, commands::CommandP
   return command;
 }
 
+namespace {
+
+bool ChangesMedia(CommandType type) {
+  switch (type) {
+    case CommandType::ImportMedia:
+    case CommandType::RemoveMedia:
+    case CommandType::RelinkMedia:
+    case CommandType::SetMediaStreams:
+    case CommandType::AttachProxy:
+    case CommandType::DetachProxy:
+      return true;
+    default:
+      return false;
+  }
+}
+
+}  // namespace
+
 void Session::Run(CommandType type, commands::CommandPayload payload) {
   if (store_ == nullptr) return;
   try {
     (void)store_->Execute(Envelope(type, std::move(payload)));
-    Reload();
+    Reload(ChangesMedia(type));
   } catch (const std::exception& error) {
     ShowStatus(QString::fromStdString(error.what()));
   }
@@ -815,7 +838,8 @@ bool Session::Apply(const ui::EditPlan& plan) {
     Reload();
     return false;
   }
-  Reload();
+  Reload(std::any_of(plan.commands.begin(), plan.commands.end(),
+                     [](const auto& command) { return ChangesMedia(command.type); }));
   ShowStatus(plan.notes.empty() ? QString::fromStdString(plan.label) : QString::fromStdString(plan.label + " - " + plan.notes.front()));
   return true;
 }
@@ -1057,19 +1081,24 @@ void Session::seek(double seconds) {
   SeekTo(RationalTime::FromFrames(std::max<std::int64_t>(frames, 0), rate));
 }
 
-void Session::RequestFrame() {
+void Session::RequestFrame(ui::PresentationMode mode) {
   if (presenter_ == nullptr || graph_.root() == nullptr) return;
   const auto* sequence = graph_.root();
   if (sequence->width <= 0 || sequence->height <= 0) return;
   const ui::SizePx full{static_cast<int>(sequence->width), static_cast<int>(sequence->height)};
-  (void)presenter_->Request(transport_.position(), ui::RenderSizeFor(full, quality_, displayed_));
-  if (engine_ != nullptr) engine_->PrimeReadAhead(transport_.position());
+  (void)presenter_->Request(transport_.position(), ui::RenderSizeFor(full, quality_, displayed_), mode);
+  // RenderFrame schedules the following frames during playback. Direct priming is reserved for discontinuous jumps.
+  if (engine_ != nullptr && mode == ui::PresentationMode::LatestOnly) engine_->PrimeReadAhead(transport_.position());
 }
 
 void Session::StartPlayback() {
   if (engine_ == nullptr || !audio_enabled_) return;
   if (transport_.audio_driven()) {
     if (sink_ == nullptr) sink_ = audio::OpenDefaultAudioSink();
+    if (!sink_->drives_clock()) {
+      ShowStatus(tr("No audio output is available; playback will continue without sound"));
+      return;
+    }
     engine_->Seek(transport_.position());
     engine_->Play(*sink_);
   } else {
@@ -1103,24 +1132,41 @@ void Session::OnTick() {
   if (!transport_.playing()) return;
   ui::Transport::Tick tick;
   if (transport_.audio_driven() && engine_->playing() && audio_enabled_) {
-    // The audio clock leads: the playhead is wherever the sound is.
-    const auto position = engine_->position();
-    const auto before = transport_.position();
-    transport_.Seek(position);
-    tick.moved = position.Compare(before) != 0;
-    if (engine_->playback_state() == audio::SinkState::Finished || position.Compare(graph_.root()->Duration()) >= 0) {
-      if (transport_.looping()) {
+    const auto state = engine_->playback_state();
+    if (state == audio::SinkState::Failed || state == audio::SinkState::Stopped) {
+      // A device can disappear after it opened (Bluetooth and HDMI endpoints do
+      // this in normal use). Do not leave the transport following its frozen
+      // clock: stop audio and let the wall clock drive the rest of this play.
+      const auto error = engine_->playback_error();
+      StopPlayback();
+      sink_.reset();
+      ShowStatus(error.empty()
+                     ? tr("Audio output stopped; playback will continue without sound")
+                     : tr("Audio output failed; playback will continue without sound: %1")
+                           .arg(QString::fromStdString(error)));
+      tick = transport_.Advance(dt);
+    } else {
+      // The audio clock leads: the playhead is wherever the sound is.
+      const auto position = engine_->position();
+      const auto before = transport_.position();
+      transport_.Seek(position);
+      tick.moved = position.Compare(before) != 0;
+      if (state == audio::SinkState::Finished || position.Compare(graph_.root()->Duration()) >= 0) {
+        if (transport_.looping()) {
+          transport_.Seek(mark_in_.value_or(RationalTime(0, 1)));
+          engine_->Seek(transport_.position());
+          engine_->Play(*sink_);
+          tick.looped = true;
+        } else {
+          transport_.Stop();
+          StopPlayback();
+          emit transportChanged();
+        }
+      } else if (transport_.looping() && mark_out_ && position.Compare(*mark_out_) >= 0) {
         transport_.Seek(mark_in_.value_or(RationalTime(0, 1)));
         engine_->Seek(transport_.position());
-        engine_->Play(*sink_);
-      } else {
-        transport_.Stop();
-        StopPlayback();
-        emit transportChanged();
+        tick.looped = true;
       }
-    } else if (transport_.looping() && mark_out_ && position.Compare(*mark_out_) >= 0) {
-      transport_.Seek(mark_in_.value_or(RationalTime(0, 1)));
-      engine_->Seek(transport_.position());
     }
   } else {
     tick = transport_.Advance(dt);
@@ -1129,9 +1175,9 @@ void Session::OnTick() {
       emit transportChanged();
     }
   }
-  if (tick.moved || true) {
+  if (tick.moved) {
     emit playheadChanged();
-    RequestFrame();
+    RequestFrame(tick.looped ? ui::PresentationMode::LatestOnly : ui::PresentationMode::Playback);
     if (prefs_.GetBool("timeline.scroll_follows_playhead")) emit timelineAction("follow");
   }
 }

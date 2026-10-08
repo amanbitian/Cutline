@@ -20,6 +20,7 @@
 #include <cmath>
 #include <filesystem>
 #include <fstream>
+#include <future>
 #include <memory>
 #include <optional>
 #include <string>
@@ -307,6 +308,43 @@ CUTLINE_TEST(PrimeReadAheadWarmsTheRequestedScrubFrame) {
   CHECK_EQ(cutline::media::ReadFrameCounter(frame), std::int64_t{150});
   CHECK_EQ(engine.statistics().cache_misses, before.cache_misses);
   CHECK(engine.statistics().read_ahead_cache_hits > before.read_ahead_cache_hits);
+}
+
+CUTLINE_TEST(PrimeReadAheadDoesNotWaitForAnActiveVideoRender) {
+  cutline::media::RegisterAllProviders();
+  auto config = FloatConfig();
+  config.decode_workers = 1;
+  config.read_ahead_frames = 3;
+  config.max_pending_decodes = 3;
+
+  std::promise<void> locator_entered;
+  auto entered = locator_entered.get_future();
+  std::promise<void> release_locator;
+  auto release = release_locator.get_future().share();
+  std::atomic<bool> first{true};
+  const auto path = CounterSpec().ToPath();
+  PlaybackEngine engine(
+      SingleTrackGraph(),
+      [&](const std::string&) {
+        if (first.exchange(false)) {
+          locator_entered.set_value();
+          release.wait();
+        }
+        return path;
+      },
+      config);
+
+  auto rendering = std::async(std::launch::async, [&] { return engine.RenderFrame(Seconds(0)); });
+  CHECK(entered.wait_for(std::chrono::seconds(1)) == std::future_status::ready);
+  auto priming = std::async(std::launch::async, [&] { engine.PrimeReadAhead(Seconds(5)); });
+  const bool returned_while_render_was_blocked =
+      priming.wait_for(std::chrono::seconds(1)) == std::future_status::ready;
+
+  release_locator.set_value();
+  priming.get();
+  const auto frame = rendering.get();
+  CHECK(frame.valid());
+  CHECK(returned_while_render_was_blocked);
 }
 
 CUTLINE_TEST(RenderingQueuesTheFollowingFramesForReadAhead) {

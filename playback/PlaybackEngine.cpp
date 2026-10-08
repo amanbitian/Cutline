@@ -56,11 +56,19 @@ PlaybackEngine::PlaybackEngine(timeline::SequenceGraph graph, MediaLocator locat
           (void)InsertCachedFrame(std::move(job.cache_key), std::move(*frame), true);
           counters_.read_ahead_completed.fetch_add(1, std::memory_order_relaxed);
         });
+    prime_worker_ = std::thread([this] { RunReadAheadPrimer(); });
   }
 }
 
 PlaybackEngine::~PlaybackEngine() {
   Pause();
+  {
+    const std::lock_guard<std::mutex> lock(prime_mutex_);
+    prime_stop_ = true;
+    prime_pending_.reset();
+  }
+  prime_wake_.notify_all();
+  if (prime_worker_.joinable()) prime_worker_.join();
   if (decode_pool_ != nullptr) decode_pool_->Stop();
 }
 
@@ -97,8 +105,17 @@ std::string PlaybackEngine::gpu_unavailable_reason() const {
 std::unique_ptr<PlaybackEngine> PlaybackEngine::OriginalQualityClone() const { return ExportClone(config_.compositor.output_format); }
 
 std::unique_ptr<PlaybackEngine> PlaybackEngine::ExportClone(media::PixelFormat output_format) const {
-  auto config = config_;
+  EngineConfig config;
+  {
+    const std::lock_guard<std::mutex> picture(video_mutex_);
+    config = config_;
+    // GPU rounding may differ from the reference output. Never reuse preview
+    // pictures for a reference export, including after a device failure.
+    if (config_.use_gpu) config.render_cache.reset();
+  }
   config.compositor.output_format = output_format;
+  config.compositor.width = 0;
+  config.compositor.height = 0;
   config.prefer_proxies = false;
   config.proxy_locator = {};
   // A delivery is rendered by the reference compositor, picture for picture the same on any machine.
@@ -208,8 +225,13 @@ media::DeviceFrame PlaybackEngine::DeviceFrameFor(const timeline::SourceRequest&
   if (source == nullptr) return {};
   try {
     auto frame = source->ReadDeviceVideo(request.source_time);
+    // A source can open a hardware decoder and reject the stream only when the first picture is requested. Remember
+    // that permanent failure as a null device source so software read-ahead resumes instead of forcing every later
+    // frame through synchronous CPU decode.
+    if (!frame.has_value() && !source->device_decode_available()) device_sources_[request.source_id].reset();
     return frame.has_value() ? std::move(*frame) : media::DeviceFrame{};
   } catch (const std::exception&) {
+    device_sources_[request.source_id].reset();
     return {};
   }
 }
@@ -268,10 +290,12 @@ const media::VideoFrame* PlaybackEngine::InsertCachedFrame(std::string key, medi
 }
 
 void PlaybackEngine::ScheduleReadAhead(const Graph& graph, const time::RationalTime& at,
-                                       const timeline::CompileOptions& options, bool include_current) {
+                                       const timeline::CompileOptions& options, bool include_current,
+                                       std::uint64_t generation) {
   if (decode_pool_ == nullptr || graph == nullptr || graph->root() == nullptr) return;
   const auto* root = graph->root();
-  const auto generation = read_ahead_generation_.load(std::memory_order_acquire);
+  if (generation == 0) generation = read_ahead_generation_.load(std::memory_order_acquire);
+  if (generation != read_ahead_generation_.load(std::memory_order_acquire)) return;
   auto first_frame = at.ToFrames(root->frame_rate, time::RoundingMode::Floor);
   if (!include_current) ++first_frame;
   if (first_frame < 0) first_frame = 0;
@@ -279,18 +303,28 @@ void PlaybackEngine::ScheduleReadAhead(const Graph& graph, const time::RationalT
   std::unordered_set<std::string> offered;
   std::unordered_map<std::string, std::string> paths;
   for (std::size_t offset = 0; offset < config_.read_ahead_frames; ++offset) {
+    if (generation != read_ahead_generation_.load(std::memory_order_acquire)) return;
     const auto timeline_time = time::RationalTime::FromFrames(first_frame + static_cast<std::int64_t>(offset),
                                                               root->frame_rate);
     if (timeline_time.Compare(root->Duration()) >= 0) break;
     auto plan = compiler_.Compile(*graph, timeline_time, options);
     for (const auto& request : plan.video) {
+      if (generation != read_ahead_generation_.load(std::memory_order_acquire)) return;
       if (request.source_kind != model::SourceKind::Media) continue;
       auto key = CacheKey(request);
       if (!offered.insert(key).second) continue;
+      bool decoded_on_device = false;
       {
         const std::lock_guard<std::mutex> picture(video_mutex_);
         if (cache_index_.count(key) != 0) continue;
+        // A hardware decoder already supplies this media directly to the compositor. A parallel software decode cannot
+        // satisfy that path and only competes for CPU, storage bandwidth, and RAM.
+        if (gpu_ != nullptr && config_.hardware_decode) {
+          const auto device = device_sources_.find(request.source_id);
+          decoded_on_device = device != device_sources_.end() && device->second != nullptr;
+        }
       }
+      if (decoded_on_device) continue;
 
       auto path = paths.find(request.source_id);
       if (path == paths.end()) {
@@ -316,17 +350,38 @@ void PlaybackEngine::ScheduleReadAhead(const Graph& graph, const time::RationalT
   }
 }
 
-void PlaybackEngine::AdvanceReadAheadGeneration() {
+std::uint64_t PlaybackEngine::AdvanceReadAheadGeneration() {
   const auto generation = read_ahead_generation_.fetch_add(1, std::memory_order_acq_rel) + 1;
   if (decode_pool_ != nullptr) decode_pool_->AdvanceGeneration(generation);
+  return generation;
 }
 
 void PlaybackEngine::PrimeReadAhead(const time::RationalTime& at) {
   // A direct prime represents the newest scrub position. Discard queued work
   // from the prior position before offering this one at the front of an empty
   // FIFO; ordinary forward playback uses ScheduleReadAhead without advancing.
-  AdvanceReadAheadGeneration();
-  ScheduleReadAhead(Snapshot(), at, config_.compile, true);
+  const auto generation = AdvanceReadAheadGeneration();
+  if (decode_pool_ == nullptr) return;
+  auto graph = Snapshot();
+  {
+    const std::lock_guard<std::mutex> lock(prime_mutex_);
+    prime_pending_ = PrimeRequest{std::move(graph), at, config_.compile, generation};
+  }
+  prime_wake_.notify_one();
+}
+
+void PlaybackEngine::RunReadAheadPrimer() {
+  for (;;) {
+    PrimeRequest request;
+    {
+      std::unique_lock<std::mutex> lock(prime_mutex_);
+      prime_wake_.wait(lock, [this] { return prime_stop_ || prime_pending_.has_value(); });
+      if (prime_stop_) return;
+      request = std::move(*prime_pending_);
+      prime_pending_.reset();
+    }
+    ScheduleReadAhead(request.graph, request.at, request.options, true, request.generation);
+  }
 }
 
 render::SourceVersions PlaybackEngine::Versions() const {
@@ -563,13 +618,20 @@ void PlaybackEngine::SetPreferProxies(bool on) {
   UpdateSequence(*Snapshot());
 }
 
-void PlaybackEngine::UpdateSequence(timeline::SequenceGraph graph) {
+void PlaybackEngine::UpdateSequence(timeline::SequenceGraph graph, bool invalidate_media) {
   auto replacement = std::make_shared<const timeline::SequenceGraph>(std::move(graph));
   {
     const std::lock_guard<std::mutex> lock(graph_mutex_);
     graph_ = std::move(replacement);
   }
-  AdvanceReadAheadGeneration();
+  (void)AdvanceReadAheadGeneration();
+
+  if (!invalidate_media) {
+    const std::lock_guard<std::mutex> picture(video_mutex_);
+    stretch_cache_->Clear();
+    nested_frames_.clear();
+    return;
+  }
 
   // Relinking changes where a media item lives without changing its id, so an open
   // decoder keyed by id would go on reading the old file, and an item that was

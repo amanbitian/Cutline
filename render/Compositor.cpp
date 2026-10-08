@@ -281,7 +281,7 @@ void BlendMaskedEffect(const Layer& before, Layer& after, const std::vector<time
                                            ? FlattenBezier(mask.document, after.width(), after.height())
                                            : std::vector<Vec2>{}});
   }
-  for (int y = 0; y < after.height(); ++y) {
+  ParallelRows(0, after.height() - 1, [&](int y) {
     for (int x = 0; x < after.width(); ++x) {
       float combined = 0.0f;
       bool first = true;
@@ -305,7 +305,7 @@ void BlendMaskedEffect(const Layer& before, Layer& after, const std::vector<time
                  original.b + (changed.b - original.b) * combined,
                  original.a + (changed.a - original.a) * combined};
     }
-  }
+  });
   after.MarkWhole();
 }
 
@@ -337,7 +337,7 @@ void ApplyBlur(Layer& layer, Layer& scratch, float requested_radius) {
   };
 
   scratch.Reset(layer.width(), layer.height());
-  for (int y = source_y0; y <= source_y1; ++y) {
+  ParallelRows(source_y0, source_y1, [&](int y) {
     Pixel sum;
     for (int tap = -radius; tap <= radius; ++tap) add(sum, read_layer(horizontal_x0 + tap, y), 1.0f);
     for (int x = horizontal_x0; x <= horizontal_x1; ++x) {
@@ -345,7 +345,7 @@ void ApplyBlur(Layer& layer, Layer& scratch, float requested_radius) {
       add(sum, read_layer(x - radius, y), -1.0f);
       add(sum, read_layer(x + radius + 1, y), 1.0f);
     }
-  }
+  });
   scratch.MarkDirty(horizontal_x0, source_y0, horizontal_x1, source_y1);
 
   const auto read_scratch = [&scratch](int x, int y) -> Pixel {
@@ -353,7 +353,7 @@ void ApplyBlur(Layer& layer, Layer& scratch, float requested_radius) {
     return scratch.at(x, y);
   };
   layer.Reset(layer.width(), layer.height());
-  for (int x = horizontal_x0; x <= horizontal_x1; ++x) {
+  ParallelRows(horizontal_x0, horizontal_x1, [&](int x) {
     Pixel sum;
     for (int tap = -radius; tap <= radius; ++tap) add(sum, read_scratch(x, output_y0 + tap), 1.0f);
     for (int y = output_y0; y <= output_y1; ++y) {
@@ -361,7 +361,7 @@ void ApplyBlur(Layer& layer, Layer& scratch, float requested_radius) {
       add(sum, read_scratch(x, y - radius), -1.0f);
       add(sum, read_scratch(x, y + radius + 1), 1.0f);
     }
-  }
+  });
   layer.MarkDirty(horizontal_x0, output_y0, horizontal_x1, output_y1);
 }
 
@@ -373,7 +373,7 @@ void ApplySharpen(Layer& layer, Layer& scratch, float requested_amount) {
   const auto y0 = layer.min_y();
   const auto y1 = layer.max_y();
   scratch.Reset(layer.width(), layer.height());
-  for (int y = y0; y <= y1; ++y) {
+  ParallelRows(y0, y1, [&](int y) {
     for (int x = x0; x <= x1; ++x) {
       const auto& centre = layer.at(x, y);
       const auto& left = layer.at(std::max(x0, x - 1), y);
@@ -388,7 +388,7 @@ void ApplySharpen(Layer& layer, Layer& scratch, float requested_amount) {
                           sharpen(centre.g, left.g, right.g, above.g, below.g, centre.a),
                           sharpen(centre.b, left.b, right.b, above.b, below.b, centre.a), centre.a};
     }
-  }
+  });
   scratch.MarkDirty(x0, y0, x1, y1);
   CopyLayer(scratch, layer);
 }
@@ -428,7 +428,7 @@ void ApplyLensCorrection(Layer& layer, Layer& scratch, const SampledEffect& effe
   }
 
   scratch.Reset(layer.width(), layer.height());
-  for (int y = 0; y < layer.height(); ++y) {
+  ParallelRows(0, layer.height() - 1, [&](int y) {
     const auto ny = ((static_cast<float>(y) + 0.5f) / static_cast<float>(layer.height()) - centre[1]) * 2.0f;
     for (int x = 0; x < layer.width(); ++x) {
       const auto nx = ((static_cast<float>(x) + 0.5f) / static_cast<float>(layer.width()) - centre[0]) * 2.0f;
@@ -440,7 +440,7 @@ void ApplyLensCorrection(Layer& layer, Layer& scratch, const SampledEffect& effe
       const auto source_y = source_v * static_cast<float>(layer.height()) - 0.5f;
       scratch.at(x, y) = SampleBilinear(layer, source_x, source_y);
     }
-  }
+  });
   scratch.MarkWhole();
   CopyLayer(scratch, layer);
 }

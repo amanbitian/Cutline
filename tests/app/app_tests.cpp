@@ -150,6 +150,20 @@ CUTLINE_TEST(TheDemoProjectOpensWithTheFirstCutOnTheTimelineAndThePictureArrives
   CHECK(f.session.canUndo() && !f.session.canRedo());
 }
 
+CUTLINE_TEST(PlaybackUsesTheTimerWhenNoAudioDeviceCanDriveTheClock) {
+  Fixture f;
+  f.session.SetAudioEnabled(true);
+  f.session.SetAudioSinkForTest(std::make_unique<cutline::audio::OfflineSink>());
+  const auto before = f.session.playheadSeconds();
+
+  f.session.trigger("transport.play_pause");
+
+  CHECK(f.session.playing());
+  CHECK(QTest::qWaitFor([&] { return f.session.playheadSeconds() > before + 0.1; }, 1000));
+  CHECK(f.session.statusMessage().contains("without sound"));
+  f.session.trigger("transport.stop");
+}
+
 CUTLINE_TEST(TheColorWorkspaceScopesMeasureTheLatestFrameAsynchronously) {
   Fixture f;
   CHECK(QTest::qWaitFor([&] {

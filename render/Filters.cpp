@@ -55,9 +55,9 @@ struct Color final {
 void CopyInto(const Layer& source, Layer& destination) {
   destination.Reset(source.width(), source.height());
   if (source.empty()) return;
-  for (int y = source.min_y(); y <= source.max_y(); ++y) {
+  ParallelRows(source.min_y(), source.max_y(), [&](int y) {
     for (int x = source.min_x(); x <= source.max_x(); ++x) destination.at(x, y) = source.at(x, y);
-  }
+  });
   destination.MarkDirty(source.min_x(), source.min_y(), source.max_x(), source.max_y());
 }
 
@@ -91,12 +91,14 @@ void BoxBlurHorizontal(Layer& layer, int radius) {
   const auto y0 = layer.min_y();
   const auto y1 = layer.max_y();
   const auto count = hi - lo + 1;
-  std::vector<Pixel> in(static_cast<std::size_t>(count)), out(static_cast<std::size_t>(count));
-  for (int y = y0; y <= y1; ++y) {
+  ParallelRows(y0, y1, [&](int y) {
+    thread_local std::vector<Pixel> in, out;
+    in.resize(static_cast<std::size_t>(count));
+    out.resize(static_cast<std::size_t>(count));
     for (int x = 0; x < count; ++x) in[static_cast<std::size_t>(x)] = layer.at(lo + x, y);
     BoxLine(in.data(), out.data(), count, radius);
     for (int x = 0; x < count; ++x) layer.at(lo + x, y) = out[static_cast<std::size_t>(x)];
-  }
+  });
   layer.MarkDirty(lo, y0, hi, y1);
 }
 
@@ -107,12 +109,14 @@ void BoxBlurVertical(Layer& layer, int radius) {
   const auto x0 = layer.min_x();
   const auto x1 = layer.max_x();
   const auto count = hi - lo + 1;
-  std::vector<Pixel> in(static_cast<std::size_t>(count)), out(static_cast<std::size_t>(count));
-  for (int x = x0; x <= x1; ++x) {
+  ParallelRows(x0, x1, [&](int x) {
+    thread_local std::vector<Pixel> in, out;
+    in.resize(static_cast<std::size_t>(count));
+    out.resize(static_cast<std::size_t>(count));
     for (int y = 0; y < count; ++y) in[static_cast<std::size_t>(y)] = layer.at(x, lo + y);
     BoxLine(in.data(), out.data(), count, radius);
     for (int y = 0; y < count; ++y) layer.at(x, lo + y) = out[static_cast<std::size_t>(y)];
-  }
+  });
   layer.MarkDirty(x0, lo, x1, hi);
 }
 
@@ -202,7 +206,7 @@ void ApplyDirectionalBlur(Layer& layer, Layer& scratch, const SampledEffect& eff
   const auto y1 = std::min(layer.height() - 1, layer.max_y() + reach);
 
   scratch.Reset(layer.width(), layer.height());
-  for (int y = y0; y <= y1; ++y) {
+  ParallelRows(y0, y1, [&](int y) {
     for (int x = x0; x <= x1; ++x) {
       Pixel sum;
       for (int tap = 0; tap < taps; ++tap) {
@@ -216,7 +220,7 @@ void ApplyDirectionalBlur(Layer& layer, Layer& scratch, const SampledEffect& eff
       const auto inverse = 1.0f / static_cast<float>(taps);
       scratch.at(x, y) = {sum.r * inverse, sum.g * inverse, sum.b * inverse, sum.a * inverse};
     }
-  }
+  });
   scratch.MarkDirty(x0, y0, x1, y1);
   CopyInto(scratch, layer);
 }
@@ -228,7 +232,7 @@ void ApplyUnsharpMask(Layer& layer, Layer& scratch, const SampledEffect& effect)
   if (amount <= 1e-6f || radius < 0.3f || layer.empty()) return;
   CopyInto(layer, scratch);
   GaussianBlur(scratch, radius);
-  for (int y = layer.min_y(); y <= layer.max_y(); ++y) {
+  ParallelRows(layer.min_y(), layer.max_y(), [&](int y) {
     for (int x = layer.min_x(); x <= layer.max_x(); ++x) {
       auto& pixel = layer.at(x, y);
       if (pixel.a <= 0.0f) continue;
@@ -244,7 +248,7 @@ void ApplyUnsharpMask(Layer& layer, Layer& scratch, const SampledEffect& effect)
       pixel.g = std::clamp(pixel.g + amount * dg, 0.0f, pixel.a);
       pixel.b = std::clamp(pixel.b + amount * db, 0.0f, pixel.a);
     }
-  }
+  });
 }
 
 void ApplyGlow(Layer& layer, Layer& scratch, const SampledEffect& effect) {
@@ -256,19 +260,19 @@ void ApplyGlow(Layer& layer, Layer& scratch, const SampledEffect& effect) {
   // The light that glows: what is brighter than the threshold, fading in over the
   // top of the range so the edge of the selection does not show as a contour.
   scratch.Reset(layer.width(), layer.height());
-  for (int y = layer.min_y(); y <= layer.max_y(); ++y) {
+  ParallelRows(layer.min_y(), layer.max_y(), [&](int y) {
     for (int x = layer.min_x(); x <= layer.max_x(); ++x) {
       const auto& pixel = layer.at(x, y);
       if (pixel.a <= 0.0f) continue;
       const auto weight = Smoothstep(threshold, std::min(1.0f, threshold + 0.25f), Luma(Straight(pixel)));
       scratch.at(x, y) = {pixel.r * weight, pixel.g * weight, pixel.b * weight, pixel.a * weight};
     }
-  }
+  });
   scratch.MarkDirty(layer.min_x(), layer.min_y(), layer.max_x(), layer.max_y());
   GaussianBlur(scratch, radius);
 
   // Screen the glow over the picture: 1 - (1 - a)(1 - b), which cannot exceed full scale.
-  for (int y = scratch.min_y(); y <= scratch.max_y(); ++y) {
+  ParallelRows(scratch.min_y(), scratch.max_y(), [&](int y) {
     for (int x = scratch.min_x(); x <= scratch.max_x(); ++x) {
       const auto& glow = scratch.at(x, y);
       if (glow.a <= 0.0f && glow.r <= 0.0f && glow.g <= 0.0f && glow.b <= 0.0f) continue;
@@ -279,7 +283,7 @@ void ApplyGlow(Layer& layer, Layer& scratch, const SampledEffect& effect) {
       pixel.b = screen(pixel.b, std::clamp(glow.b * intensity, 0.0f, 1.0f));
       pixel.a = screen(pixel.a, std::clamp(glow.a * intensity, 0.0f, 1.0f));
     }
-  }
+  });
   layer.MarkDirty(scratch.min_x(), scratch.min_y(), scratch.max_x(), scratch.max_y());
 }
 
@@ -294,9 +298,9 @@ void ApplyDropShadow(Layer& layer, Layer& scratch, const SampledEffect& effect) 
   const auto offset_y = static_cast<int>(std::lround(std::sin(angle) * distance));
 
   scratch.Reset(layer.width(), layer.height());
-  for (int y = layer.min_y(); y <= layer.max_y(); ++y) {
+  ParallelRows(layer.min_y(), layer.max_y(), [&](int y) {
     const auto ty = y + offset_y;
-    if (ty < 0 || ty >= layer.height()) continue;
+    if (ty < 0 || ty >= layer.height()) return;
     for (int x = layer.min_x(); x <= layer.max_x(); ++x) {
       const auto tx = x + offset_x;
       if (tx < 0 || tx >= layer.width()) continue;
@@ -304,14 +308,14 @@ void ApplyDropShadow(Layer& layer, Layer& scratch, const SampledEffect& effect) 
       if (alpha <= 0.0f) continue;
       scratch.at(tx, ty) = {colour[0] * alpha, colour[1] * alpha, colour[2] * alpha, alpha};
     }
-  }
+  });
   scratch.MarkDirty(std::max(0, layer.min_x() + offset_x), std::max(0, layer.min_y() + offset_y),
                     std::min(layer.width() - 1, layer.max_x() + offset_x),
                     std::min(layer.height() - 1, layer.max_y() + offset_y));
   GaussianBlur(scratch, softness);
 
   // The picture over its shadow.
-  for (int y = scratch.min_y(); y <= scratch.max_y(); ++y) {
+  ParallelRows(scratch.min_y(), scratch.max_y(), [&](int y) {
     for (int x = scratch.min_x(); x <= scratch.max_x(); ++x) {
       const auto& shadow = scratch.at(x, y);
       auto& pixel = layer.at(x, y);
@@ -321,7 +325,7 @@ void ApplyDropShadow(Layer& layer, Layer& scratch, const SampledEffect& effect) 
       pixel.b += shadow.b * keep;
       pixel.a += shadow.a * keep;
     }
-  }
+  });
   layer.MarkDirty(scratch.min_x(), scratch.min_y(), scratch.max_x(), scratch.max_y());
 }
 
@@ -398,7 +402,7 @@ void ApplyWaveWarp(Layer& layer, Layer& scratch, const SampledEffect& effect) {
 
   scratch.Reset(layer.width(), layer.height());
   const auto tau = 2.0f * std::numbers::pi_v<float>;
-  for (int y = y0; y <= y1; ++y) {
+  ParallelRows(y0, y1, [&](int y) {
     for (int x = x0; x <= x1; ++x) {
       const auto cx = static_cast<float>(x) + 0.5f;
       const auto cy = static_cast<float>(y) + 0.5f;
@@ -407,7 +411,7 @@ void ApplyWaveWarp(Layer& layer, Layer& scratch, const SampledEffect& effect) {
       const auto sy = vertical ? cy + amplitude * std::sin(tau * cx / wavelength + phase) : cy;
       scratch.at(x, y) = SampleLayer(layer, sx, sy);
     }
-  }
+  });
   scratch.MarkDirty(x0, y0, x1, y1);
   CopyInto(scratch, layer);
 }
@@ -427,7 +431,7 @@ void ApplyBulge(Layer& layer, Layer& scratch, const SampledEffect& effect) {
   const auto y1 = std::min(layer.height() - 1, static_cast<int>(std::ceil(cy + radius)));
   if (x1 < x0 || y1 < y0) return;
   CopyInto(layer, scratch);
-  for (int y = y0; y <= y1; ++y) {
+  ParallelRows(y0, y1, [&](int y) {
     for (int x = x0; x <= x1; ++x) {
       const auto dx = static_cast<float>(x) + 0.5f - cx;
       const auto dy = static_cast<float>(y) + 0.5f - cy;
@@ -439,7 +443,7 @@ void ApplyBulge(Layer& layer, Layer& scratch, const SampledEffect& effect) {
       const auto source_scale = 1.0f - amount * falloff * falloff;
       layer.at(x, y) = SampleLayer(scratch, cx + dx * source_scale, cy + dy * source_scale);
     }
-  }
+  });
   layer.MarkDirty(x0, y0, x1, y1);
 }
 
@@ -456,8 +460,8 @@ void MorphAlpha(Layer& matte, int radius) {
   const auto y0 = std::max(0, matte.min_y() - (erode ? 0 : r));
   const auto y1 = std::min(matte.height() - 1, matte.max_y() + (erode ? 0 : r));
   const auto pick = [erode](float a, float b) { return erode ? std::min(a, b) : std::max(a, b); };
-  std::vector<float> line, filtered;
-  for (int y = y0; y <= y1; ++y) {
+  ParallelRows(y0, y1, [&](int y) {
+    thread_local std::vector<float> line, filtered;
     line.assign(static_cast<std::size_t>(x1 - x0 + 1), 0.0f);
     for (int x = x0; x <= x1; ++x) line[static_cast<std::size_t>(x - x0)] = matte.at(x, y).a;
     filtered = line;
@@ -472,8 +476,9 @@ void MorphAlpha(Layer& matte, int radius) {
       filtered[static_cast<std::size_t>(x - x0)] = value;
     }
     for (int x = x0; x <= x1; ++x) matte.at(x, y).a = filtered[static_cast<std::size_t>(x - x0)];
-  }
-  for (int x = x0; x <= x1; ++x) {
+  });
+  ParallelRows(x0, x1, [&](int x) {
+    thread_local std::vector<float> line, filtered;
     line.assign(static_cast<std::size_t>(y1 - y0 + 1), 0.0f);
     for (int y = y0; y <= y1; ++y) line[static_cast<std::size_t>(y - y0)] = matte.at(x, y).a;
     filtered = line;
@@ -487,7 +492,7 @@ void MorphAlpha(Layer& matte, int radius) {
       filtered[static_cast<std::size_t>(y - y0)] = value;
     }
     for (int y = y0; y <= y1; ++y) matte.at(x, y).a = filtered[static_cast<std::size_t>(y - y0)];
-  }
+  });
   matte.MarkDirty(x0, y0, x1, y1);
 }
 
@@ -523,17 +528,17 @@ void ApplyMatte(Layer& layer, Layer& matte, const KeyCleanup& cleanup,
   const bool has_garbage = cleanup.garbage[0] > 0.0f || cleanup.garbage[1] > 0.0f || cleanup.garbage[2] < 1.0f ||
                            cleanup.garbage[3] < 1.0f;
   if (has_garbage) {
-    for (int y = layer.min_y(); y <= layer.max_y(); ++y) {
+    ParallelRows(layer.min_y(), layer.max_y(), [&](int y) {
       for (int x = layer.min_x(); x <= layer.max_x(); ++x) {
         if (!inside(cleanup.garbage, x, y)) matte.at(x, y).a = 0.0f;
       }
-    }
+    });
   }
   MorphAlpha(matte, static_cast<int>(std::lround(cleanup.shrink)));
   GaussianBlur(matte, cleanup.feather);
   const bool has_core = cleanup.core[2] > cleanup.core[0] && cleanup.core[3] > cleanup.core[1];
 
-  for (int y = layer.min_y(); y <= layer.max_y(); ++y) {
+  ParallelRows(layer.min_y(), layer.max_y(), [&](int y) {
     for (int x = layer.min_x(); x <= layer.max_x(); ++x) {
       auto& pixel = layer.at(x, y);
       if (pixel.a <= 0.0f) continue;
@@ -549,7 +554,7 @@ void ApplyMatte(Layer& layer, Layer& matte, const KeyCleanup& cleanup,
                              std::clamp(colour.b, 0.0f, 1.0f)},
                             pixel.a * alpha);
     }
-  }
+  });
 }
 
 // How far a colour is from the key colour, ignoring brightness: both are scaled so their
@@ -592,14 +597,14 @@ void ApplyChromaKey(Layer& layer, Layer& scratch, const SampledEffect& effect) {
   const int dominant = key[0] >= key[1] && key[0] >= key[2] ? 0 : (key[1] >= key[2] ? 1 : 2);
 
   scratch.Reset(layer.width(), layer.height());
-  for (int y = layer.min_y(); y <= layer.max_y(); ++y) {
+  ParallelRows(layer.min_y(), layer.max_y(), [&](int y) {
     for (int x = layer.min_x(); x <= layer.max_x(); ++x) {
       const auto& pixel = layer.at(x, y);
       if (pixel.a <= 0.0f) continue;
       const auto distance = KeyDistance(Straight(pixel), key_normalised);
       scratch.at(x, y).a = Smoothstep(tolerance, tolerance + softness, distance);
     }
-  }
+  });
   scratch.MarkDirty(layer.min_x(), layer.min_y(), layer.max_x(), layer.max_y());
   ApplyMatte(layer, scratch, cleanup, [&](Color c) { return Despill(c, dominant, spill); });
 }
@@ -612,7 +617,7 @@ void ApplyLumaKey(Layer& layer, Layer& scratch, const SampledEffect& effect) {
   const auto cleanup = ReadCleanup(effect);
 
   scratch.Reset(layer.width(), layer.height());
-  for (int y = layer.min_y(); y <= layer.max_y(); ++y) {
+  ParallelRows(layer.min_y(), layer.max_y(), [&](int y) {
     for (int x = layer.min_x(); x <= layer.max_x(); ++x) {
       const auto& pixel = layer.at(x, y);
       if (pixel.a <= 0.0f) continue;
@@ -620,7 +625,7 @@ void ApplyLumaKey(Layer& layer, Layer& scratch, const SampledEffect& effect) {
       const auto kept = Smoothstep(threshold, threshold + softness, Luma(Straight(pixel)));
       scratch.at(x, y).a = invert ? 1.0f - kept : kept;
     }
-  }
+  });
   scratch.MarkDirty(layer.min_x(), layer.min_y(), layer.max_x(), layer.max_y());
   ApplyMatte(layer, scratch, cleanup, [](Color c) { return c; });
 }

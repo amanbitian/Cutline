@@ -1,0 +1,80 @@
+Cutline 4K playback and GPU eligibility audit, 2026-10-08
+
+Machine: AMD Radeon AI PRO R9700 (32 GB)
+Input: 3840x2160 H.264, 25 fps, 60 sequential frames
+Build: Release
+
+Before
+ENGINE gpu=1 ahead=0 median_ms=10.3364 p95_ms=13.5479 max_ms=16.0781 prime_p95_ms=0.0001 gpu_frames=60 hardware_pictures=60 ahead_queued=0 ahead_completed=0 ahead_hits=0
+ENGINE gpu=1 ahead=1 median_ms=16.1735 p95_ms=19.9701 max_ms=21.9209 prime_p95_ms=0.2801 gpu_frames=60 hardware_pictures=60 ahead_queued=469 ahead_completed=56 ahead_hits=0
+UI_READAHEAD_BLOCK_MS=109.13
+
+After
+ENGINE gpu=1 ahead=0 median_ms=10.4094 p95_ms=12.3794 max_ms=14.2924 prime_p95_ms=0.0001 gpu_frames=60 hardware_pictures=60 ahead_queued=0 ahead_completed=0 ahead_hits=0
+ENGINE gpu=1 ahead=1 median_ms=10.4835 p95_ms=10.9055 max_ms=11.0654 prime_p95_ms=0.0087 gpu_frames=60 hardware_pictures=60 ahead_queued=0 ahead_completed=0 ahead_hits=0
+UI_READAHEAD_BLOCK_MS=0.0118
+
+Interpretation
+- Hardware-decoded media no longer schedules a duplicate software read-ahead decode. The GPU + read-ahead p95 fell from 19.9701 ms to 10.9055 ms and queued software decodes fell from 469 to zero.
+- PrimeReadAhead now publishes work to its worker instead of compiling future frames on the caller. The synthetic contention probe fell from 109.13 ms to 0.0118 ms.
+- The GPU compositor accepts up to 16 colour operations and eight LUTs per clip. GPU parity tests cover nine grades and two ordered LUTs.
+- Neutral unsupported effects are ignored by the GPU eligibility check; an active unsupported effect still selects the software compositor.
+
+Validation
+- cutline_core_tests: passed
+- cutline_playback_tests: passed
+- cutline_gpu_tests: passed on the hardware adapter
+
+Limits
+- Results are from one machine and one source, and include frame read-back for the current monitor path.
+- Active blur, sharpen, vignette, lens distortion, warps, keys, masks, graphics, optical-flow interpolation, and several other spatial effects still use the software compositor.
+- The audit calls PrimeReadAhead for every CPU frame; latest-wins cancellation therefore prevents its background jobs from completing and does not represent ordinary forward playback cache-hit behavior.
+
+Follow-up full-codebase audit
+
+Correctness and scheduling
+- If a hardware source opened but its first device-frame read failed, the cached device source used to remain non-null. Software read-ahead then stayed disabled even though rendering had fallen back to the CPU. DeviceFrameFor now drops that failed device source, and AHardwareDecoderFailureRestoresSoftwareReadAhead covers the case.
+
+4K scopes and copies, Release
+Before:
+SCOPE_4K clone_median_ms=3.9226 worker_median_ms=20.0598
+RENDER_CACHE_4K store_median_ms=3.5414 hit_clone_median_ms=3.5614
+
+After direct downsampling into the 640x360 float scope input:
+SCOPE_4K clone_median_ms=3.7279 worker_median_ms=3.2392
+RENDER_CACHE_4K store_median_ms=3.4968 hit_clone_median_ms=3.0494
+AUDIO_FULL_LEVELS_1024 average_ms=0.0232
+
+Interpretation:
+- The scope worker is about 84% faster. Session delivery also stopped cloning the frame once for QImage conversion and once for scopes: Rgba8 is copied directly to QImage, then the owned frame is moved to AsyncScopes.
+- Render-cache Store and cache-hit return still each copy about 31.6 MiB for a 4K Rgba8 frame and cost about 3.0-3.5 ms. That remains a material playback cost.
+- Full master audio metering on a 1024-frame stereo block is not a material bottleneck in this probe.
+
+CPU spatial effects, 3840x2160, Release median
+Effect                  Before       After row parallelism
+blur                    129.3 ms      53.9 ms
+sharpen                  70.7 ms      49.5 ms
+lens correction         125.2 ms      49.6 ms
+
+Mask blending, blur, sharpen and lens correction now use the compositor's existing bounded row worker pool. The full render suite remains bit-exact. These operations still miss a 25 fps 40 ms frame budget at 4K and still force the whole frame off the GPU when active.
+
+Other active CPU-only effects measured at 4K after this change:
+rolling shutter 111.7 ms; mesh warp 156.5 ms; Gaussian blur 402.0 ms; directional blur 1375.9 ms; glow 445.6 ms; drop shadow 425.4 ms; noise reduction 3253.7 ms; chroma key 187.7 ms; luma key 139.9 ms.
+
+D3D11 target memory
+- Before, EnsureTargets allocated two half-float canvases, two half-float transition layers, float and 8-bit output textures, and float and 8-bit staging textures for every compositor: 72 bytes/pixel, or 597,196,800 bytes (569.5 MiB) at 3840x2160.
+- Targets are now allocated on demand. The normal 8-bit/no-transition path starts at 24 bytes/pixel, or 199,065,600 bytes (189.8 MiB), a calculated 379.7 MiB reduction. Transition layers are retained only after a transition needs them; float output/staging are created only for float output.
+
+Remaining high-value work found by the audit
+- Every GPU frame is still synchronously copied into a staging texture, mapped and copied to CPU memory, then copied into QImage. Existing 1080p measurements put read-back at roughly 2-3 ms, greater than the GPU compute pass. A shared D3D texture/Qt scene-graph monitor path is required to remove it.
+- Any one unsupported active spatial effect rejects the complete playback plan and sends the whole frame through the software compositor. GPU kernels and eventually a per-layer hybrid execution plan are required.
+- Every edit reloads the complete sequence graph and UpdateSequence clears decoded-frame, stretch, nested-frame and hardware-decoder state. Parameter dragging therefore discards source data even when no media changed. Change-classified invalidation is required.
+- ExportClone explicitly disables the GPU, and ExportWorker serially renders, writes video, renders audio and writes audio. Export needs a bounded decode/compose/encode pipeline and a deliberate GPU-quality policy.
+- Render-cache hits and stores clone full frames. Immutable shared backing or ownership transfer would remove about 3 ms in each direction at 4K in this probe.
+- Render-key construction stats every referenced media/LUT asset per frame, transitions are scanned linearly per track, and active captions scan cues from the start of each track. These are secondary scaling issues for large projects.
+
+Validation after the follow-up fixes
+- cutline_render_tests: 151/151 passed
+- cutline_playback_tests: 46/49 passed, 3 skipped because av-ref.mkv was not generated
+- cutline_gpu_tests: 12/15 passed on AMD Radeon AI PRO R9700, 3 skipped because bars-2997.mp4 was not generated
+- cutline_app_tests: 31/32 passed offscreen; the pre-existing look-pack discovery check failed because fewer than eight bundled look entries were found. The frame-delivery, playback and async-scope application cases passed.

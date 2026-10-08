@@ -61,7 +61,7 @@ cbuffer P : register(b0) {
   float4 yuv0;    // y scale, y offset, chroma scale, chroma midpoint
   float4 yuv1;    // r from cr, g from cb, g from cr, b from cb
   float4 yuv2;    // normalisation of the stored value (1 for 8 bit, 65535/64512 for 10 bit in 16)
-  float4 ops[48]; // blocks of six float4, one per operation; the first value of a block is its kind (render/ColorOps.h lists them)
+  float4 ops[96]; // blocks of six float4, one per operation; the first value of a block is its kind (render/ColorOps.h lists them)
 };
 
 #if YUV
@@ -73,8 +73,15 @@ Texture2D<float4> srcTex : register(t0);
 Texture2D<float4> canvasIn : register(t2);
 Texture2D<float4> layerA : register(t3);
 Texture2D<float4> layerB : register(t4);
-Texture3D<float4> lutTex : register(t5);   // a LUT: a cube (3D) or a column of rows (1D, as n x 1 x 1)
-Texture2D<float> curveTex : register(t6);  // curves: 256 entries a row, five rows for each curves operation
+Texture3D<float4> lutTex0 : register(t5);
+Texture3D<float4> lutTex1 : register(t6);
+Texture3D<float4> lutTex2 : register(t7);
+Texture3D<float4> lutTex3 : register(t8);
+Texture3D<float4> lutTex4 : register(t9);
+Texture3D<float4> lutTex5 : register(t10);
+Texture3D<float4> lutTex6 : register(t11);
+Texture3D<float4> lutTex7 : register(t12);
+Texture2D<float> curveTex : register(t13);  // curves: 256 entries a row, five rows for each curves operation
 RWTexture2D<float4> dst : register(u0);
 RWTexture2D<unorm float4> out8 : register(u1);
 
@@ -108,6 +115,17 @@ float4 SampleSource(float x, float y) {
 
 static const float3 kLuma = float3(0.2126, 0.7152, 0.0722);
 
+float4 LutLoad(int slot, int4 location) {
+  if (slot == 0) return lutTex0.Load(location);
+  if (slot == 1) return lutTex1.Load(location);
+  if (slot == 2) return lutTex2.Load(location);
+  if (slot == 3) return lutTex3.Load(location);
+  if (slot == 4) return lutTex4.Load(location);
+  if (slot == 5) return lutTex5.Load(location);
+  if (slot == 6) return lutTex6.Load(location);
+  return lutTex7.Load(location);
+}
+
 // Colour tools, each the software compositor's arithmetic (render/ColorEffects.cpp, Filters.cpp, Compositor.cpp).
 float CurveAt(int row, float v) {
   float position = saturate(v) * 255.0;
@@ -120,6 +138,7 @@ float CurveAt(int row, float v) {
 }
 
 float3 Lut(float3 c, float4 o0, float4 o1, float4 o2) {
+  int slot = (int)o2.w;
   int size = (int)o0.z;
   float3 n = o1.w > 0.5 ? c : (c - o1.xyz) / o2.xyz;
   n = saturate(n);   // held at the edges of the domain; a NaN lands on the first entry
@@ -128,18 +147,18 @@ float3 Lut(float3 c, float4 o0, float4 o1, float4 o2) {
   int3 hi = min(lo + 1, size - 1);
   float3 f = coord - (float3)lo;
   if (o0.w > 0.5) {
-    float3 a = float3(lutTex.Load(int4(lo.x, 0, 0, 0)).r, lutTex.Load(int4(lo.y, 0, 0, 0)).g, lutTex.Load(int4(lo.z, 0, 0, 0)).b);
-    float3 b = float3(lutTex.Load(int4(hi.x, 0, 0, 0)).r, lutTex.Load(int4(hi.y, 0, 0, 0)).g, lutTex.Load(int4(hi.z, 0, 0, 0)).b);
+    float3 a = float3(LutLoad(slot, int4(lo.x, 0, 0, 0)).r, LutLoad(slot, int4(lo.y, 0, 0, 0)).g, LutLoad(slot, int4(lo.z, 0, 0, 0)).b);
+    float3 b = float3(LutLoad(slot, int4(hi.x, 0, 0, 0)).r, LutLoad(slot, int4(hi.y, 0, 0, 0)).g, LutLoad(slot, int4(hi.z, 0, 0, 0)).b);
     return a + (b - a) * f;
   }
-  float3 c000 = lutTex.Load(int4(lo.x, lo.y, lo.z, 0)).rgb;
-  float3 c100 = lutTex.Load(int4(hi.x, lo.y, lo.z, 0)).rgb;
-  float3 c010 = lutTex.Load(int4(lo.x, hi.y, lo.z, 0)).rgb;
-  float3 c110 = lutTex.Load(int4(hi.x, hi.y, lo.z, 0)).rgb;
-  float3 c001 = lutTex.Load(int4(lo.x, lo.y, hi.z, 0)).rgb;
-  float3 c101 = lutTex.Load(int4(hi.x, lo.y, hi.z, 0)).rgb;
-  float3 c011 = lutTex.Load(int4(lo.x, hi.y, hi.z, 0)).rgb;
-  float3 c111 = lutTex.Load(int4(hi.x, hi.y, hi.z, 0)).rgb;
+  float3 c000 = LutLoad(slot, int4(lo.x, lo.y, lo.z, 0)).rgb;
+  float3 c100 = LutLoad(slot, int4(hi.x, lo.y, lo.z, 0)).rgb;
+  float3 c010 = LutLoad(slot, int4(lo.x, hi.y, lo.z, 0)).rgb;
+  float3 c110 = LutLoad(slot, int4(hi.x, hi.y, lo.z, 0)).rgb;
+  float3 c001 = LutLoad(slot, int4(lo.x, lo.y, hi.z, 0)).rgb;
+  float3 c101 = LutLoad(slot, int4(hi.x, lo.y, hi.z, 0)).rgb;
+  float3 c011 = LutLoad(slot, int4(lo.x, hi.y, hi.z, 0)).rgb;
+  float3 c111 = LutLoad(slot, int4(hi.x, hi.y, hi.z, 0)).rgb;
   float3 c00 = c000 + (c100 - c000) * f.x;
   float3 c10 = c010 + (c110 - c010) * f.x;
   float3 c01 = c001 + (c101 - c001) * f.x;
@@ -417,11 +436,12 @@ struct Params final {
   float yuv0[4]{};
   float yuv1[4]{};
   float yuv2[4]{1, 0, 0, 0};
-  float ops[48][4]{};
+  float ops[96][4]{};
 };
 static_assert(sizeof(Params) % 16 == 0);
-constexpr int kMaxOps = 8;
+constexpr int kMaxOps = 16;
 constexpr int kOpStride = 6;   // float4 values in one operation's block
+constexpr int kMaxBoundLuts = 8;
 constexpr int kMaxLutSize = 129;   // a bigger cube is left to the software path (129 points a side is 34 MB on the card)
 constexpr int kMaxCachedLuts = 8;
 
@@ -541,7 +561,7 @@ struct D3D11Compositor::Impl final {
   std::string asset_root;
   ComPtr<ID3D11Texture2D> curve_texture;
   ComPtr<ID3D11ShaderResourceView> curve_view;
-  ID3D11ShaderResourceView* current_lut{nullptr};
+  std::array<ID3D11ShaderResourceView*, kMaxBoundLuts> current_luts{};
   ID3D11ShaderResourceView* current_curves{nullptr};
 
   // Per-frame draw state.
@@ -610,36 +630,54 @@ struct D3D11Compositor::Impl final {
     return true;
   }
 
-  [[nodiscard]] bool EnsureTargets(int w, int h, std::string* why) {
-    if (w == width && h == height && canvas[0].texture) return true;
-    ReleaseTargets();
+  [[nodiscard]] bool EnsureTargets(int w, int h, bool f32, bool transitions, std::string* why) {
+    if (w != width || h != height) ReleaseTargets();
     // Half float keeps a layer at 8 bytes a pixel (a 1080p canvas is 16 MB) with a precision far finer than an 8 or 10
     // bit picture can show; the canvases alternate, because reading and writing one typed texture in one pass is not
     // something every device supports.
-    const bool ok = MakeTarget(canvas[0], w, h, DXGI_FORMAT_R16G16B16A16_FLOAT, true) && MakeTarget(canvas[1], w, h, DXGI_FORMAT_R16G16B16A16_FLOAT, true) &&
-                    MakeTarget(layer_a, w, h, DXGI_FORMAT_R16G16B16A16_FLOAT, true) && MakeTarget(layer_b, w, h, DXGI_FORMAT_R16G16B16A16_FLOAT, true) &&
-                    MakeTarget(out_f32, w, h, DXGI_FORMAT_R32G32B32A32_FLOAT, false) && MakeTarget(out_u8, w, h, DXGI_FORMAT_R8G8B8A8_UNORM, false);
-    if (!ok) {
+    const auto failed = [&] {
       ReleaseTargets();
       if (why != nullptr) *why = "not enough video memory for a " + std::to_string(w) + "x" + std::to_string(h) + " picture";
       return false;
+    };
+    if (!canvas[0].texture &&
+        (!MakeTarget(canvas[0], w, h, DXGI_FORMAT_R16G16B16A16_FLOAT, true) ||
+         !MakeTarget(canvas[1], w, h, DXGI_FORMAT_R16G16B16A16_FLOAT, true))) {
+      return failed();
     }
-    D3D11_TEXTURE2D_DESC staging{};
-    staging.Width = static_cast<UINT>(w);
-    staging.Height = static_cast<UINT>(h);
-    staging.MipLevels = 1;
-    staging.ArraySize = 1;
-    staging.SampleDesc.Count = 1;
-    staging.Usage = D3D11_USAGE_STAGING;
-    staging.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
-    staging.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-    if (FAILED(device->CreateTexture2D(&staging, nullptr, &staging_f32))) return false;
-    staging.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    if (FAILED(device->CreateTexture2D(&staging, nullptr, &staging_u8))) return false;
+    if (transitions && !layer_a.texture &&
+        (!MakeTarget(layer_a, w, h, DXGI_FORMAT_R16G16B16A16_FLOAT, true) ||
+         !MakeTarget(layer_b, w, h, DXGI_FORMAT_R16G16B16A16_FLOAT, true))) {
+      return failed();
+    }
+    auto make_staging = [&](DXGI_FORMAT format, ComPtr<ID3D11Texture2D>& target) {
+      D3D11_TEXTURE2D_DESC staging{};
+      staging.Width = static_cast<UINT>(w);
+      staging.Height = static_cast<UINT>(h);
+      staging.MipLevels = 1;
+      staging.ArraySize = 1;
+      staging.SampleDesc.Count = 1;
+      staging.Usage = D3D11_USAGE_STAGING;
+      staging.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+      staging.Format = format;
+      return SUCCEEDED(device->CreateTexture2D(&staging, nullptr, &target));
+    };
+    if (f32) {
+      if (!out_f32.texture &&
+          (!MakeTarget(out_f32, w, h, DXGI_FORMAT_R32G32B32A32_FLOAT, false) ||
+           !make_staging(DXGI_FORMAT_R32G32B32A32_FLOAT, staging_f32))) {
+        return failed();
+      }
+    } else if (!out_u8.texture &&
+               (!MakeTarget(out_u8, w, h, DXGI_FORMAT_R8G8B8A8_UNORM, false) ||
+                !make_staging(DXGI_FORMAT_R8G8B8A8_UNORM, staging_u8))) {
+      return failed();
+    }
     width = w;
     height = h;
     const auto pixels = static_cast<std::size_t>(w) * static_cast<std::size_t>(h);
-    texture_bytes = pixels * (8 * 4 + 16 + 4 + 16 + 4);
+    texture_bytes = pixels * (16 + (layer_a.texture ? 16 : 0) + (out_f32.texture ? 32 : 0) +
+                              (out_u8.texture ? 8 : 0));
     return true;
   }
 
@@ -648,6 +686,7 @@ struct D3D11Compositor::Impl final {
     staging_f32.Reset();
     staging_u8.Reset();
     width = height = 0;
+    texture_bytes = 0;
   }
 
   // A pooled texture for one picture in memory; textures are reused from frame to frame and the pool is trimmed when
@@ -725,9 +764,9 @@ struct D3D11Compositor::Impl final {
   }
 
   void Unbind() {
-    ID3D11ShaderResourceView* no_srv[7] = {};
+    ID3D11ShaderResourceView* no_srv[14] = {};
     ID3D11UnorderedAccessView* no_uav[2] = {};
-    context->CSSetShaderResources(0, 7, no_srv);
+    context->CSSetShaderResources(0, 14, no_srv);
     context->CSSetUnorderedAccessViews(0, 2, no_uav, nullptr);
   }
 
@@ -819,7 +858,8 @@ struct D3D11Compositor::Impl final {
 
   void FillOps(const std::vector<SampledEffect>& effects) {
     int count = 0;
-    current_lut = nullptr;
+    int lut_count = 0;
+    current_luts.fill(nullptr);
     current_curves = nullptr;
     std::vector<float> curve_rows;
     for (const auto& effect : effects) {
@@ -856,7 +896,8 @@ struct D3D11Compositor::Impl final {
           params.ops[kOpStride * count + 2][i] = lut.domain_max()[static_cast<std::size_t>(i)] - lut.domain_min()[static_cast<std::size_t>(i)];
         }
         params.ops[kOpStride * count + 1][3] = default_domain ? 1.0f : 0.0f;
-        current_lut = entry->view.Get();
+        params.ops[kOpStride * count + 2][3] = static_cast<float>(lut_count);
+        current_luts[static_cast<std::size_t>(lut_count++)] = entry->view.Get();
         ++count;
       } else if (IsGpuColorEffect(effect.effect_type)) {
         const auto op = DescribeColorOp(effect);
@@ -905,8 +946,10 @@ struct D3D11Compositor::Impl final {
   // Binds what the next pass reads and writes.
   void Bind(ID3D11ShaderResourceView* source0, ID3D11ShaderResourceView* source1, ID3D11ShaderResourceView* canvas_in,
             ID3D11ShaderResourceView* a, ID3D11ShaderResourceView* b, ID3D11UnorderedAccessView* output, ID3D11UnorderedAccessView* output8 = nullptr) {
-    ID3D11ShaderResourceView* views[7] = {source0, source1, canvas_in, a, b, current_lut, current_curves};
-    context->CSSetShaderResources(0, 7, views);
+    ID3D11ShaderResourceView* views[14] = {source0, source1, canvas_in, a, b};
+    for (std::size_t i = 0; i < current_luts.size(); ++i) views[5 + i] = current_luts[i];
+    views[13] = current_curves;
+    context->CSSetShaderResources(0, 14, views);
     ID3D11UnorderedAccessView* uavs[2] = {output, output8};
     context->CSSetUnorderedAccessViews(0, 2, uavs, nullptr);
   }
@@ -944,11 +987,48 @@ struct D3D11Compositor::Impl final {
 
 namespace {
 
+bool IsNoOpEffect(const SampledEffect& effect) {
+  const auto zero = [&](const char* name) { return std::abs(ScalarParameter(effect, name, 0.0f)) <= 1e-6f; };
+  const auto& type = effect.effect_type;
+  if (type == "blur" || type == "gaussian_blur") return zero("radius");
+  if (type == "sharpen" || type == "unsharp_mask") return zero("amount");
+  if (type == "vignette") return zero("amount");
+  if (type == "directional_blur") return zero("length");
+  if (type == "glow") return zero("intensity") || zero("radius");
+  if (type == "drop_shadow") return zero("opacity");
+  if (type == "noise_reduction") return zero("luma") && zero("chroma") && zero("temporal");
+  if (type == "posterize") return ScalarParameter(effect, "levels", 256.0f) >= 255.5f;
+  if (type == "wave_warp") return zero("amplitude");
+  if (type == "bulge") return zero("amount");
+  if (type == "rolling_shutter") {
+    return zero("horizontal") && zero("vertical") && zero("rotation") && zero("curve");
+  }
+  if (type == "lens_correction" || type == "wide_angle") {
+    return zero("distortion") && zero("quadratic") &&
+           std::abs(ScalarParameter(effect, "scale", 100.0f) - 100.0f) <= 1e-6f;
+  }
+  if (type == "mesh_warp") {
+    for (const auto& parameter : effect.parameters) {
+      if (parameter.name.rfind("point_", 0) != 0) continue;
+      for (int component = 0; component < parameter.value.dimension; ++component) {
+        if (std::abs(parameter.value.components[static_cast<std::size_t>(component)]) > 1e-6) return false;
+      }
+    }
+    return true;
+  }
+  if (type == "blend_mode") {
+    return static_cast<int>(std::lround(ScalarParameter(effect, "mode", 0.0f))) == 0 &&
+           ScalarParameter(effect, "opacity", 1.0f) >= 1.0f - 1e-6f;
+  }
+  return false;
+}
+
 bool HasOnlySupportedEffects(const std::vector<SampledEffect>& effects, bool sequence_level, std::string* reason,
                              const std::function<bool(const SampledEffect&, std::string*)>& lut_usable) {
   int ops = 0;
   int luts = 0;
   for (const auto& effect : effects) {
+    if (IsNoOpEffect(effect)) continue;
     if (!effect.masks.empty()) {
       if (reason != nullptr) *reason = "an effect has a mask";
       return false;
@@ -956,13 +1036,12 @@ bool HasOnlySupportedEffects(const std::vector<SampledEffect>& effects, bool seq
     const auto& type = effect.effect_type;
     if (type == "opacity" || type == "grade" || type == "lumetri" || type == "lut" || IsGpuColorEffect(type)) {
       if (++ops > kMaxOps) {
-        if (reason != nullptr) *reason = "more than eight colour effects on one clip";
+        if (reason != nullptr) *reason = "more than sixteen colour effects on one clip";
         return false;
       }
       if (type == "lut") {
-        // One LUT is bound for a pass; a second is left to the software path.
-        if (++luts > 1) {
-          if (reason != nullptr) *reason = "more than one LUT on one clip";
+        if (++luts > kMaxBoundLuts) {
+          if (reason != nullptr) *reason = "more than eight LUTs on one clip";
           return false;
         }
         if (!lut_usable(effect, reason)) return false;
@@ -1106,8 +1185,9 @@ media::VideoFrame D3D11Compositor::Compose(const timeline::PlaybackPlan& plan, c
   const int width = config.width > 0 ? config.width : static_cast<int>(plan.width);
   const int height = config.height > 0 ? config.height : static_cast<int>(plan.height);
   if (width <= 0 || height <= 0) throw std::invalid_argument("Compositor has no output size");
+  const bool f32 = config.output_format == media::PixelFormat::RgbaF32;
   std::string why;
-  if (!s.EnsureTargets(width, height, &why)) throw std::runtime_error(why);
+  if (!s.EnsureTargets(width, height, f32, !plan.transitions.empty(), &why)) throw std::runtime_error(why);
   ++s.frame_counter;
 
   auto& context = *s.context.Get();
@@ -1298,7 +1378,6 @@ media::VideoFrame D3D11Compositor::Compose(const timeline::PlaybackPlan& plan, c
   ops_on_canvas(plan.sequence_effects);
 
   // The finished picture: un-premultiplied, in the format asked for, then copied where the CPU can read it.
-  const bool f32 = config.output_format == media::PixelFormat::RgbaF32;
   s.SetBaseParams();
   {
     const int in = s.current_canvas;

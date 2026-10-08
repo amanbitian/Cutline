@@ -60,6 +60,10 @@ class AudioSink {
 
   [[nodiscard]] virtual std::string name() const = 0;
   [[nodiscard]] virtual const AudioDeviceFormat& format() const = 0;
+  // True when this sink consumes audio on its own and its clock can lead video
+  // playback. OfflineSink is pulled explicitly by tests and renderers, so using
+  // its clock as the live transport clock would leave the playhead frozen.
+  [[nodiscard]] virtual bool drives_clock() const = 0;
 
   virtual void Start(RenderCallback callback) = 0;
   virtual void Stop() = 0;
@@ -98,6 +102,7 @@ class OfflineSink final : public AudioSink {
 
   [[nodiscard]] std::string name() const override { return "offline"; }
   [[nodiscard]] const AudioDeviceFormat& format() const override { return format_; }
+  [[nodiscard]] bool drives_clock() const override { return false; }
 
   void Start(RenderCallback callback) override;
   void Stop() override;

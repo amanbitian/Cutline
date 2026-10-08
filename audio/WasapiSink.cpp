@@ -224,6 +224,7 @@ class WasapiSink final : public AudioSink {
 
   [[nodiscard]] std::string name() const override { return "wasapi"; }
   [[nodiscard]] const AudioDeviceFormat& format() const override { return format_; }
+  [[nodiscard]] bool drives_clock() const override { return true; }
   [[nodiscard]] bool running() const override { return running_.load(std::memory_order_acquire); }
   [[nodiscard]] AudioClock& clock() override { return clock_; }
   [[nodiscard]] time::RationalTime latency() const override { return latency_; }

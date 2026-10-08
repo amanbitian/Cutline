@@ -618,6 +618,13 @@ CUTLINE_TEST(EffectRegistryDescribesUniqueBuiltInsWithValidDefaults) {
   }
   CHECK(cutline::effects::FindEffect("blur")->medium == cutline::effects::Medium::Video);
   CHECK(cutline::effects::FindEffect("pan")->medium == cutline::effects::Medium::Audio);
+  for (const auto* id : {"opacity", "motion", "transform", "crop", "grade", "lumetri", "solid", "lut",
+                         "stabilizer", "time_remap", "channel_mixer", "black_and_white", "tint", "color_wheels",
+                         "curves", "hue_curves", "color_adjust", "hsl_secondary"}) {
+    CHECK(cutline::effects::FindEffect(id)->gpu_available);
+  }
+  CHECK(!cutline::effects::FindEffect("blur")->gpu_available);
+  CHECK(!cutline::effects::FindEffect("chroma_key")->gpu_available);
 }
 
 CUTLINE_TEST(RegisteredEffectsRejectInvalidParametersButUnknownPluginEffectsRemainSerializable) {

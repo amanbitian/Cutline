@@ -28,20 +28,41 @@ struct Rgb final {
   if (max_width <= 0 || max_height <= 0) throw std::invalid_argument("Scope downsample size must be positive");
   const auto scale = std::min({1.0, static_cast<double>(max_width) / input.width(),
                               static_cast<double>(max_height) / input.height()});
-  if (scale >= 1.0) return input.Clone();
-  const auto source = AsFloat(input);
+  if (scale >= 1.0) return AsFloat(input);
   const auto width = std::max(1, static_cast<int>(std::floor(input.width() * scale)));
   const auto height = std::max(1, static_cast<int>(std::floor(input.height() * scale)));
   auto output = media::VideoFrame::Allocate(media::PixelFormat::RgbaF32, width, height);
   output.color = input.color;
+  output.presentation_time = input.presentation_time;
+  output.duration = input.duration;
+  output.pixel_aspect = input.pixel_aspect;
+  output.keyframe = input.keyframe;
   for (int y = 0; y < height; ++y) {
     const auto sy = std::min(input.height() - 1, static_cast<int>((static_cast<long long>(y) * input.height()) / height));
     auto* target = output.row_f32(y);
-    const auto* source_row = source.row_f32(sy);
-    for (int x = 0; x < width; ++x) {
-      const auto sx = std::min(input.width() - 1, static_cast<int>((static_cast<long long>(x) * input.width()) / width));
-      for (int channel = 0; channel < 4; ++channel) {
-        target[static_cast<std::size_t>(x) * 4 + channel] = source_row[static_cast<std::size_t>(sx) * 4 + channel];
+    if (input.format() == media::PixelFormat::RgbaF32) {
+      const auto* source = input.row_f32(sy);
+      for (int x = 0; x < width; ++x) {
+        const auto sx = std::min(input.width() - 1, static_cast<int>((static_cast<long long>(x) * input.width()) / width));
+        std::copy_n(source + static_cast<std::size_t>(sx) * 4, 4, target + static_cast<std::size_t>(x) * 4);
+      }
+    } else if (input.format() == media::PixelFormat::Rgba8) {
+      const auto* source = input.row_u8(sy);
+      for (int x = 0; x < width; ++x) {
+        const auto sx = std::min(input.width() - 1, static_cast<int>((static_cast<long long>(x) * input.width()) / width));
+        for (int channel = 0; channel < 4; ++channel) {
+          target[static_cast<std::size_t>(x) * 4 + channel] =
+              static_cast<float>(source[static_cast<std::size_t>(sx) * 4 + channel]) / 255.0f;
+        }
+      }
+    } else {
+      const auto* source = reinterpret_cast<const std::uint16_t*>(input.row(sy));
+      for (int x = 0; x < width; ++x) {
+        const auto sx = std::min(input.width() - 1, static_cast<int>((static_cast<long long>(x) * input.width()) / width));
+        for (int channel = 0; channel < 4; ++channel) {
+          target[static_cast<std::size_t>(x) * 4 + channel] =
+              static_cast<float>(source[static_cast<std::size_t>(sx) * 4 + channel]) / 65535.0f;
+        }
       }
     }
   }

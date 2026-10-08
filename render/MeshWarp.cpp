@@ -30,9 +30,9 @@ namespace {
 void Finish(Layer& layer, Layer& scratch) {
   layer.Reset(scratch.width(), scratch.height());
   if (scratch.empty()) return;
-  for (int y = scratch.min_y(); y <= scratch.max_y(); ++y) {
+  ParallelRows(scratch.min_y(), scratch.max_y(), [&](int y) {
     for (int x = scratch.min_x(); x <= scratch.max_x(); ++x) layer.at(x, y) = scratch.at(x, y);
-  }
+  });
   layer.MarkDirty(scratch.min_x(), scratch.min_y(), scratch.max_x(), scratch.max_y());
 }
 
@@ -41,7 +41,7 @@ void Finish(Layer& layer, Layer& scratch) {
 void ApplyMeshWarp(Layer& layer, Layer& scratch, const WarpMesh& mesh) {
   if (layer.empty() || !mesh.valid()) return;
   scratch.Reset(layer.width(), layer.height());
-  for (int y = 0; y < layer.height(); ++y) {
+  ParallelRows(0, layer.height() - 1, [&](int y) {
     const auto gy = layer.height() > 1 ? static_cast<float>(y) * static_cast<float>(mesh.rows - 1) /
                                            static_cast<float>(layer.height() - 1)
                                      : 0.0f;
@@ -63,7 +63,7 @@ void ApplyMeshWarp(Layer& layer, Layer& scratch, const WarpMesh& mesh) {
       const auto dy = mix(mix(a.y, b.y, tx), mix(c.y, d.y, tx), ty);
       scratch.at(x, y) = Sample(layer, static_cast<float>(x) + dx, static_cast<float>(y) + dy);
     }
-  }
+  });
   scratch.MarkWhole();
   Finish(layer, scratch);
 }
@@ -76,7 +76,7 @@ void ApplyRollingShutter(Layer& layer, Layer& scratch, const RollingShutterSetti
   const auto center_x = static_cast<float>(layer.width() - 1) * 0.5f;
   const auto center_y = static_cast<float>(layer.height() - 1) * 0.5f;
   const auto radians = settings.rotation_degrees * std::numbers::pi_v<float> / 180.0f;
-  for (int y = 0; y < layer.height(); ++y) {
+  ParallelRows(0, layer.height() - 1, [&](int y) {
     auto scan = layer.height() > 1 ? static_cast<float>(y) / static_cast<float>(layer.height() - 1) : 0.0f;
     if (settings.bottom_to_top) scan = 1.0f - scan;
     scan = std::clamp(scan + std::clamp(settings.curve, -1.0f, 1.0f) * scan * (1.0f - scan), 0.0f, 1.0f);
@@ -90,7 +90,7 @@ void ApplyRollingShutter(Layer& layer, Layer& scratch, const RollingShutterSetti
       const auto sy = sine * local_x + cosine * local_y + center_y + settings.vertical * scan;
       scratch.at(x, y) = Sample(layer, sx, sy);
     }
-  }
+  });
   scratch.MarkWhole();
   Finish(layer, scratch);
 }
